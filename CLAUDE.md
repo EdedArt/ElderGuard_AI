@@ -35,3 +35,7 @@ Web-based smartwatch simulator for elderly safety: fall detection, abnormal hear
 ## UI Principles
 - Users are elderly people: high contrast (WCAG AAA, 7:1 text), very large touch targets, minimal text, readable at a glance.
 - Watch UI lives inside a circular frame (390–454px). The simulator panel lives outside the frame.
+- Light theme is the default. Dark theme is optional, chosen by the user, and saved across reloads. Do NOT follow the system preference.
+- The UI is bilingual: Spanish (es) is the default, English (en) is optional, chosen by the user, and saved across reloads.
+- Never hardcode user-facing text. All visible strings (including aria-labels, titles and alerts) must come from the i18n dictionaries, with both Spanish and English entries added in the same commit.
+- Code, comments and commit messages stay in English.
