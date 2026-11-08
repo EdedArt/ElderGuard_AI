@@ -1,7 +1,7 @@
 /*
  * Design tokens. Text pairs meet WCAG AAA (7:1).
- * With no data-theme attribute the system preference decides the theme;
- * data-theme="light" or data-theme="dark" overrides it.
+ * Light is the default; data-theme="dark" switches to the dark theme.
+ * The system preference is intentionally ignored: the theme is the user's choice.
  *
  * Danger is the same solid red with white text in both themes:
  * - --color-danger / --color-on-danger: filled alert surfaces.
@@ -41,27 +41,6 @@
   --radius-circle: 50%;
 
   --touch-target-min: 3rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
-    color-scheme: dark;
-
-    --color-background: #000000;
-    --color-surface: #1a1a1a;
-    --color-text: #ffffff;
-    --color-border: #b3b3b3;
-    --color-accent: #7cc4ff;
-    --color-on-accent: #000000;
-    --color-danger: #b00000;
-    --color-on-danger: #ffffff;
-    --color-danger-border: #ffffff;
-    --color-danger-text: #ff8a80;
-    --color-warning: #ffc233;
-    --color-on-warning: #000000;
-    --color-success: #4ade80;
-    --color-on-success: #000000;
-  }
 }
 
 :root[data-theme='dark'] {
