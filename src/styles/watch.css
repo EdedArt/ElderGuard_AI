@@ -1,0 +1,21 @@
+.watch-frame {
+  flex-shrink: 0;
+  padding: var(--space-medium);
+  background-color: #1a1a1a;
+  border: 0.125rem solid var(--color-border);
+  border-radius: var(--radius-circle);
+}
+
+.watch-frame__screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--watch-size);
+  height: var(--watch-size);
+  overflow: hidden;
+  background-color: var(--color-background);
+  border-radius: var(--radius-circle);
+  font-size: var(--font-size-extra-large);
+  font-weight: 700;
+  text-align: center;
+}
