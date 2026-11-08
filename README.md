@@ -10,7 +10,14 @@ Simulador web de un smartwatch para la seguridad de personas mayores. Es un proy
 - Panel externo para simular los datos de los sensores.
 - Interfaz de alto contraste (WCAG AAA) con botones muy grandes y poco texto, pensada para personas mayores.
 
-Estado actual: estructura base del proyecto, pantalla circular del reloj, panel del simulador (por ahora vacío) y cambio de tema claro/oscuro.
+Estado actual: estructura base del proyecto, pantalla circular del reloj, panel del simulador (por ahora vacío), cambio de tema claro/oscuro e interfaz en español e inglés.
+
+## Tema e idioma
+
+La aplicación abre en tema claro y en español, sin importar la configuración del sistema. Ambas opciones se cambian con los botones del encabezado, y la elección se conserva al recargar la página:
+
+- **Idioma:** pulsa `ES` para español o `EN` para inglés. El botón resaltado indica el idioma actual.
+- **Tema:** pulsa `Tema oscuro` o `Tema claro` (`Dark theme` o `Light theme` en inglés). El botón muestra el tema al que se va a cambiar.
 
 ## Stack
 
@@ -38,6 +45,7 @@ npm run preview  # Sirve localmente la versión de producción
 ├── src/
 │   ├── config/      Umbrales y configuración de la aplicación
 │   ├── core/        Telemetría, detectores y lógica de alertas (JS puro y testeable)
+│   ├── i18n/        Traducciones al español y al inglés
 │   ├── simulator/   Panel externo del simulador de sensores
 │   ├── styles/      Design tokens y estilos globales
 │   ├── ui/          Componentes de la interfaz del reloj
