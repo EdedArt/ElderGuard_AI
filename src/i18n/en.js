@@ -4,6 +4,11 @@ export const en = {
   },
   header: {
     title: '{name}',
+    language: {
+      group: 'Language',
+      es: { code: 'ES', name: 'Spanish' },
+      en: { code: 'EN', name: 'English' },
+    },
   },
   watch: {
     areaLabel: 'Smartwatch',

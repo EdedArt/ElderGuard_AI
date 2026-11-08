@@ -6,7 +6,9 @@ export function createPageLayout({ title }) {
   header.className = 'page__header';
   const heading = document.createElement('h1');
   heading.textContent = title;
-  header.append(heading);
+  const headerActions = document.createElement('div');
+  headerActions.className = 'page__header-actions';
+  header.append(heading, headerActions);
 
   const main = document.createElement('main');
   main.className = 'page__main';
@@ -18,5 +20,5 @@ export function createPageLayout({ title }) {
   main.append(watchArea, simulatorArea);
 
   root.append(header, main);
-  return { root, header, watchArea, simulatorArea };
+  return { root, headerActions, watchArea, simulatorArea };
 }

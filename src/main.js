@@ -4,14 +4,17 @@ import './styles/layout.css';
 import './styles/watch.css';
 import { appConfig } from './config/app.config.js';
 import { createSimulatorPanel } from './simulator/simulatorPanel.js';
+import { createLanguageToggle } from './ui/languageToggle.js';
 import { createPageLayout } from './ui/pageLayout.js';
 import { createThemeToggle } from './ui/themeToggle.js';
 import { createWatchFrame } from './ui/watchFrame.js';
 
 document.title = appConfig.name;
 
-const { root, header, watchArea, simulatorArea } = createPageLayout({ title: appConfig.name });
-header.append(createThemeToggle());
+const { root, headerActions, watchArea, simulatorArea } = createPageLayout({
+  title: appConfig.name,
+});
+headerActions.append(createLanguageToggle(), createThemeToggle());
 watchArea.append(createWatchFrame());
 simulatorArea.append(createSimulatorPanel());
 document.querySelector('#app').append(root);

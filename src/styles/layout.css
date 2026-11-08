@@ -7,10 +7,40 @@
 .page__header {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: var(--space-medium);
   padding: var(--space-medium) var(--space-large);
   border-bottom: 0.125rem solid var(--color-border);
+}
+
+.page__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-medium);
+}
+
+.language-toggle {
+  display: flex;
+  gap: var(--space-small);
+}
+
+.language-toggle__option {
+  min-width: var(--touch-target-min);
+  min-height: var(--touch-target-min);
+  padding: 0 var(--space-medium);
+  background-color: var(--color-surface);
+  border: 0.125rem solid var(--color-border);
+  border-radius: var(--radius-small);
+  cursor: pointer;
+}
+
+.language-toggle__option[aria-pressed='true'] {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: var(--color-on-accent);
+  font-weight: 700;
 }
 
 .theme-toggle {
