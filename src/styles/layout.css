@@ -13,6 +13,15 @@
   border-bottom: 0.125rem solid var(--color-border);
 }
 
+.theme-toggle {
+  min-height: var(--touch-target-min);
+  padding: 0 var(--space-medium);
+  background-color: var(--color-surface);
+  border: 0.125rem solid var(--color-border);
+  border-radius: var(--radius-small);
+  cursor: pointer;
+}
+
 .page__main {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 22rem;
