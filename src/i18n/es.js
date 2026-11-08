@@ -12,7 +12,11 @@ export const es = {
   },
   watch: {
     areaLabel: 'Reloj inteligente',
-    placeholder: 'Pantalla del reloj',
+    readout: {
+      heartRate: '{value} LPM',
+      battery: 'Batería {value} %',
+      movement: 'Movimiento {value} g',
+    },
   },
   simulator: {
     title: 'Simulador de sensores (próximamente)',

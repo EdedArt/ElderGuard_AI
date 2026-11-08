@@ -12,7 +12,11 @@ export const en = {
   },
   watch: {
     areaLabel: 'Smartwatch',
-    placeholder: 'Watch screen',
+    readout: {
+      heartRate: '{value} BPM',
+      battery: 'Battery {value}%',
+      movement: 'Movement {value} g',
+    },
   },
   simulator: {
     title: 'Sensor simulator (coming soon)',
