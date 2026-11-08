@@ -1,1 +1,4 @@
-document.querySelector('#app').textContent = 'ElderGuard AI';
+import { appConfig } from './config/app.config.js';
+
+document.title = appConfig.name;
+document.querySelector('#app').textContent = appConfig.name;
