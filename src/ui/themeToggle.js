@@ -1,3 +1,5 @@
+import { onLanguageChange, t } from '../i18n/index.js';
+
 const STORAGE_KEY = 'elderguard.theme';
 const THEMES = ['light', 'dark'];
 
@@ -34,7 +36,7 @@ export function createThemeToggle() {
 
   const render = () => {
     root.setAttribute('data-theme', theme);
-    button.textContent = getNextTheme(theme) === 'dark' ? 'Dark theme' : 'Light theme';
+    button.textContent = t(getNextTheme(theme) === 'dark' ? 'theme.toDark' : 'theme.toLight');
   };
 
   button.addEventListener('click', () => {
@@ -42,6 +44,7 @@ export function createThemeToggle() {
     saveTheme(theme);
     render();
   });
+  onLanguageChange(render);
   render();
 
   return button;
