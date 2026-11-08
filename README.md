@@ -10,7 +10,7 @@ Simulador web de un smartwatch para la seguridad de personas mayores. Es un proy
 - Panel externo para simular los datos de los sensores.
 - Interfaz de alto contraste (WCAG AAA) con botones muy grandes y poco texto, pensada para personas mayores.
 
-Estado actual: estructura base del proyecto, pantalla circular del reloj, panel del simulador (por ahora vacío), cambio de tema claro/oscuro e interfaz en español e inglés.
+Estado actual: estructura base del proyecto, pantalla circular del reloj, panel del simulador (por ahora vacío), cambio de tema claro/oscuro, interfaz en español e inglés, y motor de telemetría simulada con una lectura temporal en vivo dentro del reloj.
 
 ## Tema e idioma
 
@@ -18,6 +18,51 @@ La aplicación abre en tema claro y en español, sin importar la configuración 
 
 - **Idioma:** pulsa `ES` para español o `EN` para inglés. El botón resaltado indica el idioma actual.
 - **Tema:** pulsa `Tema oscuro` o `Tema claro` (`Dark theme` o `Light theme` en inglés). El botón muestra el tema al que se va a cambiar.
+
+## Arquitectura de telemetría
+
+Como no hay un reloj físico, los datos de los sensores se simulan. Todo este código está en `src/core`, es JavaScript puro sin acceso al DOM y recibe su función aleatoria por parámetro, de modo que las pruebas son deterministas. Los valores (intervalo, rangos, ruido, ubicación y batería) se configuran en `src/config/telemetry.config.js`.
+
+```text
+Generadores ──> Motor de simulación ──> Store ──> Interfaz (suscriptores)
+                       ^
+                       └── Anulaciones (futuro panel de demostración)
+```
+
+- **Store (`telemetryStore.js`):** guarda el estado central y es la única fuente de datos para la interfaz. `getState()` devuelve una copia, `update(partial)` combina los cambios y avisa a los suscriptores con el estado nuevo y las claves que cambiaron, `subscribe(listener)` devuelve la función para cancelar la suscripción y `reset()` restaura el estado inicial.
+- **Generadores (`generators/`):** funciones puras que calculan la siguiente lectura de cada sensor.
+  - Frecuencia cardíaca: caminata aleatoria con valores enteros dentro del rango de reposo y cambios suaves.
+  - Acelerómetro: valores cercanos a 1 g de magnitud total con poco ruido.
+  - GPS: pequeña deriva alrededor de las coordenadas base.
+  - Batería: baja una cantidad fija en cada ciclo y nunca queda por debajo de 0.
+- **Motor (`simulationEngine.js`):** cada segundo ejecuta los generadores y escribe todas las lecturas en el store en una sola actualización. Se controla con `start()`, `stop()` e `isRunning()`.
+
+### Forma del estado
+
+```js
+{
+  heartRate: 70,                                 // LPM (latidos por minuto)
+  accelerometer: { x: 0, y: 0, z: 1 },           // g
+  gps: { lat, lng, accuracy, signal: true },     // accuracy en metros
+  battery: { level: 100, charging: false },      // level de 0 a 100
+  deviceStatus: { mode: 'monitoring', lastUpdate: null }, // marca de tiempo tras el primer ciclo
+}
+```
+
+### Anulaciones (overrides)
+
+El futuro panel de demostración usará las anulaciones para inyectar eventos sin tocar los generadores. Mientras un sensor (`heartRate`, `accelerometer`, `gps` o `battery`) tiene una anulación, su generador no se ejecuta y se usa el valor indicado. El valor se aplica de inmediato y los demás sensores siguen generándose con normalidad.
+
+```js
+engine.setOverride('heartRate', 150); // Simula una frecuencia cardíaca anormal
+engine.setOverride('accelerometer', { x: 2.5, y: 1.8, z: 3.2 }); // Simula un impacto
+engine.setOverride('gps', { signal: false }); // Valor parcial: simula la pérdida de señal
+
+engine.clearOverride('heartRate'); // Ese sensor vuelve a generarse en el siguiente ciclo
+engine.clearAllOverrides(); // Todos los sensores vuelven a generarse
+```
+
+Al quitar una anulación, la frecuencia cardíaca y el GPS regresan a su rango normal, mientras que la batería continúa bajando desde el último nivel.
 
 ## Stack
 
