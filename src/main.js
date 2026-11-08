@@ -1,3 +1,4 @@
+import './styles/tokens.css';
 import { appConfig } from './config/app.config.js';
 
 document.title = appConfig.name;
