@@ -15,6 +15,9 @@ export const en = {
     heartRate: {
       unit: 'BPM',
     },
+    battery: {
+      value: '{value}%',
+    },
     readout: {
       heartRate: '{value} BPM',
       battery: 'Battery {value}%',

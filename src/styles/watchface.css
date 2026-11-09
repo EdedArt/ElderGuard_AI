@@ -81,6 +81,34 @@
   font-size: calc(var(--watch-screen) * var(--watch-font-secondary));
 }
 
+.battery-indicator {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--watch-screen) * 0.012);
+  font-variant-numeric: tabular-nums;
+}
+
+.battery-indicator[data-state='normal'] {
+  color: var(--color-status-normal);
+}
+
+.battery-indicator[data-state='low'] {
+  color: var(--color-status-warning);
+}
+
+.battery-indicator[data-state='critical'] {
+  color: var(--color-status-critical);
+}
+
+.battery-indicator__icon {
+  display: flex;
+  width: calc(var(--watch-screen) * 0.075);
+}
+
+.battery-indicator__icon svg {
+  width: 100%;
+}
+
 @keyframes heart-pulse {
   50% {
     transform: scale(1.12);
