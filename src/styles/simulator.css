@@ -93,6 +93,13 @@
   cursor: pointer;
 }
 
+.simulator-action--reset {
+  flex-basis: 100%;
+  border-color: var(--color-danger-border);
+  color: var(--color-danger-text);
+  font-weight: 700;
+}
+
 .simulator-action:disabled {
   border-style: dashed;
   cursor: not-allowed;

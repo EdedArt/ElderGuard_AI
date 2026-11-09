@@ -85,6 +85,7 @@ export const es = {
       restoreBattery: 'Restaurar batería (100 %)',
       gpsLose: 'Perder GPS',
       gpsRestore: 'Recuperar GPS',
+      reset: 'Reiniciar todo',
     },
     fallState: {
       label: 'Detector de caídas',

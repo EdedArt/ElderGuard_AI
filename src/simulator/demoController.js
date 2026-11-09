@@ -83,6 +83,20 @@ export function createDemoController({ device }) {
       applyManual(channel);
     },
 
+    // Back to the state the watch started in, ending the alerts through their own logic.
+    resetAll() {
+      runner.stop();
+      manual.clear();
+      engine.clearAllOverrides();
+      fall.cancel();
+      device.sos.cancel();
+      fall.resetDetector();
+      device.store.reset();
+      emitter.emit('manual-change');
+      emitter.emit('reset');
+    },
+
     onManualChange: (listener) => emitter.on('manual-change', listener),
+    onReset: (listener) => emitter.on('reset', listener),
   };
 }

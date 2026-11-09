@@ -84,6 +84,16 @@ export function createSimulatorPanel({ device }) {
   const status = createPanelSection('simulator.sections.status');
   const fallState = createFallStateIndicator(device);
   status.content.append(fallState.root, createTelemetryReadout(device.store));
+  // A reset right after starting may change nothing in the store, but it does change the detector.
+  controller.onReset(fallState.render);
+
+  // Closing an alert sends the focus back to the watch, away from where the presenter is working.
+  const reset = action('reset', () => {
+    controller.resetAll();
+    reset.focus();
+  });
+  reset.classList.add('simulator-action--reset');
+  scenarioControls.content.append(reset);
   body.append(hint, scenarioControls.root, manualControls.root, status.root);
 
   panel.append(header, body);
