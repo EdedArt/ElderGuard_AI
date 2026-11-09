@@ -36,11 +36,6 @@ export const es = {
       gpsLost: 'Se perdió la señal de GPS',
       gpsRestored: 'Se recuperó la señal de GPS',
     },
-    readout: {
-      heartRate: '{value} LPM',
-      battery: 'Batería {value} %',
-      movement: 'Movimiento {value} g',
-    },
   },
   sos: {
     title: 'SOS',

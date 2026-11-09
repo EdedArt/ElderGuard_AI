@@ -36,11 +36,6 @@ export const en = {
       gpsLost: 'GPS signal lost',
       gpsRestored: 'GPS signal restored',
     },
-    readout: {
-      heartRate: '{value} BPM',
-      battery: 'Battery {value}%',
-      movement: 'Movement {value} g',
-    },
   },
   sos: {
     title: 'SOS',

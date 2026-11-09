@@ -2,7 +2,7 @@
  * --watch-screen is the rendered screen diameter: the configured size, or less
  * when the watch area is too narrow (100cqi, minus the fixed border, divided by
  * the screen plus its two proportional bezels). Everything inside the frame
- * derives from it; screen content should use em so it scales with the watch.
+ * derives from it, so it all scales with the watch.
  */
 .watch-frame {
   --watch-screen: min(var(--watch-size), (100cqi - 0.25rem) / 1.078);
@@ -23,16 +23,6 @@
   overflow: hidden;
   background-color: var(--color-background);
   border-radius: var(--radius-circle);
-  font-size: calc(var(--watch-screen) * 0.0976);
   font-weight: 700;
   text-align: center;
-}
-
-.telemetry-readout {
-  font-size: 0.6em;
-}
-
-.telemetry-readout__primary {
-  font-size: 2.5em;
-  line-height: 1.2;
 }
