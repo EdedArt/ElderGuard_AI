@@ -47,6 +47,8 @@ dependencies {
     // Wear OS versions of the Compose components, sized and styled for a round watch screen.
     implementation(libs.androidx.wear.compose.material)
     implementation(libs.androidx.wear.compose.foundation)
+    // Coroutines and StateFlow, used by the telemetry engine.
+    implementation(libs.kotlinx.coroutines.android)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
