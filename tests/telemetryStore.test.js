@@ -147,3 +147,47 @@ describe('reset', () => {
     expect(listener).not.toHaveBeenCalled();
   });
 });
+
+describe('updates made from inside a listener', () => {
+  it('reach every listener in order, after the current round', () => {
+    const store = createTelemetryStore();
+    const seen = [];
+    store.subscribe((state) => {
+      if (state.heartRate === 90) store.update({ heartRate: 91 });
+    });
+    store.subscribe((state) => seen.push(state.heartRate));
+
+    store.update({ heartRate: 90 });
+
+    expect(seen).toEqual([90, 91]);
+  });
+
+  it('are visible to getState right away', () => {
+    const store = createTelemetryStore();
+    let current;
+    store.subscribe((state) => {
+      if (state.heartRate === 90) {
+        store.update({ heartRate: 91 });
+        current = store.getState().heartRate;
+      }
+    });
+
+    store.update({ heartRate: 90 });
+
+    expect(current).toBe(91);
+  });
+
+  it('do not block later updates when a listener throws', () => {
+    const store = createTelemetryStore();
+    const unsubscribe = store.subscribe(() => {
+      throw new Error('listener failed');
+    });
+    expect(() => store.update({ heartRate: 90 })).toThrow('listener failed');
+    unsubscribe();
+
+    const listener = vi.fn();
+    store.subscribe(listener);
+    store.update({ heartRate: 91 });
+    expect(listener).toHaveBeenCalledTimes(1);
+  });
+});

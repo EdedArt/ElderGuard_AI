@@ -3,6 +3,7 @@ import './styles/base.css';
 import './styles/layout.css';
 import './styles/watch.css';
 import './styles/watchface.css';
+import { createFallMonitor } from './core/fallMonitor.js';
 import { createSimulationEngine } from './core/simulationEngine.js';
 import { createSosController } from './core/sosController.js';
 import { createTelemetryStore } from './core/telemetryStore.js';
@@ -16,6 +17,7 @@ import { createWatchface } from './ui/watchface.js';
 const store = createTelemetryStore();
 const engine = createSimulationEngine({ store });
 const sos = createSosController({ store });
+createFallMonitor({ store });
 
 const { root, headerActions, watchArea, simulatorArea } = createPageLayout();
 headerActions.append(createLanguageToggle(), createThemeToggle());

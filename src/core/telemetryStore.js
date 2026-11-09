@@ -34,11 +34,26 @@ function isSame(a, b) {
 export function createTelemetryStore(config = telemetryConfig) {
   const emitter = createEventEmitter();
   let state = createInitialState(config);
+  const pendingChanges = [];
+  let notifying = false;
+
+  // An update made from inside a listener waits for the current round to finish. Otherwise the
+  // listeners after that one would receive the newer state first and the older one afterwards.
+  const notify = (snapshot, changedKeys) => {
+    pendingChanges.push([snapshot, changedKeys]);
+    if (notifying) return;
+    notifying = true;
+    try {
+      while (pendingChanges.length > 0) emitter.emit('change', ...pendingChanges.shift());
+    } finally {
+      notifying = false;
+    }
+  };
 
   const replaceState = (next) => {
     const changedKeys = Object.keys(next).filter((key) => !isSame(state[key], next[key]));
     state = next;
-    if (changedKeys.length > 0) emitter.emit('change', structuredClone(state), changedKeys);
+    if (changedKeys.length > 0) notify(structuredClone(state), changedKeys);
   };
 
   return {
