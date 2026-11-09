@@ -22,6 +22,7 @@ export function createSosController({ store, now = Date.now }) {
     cancel() {
       if (!isActive()) return;
       store.update({ deviceStatus: { mode: MODE_MONITORING } });
+      emitter.emit('sos:cancelled', { timestamp: now() });
     },
   };
 }

@@ -13,6 +13,20 @@ describe('createSosController', () => {
     expect(setup().sos.isActive()).toBe(false);
   });
 
+  it('emits sos:cancelled with the time, only when an SOS was active', () => {
+    const { sos } = setup();
+    const listener = vi.fn();
+    sos.on('sos:cancelled', listener);
+
+    sos.cancel();
+    expect(listener).not.toHaveBeenCalled();
+
+    sos.trigger({ reason: 'manual' });
+    sos.cancel();
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).toHaveBeenCalledWith({ timestamp: 12345 });
+  });
+
   it('sets the mode to sos and emits sos:triggered with the time and location', () => {
     const { store, sos } = setup();
     const listener = vi.fn();

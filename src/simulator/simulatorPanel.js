@@ -1,6 +1,7 @@
 import { onLanguageChange, t } from '../i18n/index.js';
 import { createActionButton } from './actionButton.js';
 import { createDemoController } from './demoController.js';
+import { createEventLog } from './eventLog.js';
 import { createFallStateIndicator } from './fallStateIndicator.js';
 import { createManualSliders } from './manualSliders.js';
 import { createPanelSection } from './panelSection.js';
@@ -94,7 +95,10 @@ export function createSimulatorPanel({ device }) {
   });
   reset.classList.add('simulator-action--reset');
   scenarioControls.content.append(reset);
-  body.append(hint, scenarioControls.root, manualControls.root, status.root);
+  const log = createPanelSection('simulator.sections.log');
+  log.content.append(createEventLog({ device, controller }));
+
+  body.append(hint, scenarioControls.root, manualControls.root, status.root, log.root);
 
   panel.append(header, body);
 
