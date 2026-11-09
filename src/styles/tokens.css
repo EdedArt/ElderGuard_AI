@@ -41,6 +41,23 @@
   --radius-circle: 50%;
 
   --touch-target-min: 3rem;
+
+  /* Resolved at use, after any theme override. All pass 7:1 on the page background. */
+  --color-status-normal: var(--color-success);
+  --color-status-warning: var(--color-warning);
+  --color-status-critical: var(--color-danger-text);
+
+  /*
+   * Watchface sizes, as fractions of the watch screen diameter so they scale with it:
+   * calc(var(--watch-screen) * var(--watch-font-time)).
+   */
+  --watch-font-time: 0.2;
+  --watch-font-bpm: 0.15;
+  --watch-font-secondary: 0.055;
+  --watch-font-sos: 0.095;
+  --watch-sos-size: 0.3;
+
+  --watch-touch-target-min: 4.5rem;
 }
 
 :root[data-theme='dark'] {
