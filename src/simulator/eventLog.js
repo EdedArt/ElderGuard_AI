@@ -4,7 +4,7 @@ import { getLanguage, onLanguageChange, t } from '../i18n/index.js';
 
 const scenarioName = (scenario) => t(`simulator.scenarios.${scenario.id}`);
 
-function formatTime(timestamp) {
+export function formatTime(timestamp) {
   return new Date(timestamp).toLocaleTimeString(getLanguage(), {
     hour: '2-digit',
     minute: '2-digit',
@@ -67,7 +67,7 @@ export function createEventLog({
     empty.hidden = false;
   });
 
-  const { fall, heartRateMonitor, scenarioRunner, sos, store } = device;
+  const { alerts, fall, heartRateMonitor, scenarioRunner, sos, store } = device;
 
   scenarioRunner.onStart(({ scenario }) => {
     const key = scenario.holds
@@ -89,6 +89,9 @@ export function createEventLog({
   sos.on('sos:cancelled', () => add(() => t('simulator.log.sosCancelled')));
   heartRateMonitor.on('heartRate:anomaly', () => add(() => t('simulator.log.heartRateAnomaly')));
   heartRateMonitor.on('heartRate:resolved', () => add(() => t('simulator.log.heartRateResolved')));
+  alerts.on('alert:dispatched', ({ type }) =>
+    add(() => t('simulator.log.alertDispatched', { type: t(`simulator.alerts.type.${type}`) })),
+  );
   controller.onScenarioRestored(({ scenario }) =>
     add(() => t('simulator.log.scenarioRestored', { name: scenarioName(scenario) })),
   );

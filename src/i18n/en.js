@@ -80,6 +80,7 @@ export const en = {
       scenarios: 'Scenarios',
       manual: 'Manual sensors',
       status: 'Status',
+      alerts: 'Alerts to the family (mock)',
       log: 'Log',
     },
     scenarios: {
@@ -90,7 +91,17 @@ export const en = {
       criticalBattery: 'Critical battery',
       gpsLost: 'GPS lost',
     },
+    alerts: {
+      empty: 'No alerts sent',
+      contact: '{name} ({relationship})',
+      type: {
+        fall: 'Fall',
+        'manual-sos': 'Manual SOS',
+        'high-heart-rate': 'Critical heart rate',
+      },
+    },
     log: {
+      alertDispatched: 'Alert sent: {type}',
       clear: 'Clear log',
       empty: 'No events',
       scenarioStarted: 'Scenario started: {name}',

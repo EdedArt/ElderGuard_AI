@@ -1,5 +1,6 @@
 import { onLanguageChange, t } from '../i18n/index.js';
 import { createActionButton } from './actionButton.js';
+import { createAlertHistory } from './alertHistory.js';
 import { createDemoController } from './demoController.js';
 import { createEventLog } from './eventLog.js';
 import { createFallStateIndicator } from './fallStateIndicator.js';
@@ -106,11 +107,21 @@ export function createSimulatorPanel({ device, shortcutTarget = document }) {
   });
   reset.classList.add('simulator-action--reset');
   scenarioControls.content.append(reset);
+  const alertHistory = createPanelSection('simulator.sections.alerts');
+  alertHistory.content.append(createAlertHistory(device));
+
   const log = createPanelSection('simulator.sections.log');
   log.content.append(createEventLog({ device, controller }));
 
   // The state stays right below the scenarios, so it is on screen while the audience watches them.
-  body.append(hint, scenarioControls.root, status.root, manualControls.root, log.root);
+  body.append(
+    hint,
+    scenarioControls.root,
+    status.root,
+    alertHistory.root,
+    manualControls.root,
+    log.root,
+  );
 
   // Outside the body, since the shortcuts also work with the panel collapsed.
   panel.append(header, shortcutHelp.list, body);

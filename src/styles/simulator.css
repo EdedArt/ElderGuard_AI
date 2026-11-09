@@ -123,6 +123,7 @@ legend.simulator-section__title {
 .simulator-section__content > .telemetry-readout,
 .simulator-section__content > .manual-sliders,
 .simulator-section__content > .event-log,
+.simulator-section__content > .alert-history,
 .simulator-action--reset {
   grid-column: 1 / -1;
 }
@@ -246,6 +247,31 @@ legend.simulator-section__title {
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   text-align: right;
+}
+
+.alert-history__list {
+  max-height: 16rem;
+  padding: 0;
+  overflow-y: auto;
+  font-size: 0.9375rem;
+  list-style: none;
+}
+
+.alert-history__entry {
+  padding: var(--space-small) 0;
+  border-top: 0.0625rem solid var(--color-border);
+}
+
+.alert-history__heading {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-small);
+  font-weight: 700;
+}
+
+.alert-history__heading time {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
 }
 
 .event-log__list {

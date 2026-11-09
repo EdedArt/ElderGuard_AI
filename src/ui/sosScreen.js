@@ -1,18 +1,11 @@
 import { onLanguageChange, t } from '../i18n/index.js';
+import { alertLocationText } from './alertLocation.js';
 
 const TITLE_ID = 'sos-screen-title';
 const DETAILS_ID = 'sos-screen-details';
-const COORDINATE_DECIMALS = 5;
 const SOS_ALERT_TYPES = ['fall', 'manual-sos'];
 
 const contactNames = ({ contacts }) => contacts.map(({ name }) => name).join(', ');
-
-function locationText({ gps }) {
-  return t(gps.signal ? 'sos.location' : 'sos.lastLocation', {
-    lat: gps.lat.toFixed(COORDINATE_DECIMALS),
-    lng: gps.lng.toFixed(COORDINATE_DECIMALS),
-  });
-}
 
 export function createSosScreen({ store, alerts, announce, onCancel, lock, returnFocusTo }) {
   const root = document.createElement('div');
@@ -60,7 +53,7 @@ export function createSosScreen({ store, alerts, announce, onCancel, lock, retur
         })
         .flat(),
     );
-    location.textContent = locationText(alert);
+    location.textContent = alertLocationText(alert);
   };
 
   const render = ({ deviceStatus }) => {

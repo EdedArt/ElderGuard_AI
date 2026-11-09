@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fallDetectionConfig } from '../src/config/fallDetection.config.js';
+import { heartRateAnomalyConfig } from '../src/config/heartRateAnomaly.config.js';
 import { simulatorConfig } from '../src/config/simulator.config.js';
 import { telemetryConfig } from '../src/config/telemetry.config.js';
 import { createDevice } from '../src/core/device.js';
@@ -40,6 +41,16 @@ const manualSwitch = (channel) => sliderRow(channel).querySelector('input[role="
 function moveSlider(channel, value) {
   slider(channel).value = String(value);
   slider(channel).dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+// The generator can land on any one reading by chance, even the resting one, but it does not stay.
+function expectAccelerometerGenerated() {
+  const readings = new Set();
+  for (let tick = 0; tick < 10; tick += 1) {
+    vi.advanceTimersByTime(TICK);
+    readings.add(JSON.stringify(state().accelerometer));
+  }
+  expect(readings.size).toBeGreaterThan(1);
 }
 
 function pressShortcut(digit, { target = root, ...init } = {}) {
@@ -401,7 +412,7 @@ describe('with the watch started', () => {
 
       manualSwitch('y').click();
       vi.advanceTimersByTime(TICK * 5);
-      expect(state().accelerometer).not.toEqual({ x: 0, y: 0, z: 1 });
+      expectAccelerometerGenerated();
     });
 
     it('feed the real detector', () => {
@@ -513,7 +524,7 @@ describe('with the watch started', () => {
       expect(state().heartRate).toBeLessThanOrEqual(telemetryConfig.heartRate.restingMax);
       expect(state().battery.level).toBeLessThan(100);
       expect(state().gps.signal).toBe(true);
-      expect(state().accelerometer).not.toEqual({ x: 0, y: 0, z: 1 });
+      expectAccelerometerGenerated();
     });
 
     it('closes the open help-request dialog and unlocks the watch', () => {
@@ -566,6 +577,7 @@ describe('with the watch started', () => {
       expect(logMessages()).toEqual([
         'SOS cancelado',
         'SOS activado (motivo: caída)',
+        'Alerta enviada: Caída',
         'Escenario terminado: Caída',
         'Caída detectada',
         'Escenario iniciado: Caída',
@@ -657,7 +669,7 @@ describe('with the watch started', () => {
         // The stillness it was holding goes with it.
         manualSwitch('heartRate').click();
         vi.advanceTimersByTime(TICK * 5);
-        expect(state().accelerometer).not.toEqual({ x: 0, y: 0, z: 1 });
+        expectAccelerometerGenerated();
       });
 
       it('leaves the wording of fall and stumble as it was', () => {
@@ -715,6 +727,77 @@ describe('with the watch started', () => {
       const list = panel.querySelector('.event-log__list');
       expect(list.getAttribute('aria-live')).toBe('polite');
       expect(list.getAttribute('aria-relevant')).toBe('additions');
+    });
+  });
+
+  describe('alert history', () => {
+    const entries = () => [...panel.querySelectorAll('.alert-history__entry')];
+
+    function holdCriticalRate() {
+      device.engine.setOverride('accelerometer', { x: 0, y: 0, z: 1 });
+      device.engine.setOverride('heartRate', 170);
+      vi.advanceTimersByTime(heartRateAnomalyConfig.sustainedDurationMs + TICK);
+    }
+
+    it('starts empty, saying so', () => {
+      expect(entries()).toEqual([]);
+      const empty = panel.querySelector('.alert-history__empty');
+      expect(empty.hidden).toBe(false);
+      expect(empty.textContent).toBe('Ninguna alerta enviada');
+    });
+
+    it('shows the type, time, contacts and GPS of an alert', () => {
+      device.sos.trigger({ reason: 'manual' });
+      const { lat, lng } = state().gps;
+
+      const [entry] = entries();
+      expect(panel.querySelector('.alert-history__empty').hidden).toBe(true);
+      expect(entry.textContent).toContain('SOS manual');
+      expect(entry.querySelector('time').textContent).toBe('14:05:30');
+      expect(entry.textContent).toContain('Ana Ejemplo (Hija)');
+      expect(entry.textContent).toContain('Dra. Prueba (Médica)');
+      expect(entry.textContent).toContain(`GPS: ${lat.toFixed(5)}, ${lng.toFixed(5)}`);
+    });
+
+    it('lists the newest first', () => {
+      reachSos();
+      query('.sos-screen__cancel').click();
+      device.sos.trigger({ reason: 'manual' });
+
+      expect(entries().map(({ dataset }) => dataset.type)).toEqual(['manual-sos', 'fall']);
+    });
+
+    it('records a critical heart rate, with no SOS', () => {
+      holdCriticalRate();
+      expect(entries().map(({ dataset }) => dataset.type)).toEqual(['high-heart-rate']);
+      expect(entries()[0].textContent).toContain('Ritmo cardíaco crítico');
+      expect(mode()).toBe('monitoring');
+    });
+
+    it('stays apart from the event log, which only mentions the alert', () => {
+      device.sos.trigger({ reason: 'manual' });
+      expect(logMessages()).toContain('Alerta enviada: SOS manual');
+      expect(panel.querySelector('.event-log').querySelector('.alert-history__entry')).toBeNull();
+    });
+
+    it('survives clearing the event log', () => {
+      device.sos.trigger({ reason: 'manual' });
+      panel.querySelector('.event-log__clear').click();
+      expect(entries()).toHaveLength(1);
+    });
+
+    it('is emptied by reset all', () => {
+      device.sos.trigger({ reason: 'manual' });
+      click('reset');
+      expect(entries()).toEqual([]);
+      expect(panel.querySelector('.alert-history__empty').hidden).toBe(false);
+    });
+
+    it('follows the language', () => {
+      device.sos.trigger({ reason: 'manual' });
+      setLanguage('en');
+      expect(entries()[0].textContent).toContain('Manual SOS');
+      expect(entries()[0].textContent).toContain('Ana Ejemplo (Daughter)');
     });
   });
 
@@ -835,7 +918,13 @@ describe('structure and language', () => {
     const titles = [...panel.querySelectorAll('.simulator-section__title')].map(
       ({ textContent }) => textContent,
     );
-    expect(titles).toEqual(['Escenarios', 'Estado', 'Sensores manuales', 'Registro']);
+    expect(titles).toEqual([
+      'Escenarios',
+      'Estado',
+      'Alertas a la familia (simuladas)',
+      'Sensores manuales',
+      'Registro',
+    ]);
   });
 
   it('names the groups of controls with fieldsets and legends', () => {
@@ -849,7 +938,11 @@ describe('structure and language', () => {
     const named = (element) =>
       document.getElementById(element.getAttribute('aria-labelledby')).textContent;
     expect(named(panel)).toBe('Modo demostración');
-    expect([...panel.querySelectorAll('section')].map(named)).toEqual(['Estado', 'Registro']);
+    expect([...panel.querySelectorAll('section')].map(named)).toEqual([
+      'Estado',
+      'Alertas a la familia (simuladas)',
+      'Registro',
+    ]);
   });
 
   it('is titled in English too', () => {
