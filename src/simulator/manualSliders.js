@@ -56,7 +56,9 @@ function createSliderRow({ channel, labelKey, range, read, format }, { store, co
   root.append(label, value, slider, switchLabel);
 
   const renderValue = () => {
-    value.textContent = format(Number(slider.value));
+    const text = format(Number(slider.value));
+    value.textContent = text;
+    slider.setAttribute('aria-valuetext', text);
   };
 
   // While on automatic, the slider follows the reading, so turning manual on causes no jump.
@@ -89,6 +91,8 @@ function createSliderRow({ channel, labelKey, range, read, format }, { store, co
   const renderText = () => {
     label.textContent = t(labelKey);
     switchText.textContent = t('simulator.manual.switch');
+    // There are several identical "Manual" switches, so each one says which sensor it controls.
+    toggle.setAttribute('aria-label', t('simulator.manual.switchLabel', { sensor: t(labelKey) }));
     renderValue();
   };
   onLanguageChange(renderText);

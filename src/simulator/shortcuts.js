@@ -76,6 +76,8 @@ export function createShortcutHelp() {
   const toggle = document.createElement('button');
   toggle.type = 'button';
   toggle.className = 'simulator-panel__help';
+  toggle.setAttribute('aria-controls', LIST_ID);
+  toggle.setAttribute('aria-expanded', 'false');
 
   const list = document.createElement('dl');
   list.id = LIST_ID;
@@ -94,6 +96,7 @@ export function createShortcutHelp() {
 
   toggle.addEventListener('click', () => {
     list.hidden = !list.hidden;
+    toggle.setAttribute('aria-expanded', String(!list.hidden));
   });
 
   const render = () => {

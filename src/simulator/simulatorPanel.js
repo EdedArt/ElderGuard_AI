@@ -10,6 +10,8 @@ import { createStartGate } from './startGate.js';
 import { createTelemetryReadout } from './telemetryReadout.js';
 
 const COLLAPSED_STORAGE_KEY = 'elderguard.simulator.collapsed';
+const PANEL_TITLE_ID = 'simulator-panel-title';
+const PANEL_BODY_ID = 'simulator-panel-body';
 
 function loadCollapsed() {
   try {
@@ -35,6 +37,8 @@ export function createSimulatorPanel({ device, shortcutTarget = document }) {
   header.className = 'simulator-panel__header';
   const heading = document.createElement('h2');
   heading.className = 'simulator-panel__title';
+  heading.id = PANEL_TITLE_ID;
+  panel.setAttribute('aria-labelledby', PANEL_TITLE_ID);
   const collapse = document.createElement('button');
   collapse.type = 'button';
   collapse.className = 'simulator-panel__collapse';
@@ -46,6 +50,8 @@ export function createSimulatorPanel({ device, shortcutTarget = document }) {
 
   const body = document.createElement('div');
   body.className = 'simulator-panel__body';
+  body.id = PANEL_BODY_ID;
+  collapse.setAttribute('aria-controls', PANEL_BODY_ID);
   const hint = document.createElement('p');
   hint.className = 'simulator-panel__hint';
 
@@ -73,7 +79,7 @@ export function createSimulatorPanel({ device, shortcutTarget = document }) {
     if (changedKeys.includes('gps')) gpsToggle.render();
   });
 
-  const scenarioControls = createPanelSection('simulator.sections.scenarios');
+  const scenarioControls = createPanelSection('simulator.sections.scenarios', { controls: true });
   scenarioControls.content.append(
     scenarioAction('fall'),
     scenarioAction('stumble'),
@@ -84,7 +90,7 @@ export function createSimulatorPanel({ device, shortcutTarget = document }) {
     gpsToggle.button,
   );
 
-  const manualControls = createPanelSection('simulator.sections.manual');
+  const manualControls = createPanelSection('simulator.sections.manual', { controls: true });
   manualControls.content.append(createManualSliders({ store: device.store, controller, gate }));
 
   const status = createPanelSection('simulator.sections.status');
@@ -114,6 +120,7 @@ export function createSimulatorPanel({ device, shortcutTarget = document }) {
 
   const renderCollapse = () => {
     body.hidden = collapsed;
+    collapse.setAttribute('aria-expanded', String(!collapsed));
     collapse.textContent = t(collapsed ? 'simulator.expand' : 'simulator.collapse');
   };
   collapse.addEventListener('click', () => {

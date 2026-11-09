@@ -105,7 +105,15 @@
   line-height: 1.5;
 }
 
+/* Floating takes the legend off the fieldset border, so it looks the same as the headings. */
+legend.simulator-section__title {
+  float: left;
+  width: 100%;
+  padding: 0;
+}
+
 .simulator-section__content {
+  clear: both;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
   gap: var(--space-small);

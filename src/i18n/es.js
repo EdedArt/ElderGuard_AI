@@ -109,6 +109,7 @@ export const es = {
     },
     manual: {
       switch: 'Manual',
+      switchLabel: 'Control manual de {sensor}',
     },
     shortcuts: {
       toggle: '?',

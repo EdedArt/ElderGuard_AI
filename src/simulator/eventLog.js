@@ -30,6 +30,12 @@ export function createEventLog({
   empty.className = 'event-log__empty';
   const list = document.createElement('ol');
   list.className = 'event-log__list';
+  // Only new entries are read out, not old ones dropping off or a change of language.
+  list.setAttribute('role', 'log');
+  list.setAttribute('aria-live', 'polite');
+  list.setAttribute('aria-relevant', 'additions');
+  // The list scrolls, which a keyboard user can only do once it can take the focus.
+  list.tabIndex = 0;
   root.append(clear, empty, list);
 
   let entries = [];
@@ -98,6 +104,7 @@ export function createEventLog({
   });
 
   const render = () => {
+    list.setAttribute('aria-label', t('simulator.sections.log'));
     clear.textContent = t('simulator.log.clear');
     empty.textContent = t('simulator.log.empty');
     entries.forEach(renderEntry);
