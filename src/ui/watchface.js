@@ -8,6 +8,7 @@ import { createSosAlternativeButton } from './sosAlternativeButton.js';
 import { createSosButton } from './sosButton.js';
 import { createSosConfirmScreen } from './sosConfirmScreen.js';
 import { createSosScreen } from './sosScreen.js';
+import { createStartScreen } from './startScreen.js';
 import { createStatusAnnouncer } from './statusAnnouncer.js';
 import { createWatchClock } from './watchClock.js';
 
@@ -17,7 +18,7 @@ function createZone(name) {
   return zone;
 }
 
-export function createWatchface({ store, sos }) {
+export function createWatchface({ store, sos, onStart }) {
   const root = document.createElement('div');
   root.className = 'watchface';
   root.setAttribute('role', 'group');
@@ -52,6 +53,7 @@ export function createWatchface({ store, sos }) {
     lock,
     returnFocusTo: sosButton,
   });
+  const startScreen = createStartScreen({ lock, onStart, returnFocusTo: sosButton });
   root.append(
     statusZone,
     centerZone,
@@ -59,6 +61,7 @@ export function createWatchface({ store, sos }) {
     holdHint.root,
     sosConfirm.root,
     sosScreen,
+    startScreen,
     announcer.root,
   );
 

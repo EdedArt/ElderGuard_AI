@@ -53,6 +53,9 @@ export const en = {
     active: 'Calling for help…',
     cancel: 'Cancel',
   },
+  start: {
+    button: 'Tap to start',
+  },
   simulator: {
     title: 'Sensor simulator (coming soon)',
   },

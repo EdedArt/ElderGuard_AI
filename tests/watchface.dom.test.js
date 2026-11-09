@@ -11,6 +11,7 @@ const HOLD = sosConfig.holdDurationMs;
 let store;
 let sos;
 let face;
+const onStart = vi.fn();
 
 const query = (selector) => face.querySelector(selector);
 const sosButton = () => query('.sos-button');
@@ -35,12 +36,46 @@ beforeEach(() => {
 
   store = createTelemetryStore();
   sos = createSosController({ store });
-  face = createWatchface({ store, sos });
+  face = createWatchface({ store, sos, onStart });
   document.body.replaceChildren(face);
+  query('.start-screen__button').click();
 });
 
 afterEach(() => {
   vi.useRealTimers();
+});
+
+describe('start screen', () => {
+  const startScreen = () => query('.start-screen');
+  const startButton = () => query('.start-screen__button');
+
+  beforeEach(() => {
+    onStart.mockClear();
+    face = createWatchface({ store, sos, onStart });
+    document.body.replaceChildren(face);
+  });
+
+  it('covers the watch and disables what is behind it until tapped', () => {
+    expect(startScreen().hidden).toBe(false);
+    expect(startButton().textContent).toBe('Toca para iniciar');
+    expect(query('.watchface__bottom').hasAttribute('inert')).toBe(true);
+    expect(onStart).not.toHaveBeenCalled();
+  });
+
+  it('starts once tapped, and hands the watch and the focus over', () => {
+    startButton().click();
+
+    expect(onStart).toHaveBeenCalledTimes(1);
+    expect(startScreen().hidden).toBe(true);
+    expect(query('.watchface__bottom').hasAttribute('inert')).toBe(false);
+    expect(document.activeElement).toBe(sosButton());
+  });
+
+  it('stays until tapped, even if the language changes', () => {
+    setLanguage('en');
+    expect(startButton().textContent).toBe('Tap to start');
+    expect(startScreen().hidden).toBe(false);
+  });
 });
 
 describe('layout', () => {

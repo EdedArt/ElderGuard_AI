@@ -53,6 +53,9 @@ export const es = {
     active: 'Pidiendo ayuda…',
     cancel: 'Cancelar',
   },
+  start: {
+    button: 'Toca para iniciar',
+  },
   simulator: {
     title: 'Simulador de sensores (próximamente)',
   },
