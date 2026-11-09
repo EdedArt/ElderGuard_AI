@@ -86,3 +86,18 @@
     padding: var(--space-medium);
   }
 }
+
+/* On the narrowest phones, every pixel of width goes to the watch so its text stays readable. */
+@media (max-width: 25rem) {
+  .page__header {
+    padding: var(--space-small);
+  }
+
+  .page__main {
+    padding: var(--space-small) 0.25rem;
+  }
+
+  .simulator-panel {
+    padding: var(--space-medium);
+  }
+}

@@ -55,7 +55,11 @@
   --watch-font-bpm: 0.15;
   --watch-font-secondary: 0.055;
   --watch-font-sos: 0.095;
+  --watch-font-label: 0.045;
   --watch-sos-size: 0.3;
+
+  /* Labels stop shrinking here, however narrow the screen is. */
+  --watch-font-min: 0.875rem;
 
   --watch-touch-target-min: 4.5rem;
 }

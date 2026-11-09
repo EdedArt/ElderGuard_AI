@@ -19,7 +19,7 @@
   justify-content: center;
   gap: calc(var(--watch-screen) * 0.04);
   min-height: 0;
-  font-size: calc(var(--watch-screen) * var(--watch-font-secondary));
+  font-size: max(var(--watch-font-min), calc(var(--watch-screen) * var(--watch-font-secondary)));
 }
 
 .watchface__center {
@@ -55,13 +55,13 @@
 }
 
 .watch-clock__period {
-  font-size: calc(var(--watch-screen) * var(--watch-font-secondary));
+  font-size: max(var(--watch-font-min), calc(var(--watch-screen) * var(--watch-font-secondary)));
   white-space: nowrap;
 }
 
 .watch-clock__date {
   margin-top: calc(var(--watch-screen) * 0.01);
-  font-size: calc(var(--watch-screen) * var(--watch-font-secondary));
+  font-size: max(var(--watch-font-min), calc(var(--watch-screen) * var(--watch-font-secondary)));
 }
 
 .heart-rate {
@@ -90,7 +90,7 @@
 .heart-rate__unit {
   align-self: flex-end;
   padding-bottom: calc(var(--watch-screen) * 0.015);
-  font-size: calc(var(--watch-screen) * var(--watch-font-secondary));
+  font-size: max(var(--watch-font-min), calc(var(--watch-screen) * var(--watch-font-secondary)));
 }
 
 .battery-indicator {
@@ -205,7 +205,7 @@
 
 .sos-button__label {
   margin-top: calc(var(--watch-screen) * 0.005);
-  font-size: calc(var(--watch-screen) * 0.045);
+  font-size: max(var(--watch-font-min), calc(var(--watch-screen) * var(--watch-font-label)));
 }
 
 /* Out of sight until focused, so a keyboard user can always see where the focus is. */
