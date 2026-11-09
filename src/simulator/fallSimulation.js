@@ -1,17 +1,8 @@
-import { fallDetectionConfig } from '../config/fallDetection.config.js';
-import { telemetryConfig } from '../config/telemetry.config.js';
+import { createScenarioRunner } from '../core/scenarioRunner.js';
+import { scenarios } from './scenarios.js';
 
-const SPIKE = { x: 2.5, y: 1.8, z: 3.2 }; // About 4.4 g, well over the impact threshold
-const STILL = { x: 0, y: 0, z: 1 };
-
-// Injects a fall through the engine overrides, so the real detector runs from start to end.
-export function createFallSimulation({
-  engine,
-  detection = fallDetectionConfig,
-  telemetry = telemetryConfig,
-}) {
-  let releaseTimer = null;
-
+// Development helper. It plays the same fall scenario as the panel, so there is only one fall.
+export function createFallSimulation({ engine, runner = createScenarioRunner({ engine }) }) {
   return {
     simulateFall() {
       if (!engine.isRunning()) {
@@ -19,14 +10,7 @@ export function createFallSimulation({
         return false;
       }
 
-      clearTimeout(releaseTimer);
-      engine.setOverride('accelerometer', SPIKE);
-      engine.setOverride('accelerometer', STILL);
-      // Long enough for the stillness to be confirmed, whatever the tick timing.
-      releaseTimer = setTimeout(
-        () => engine.clearOverride('accelerometer'),
-        detection.immobilityDurationMs + telemetry.tickIntervalMs * 2,
-      );
+      runner.run(scenarios.fall);
       return true;
     },
   };

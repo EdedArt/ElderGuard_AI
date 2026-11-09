@@ -12,7 +12,7 @@ const MOVEMENT = [
 ];
 
 // Long enough for the audience to read "impact" on the panel before the detector moves on.
-const SPIKE_HOLD_MS = 1000;
+export const SPIKE_HOLD_MS = 1000;
 
 const HIGH_HEART_RATE_BPM = 140;
 const LOW_BATTERY_LEVEL = 15;

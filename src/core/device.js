@@ -2,6 +2,7 @@ import { createAudioPlayer } from './audioPlayer.js';
 import { createCountdown } from './countdown.js';
 import { createEventEmitter } from './eventEmitter.js';
 import { createFallMonitor } from './fallMonitor.js';
+import { createScenarioRunner } from './scenarioRunner.js';
 import { createSimulationEngine } from './simulationEngine.js';
 import { createSosController } from './sosController.js';
 import { createTelemetryStore } from './telemetryStore.js';
@@ -15,6 +16,7 @@ export function createDevice({ createAudioContext } = {}) {
   const countdown = createCountdown();
   const fall = createFallMonitor({ store, sos, countdown });
   const audio = createAudioPlayer({ createContext: createAudioContext });
+  const scenarioRunner = createScenarioRunner({ engine });
 
   countdown.onTick(audio.playCountdownBeep);
 
@@ -25,6 +27,7 @@ export function createDevice({ createAudioContext } = {}) {
     countdown,
     fall,
     audio,
+    scenarioRunner,
 
     // Call this from a user gesture, which the browser requires to allow audio.
     start() {

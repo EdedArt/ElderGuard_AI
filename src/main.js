@@ -25,5 +25,8 @@ document.querySelector('#app').append(root);
 
 // Removed from production builds. The simulator panel will take over this job for the demo.
 if (import.meta.env.DEV) {
-  window.elderguard = createFallSimulation({ engine: device.engine });
+  window.elderguard = createFallSimulation({
+    engine: device.engine,
+    runner: device.scenarioRunner,
+  });
 }

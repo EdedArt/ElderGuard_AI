@@ -6,11 +6,13 @@ import { telemetryConfig } from '../src/config/telemetry.config.js';
 import { createDevice } from '../src/core/device.js';
 import { setLanguage } from '../src/i18n/index.js';
 import { createFallSimulation } from '../src/simulator/fallSimulation.js';
+import { SPIKE_HOLD_MS } from '../src/simulator/scenarios.js';
 import { createWatchface } from '../src/ui/watchface.js';
 
 const { countdownSeconds, immobilityDurationMs } = fallDetectionConfig;
 const SECOND = 1000;
 const TICK = telemetryConfig.tickIntervalMs;
+const TIME_TO_DETECT = SPIKE_HOLD_MS + immobilityDurationMs;
 
 let device;
 let face;
@@ -58,10 +60,10 @@ function start() {
   startButton().click();
 }
 
-// The impact goes in right away; the detector then needs the stillness to last.
+// The impact lasts a moment; the detector then needs the stillness to last.
 function detectFall() {
   simulation.simulateFall();
-  vi.advanceTimersByTime(immobilityDurationMs);
+  vi.advanceTimersByTime(TIME_TO_DETECT);
 }
 
 function reachSos() {
@@ -147,7 +149,7 @@ describe('with the watch started', () => {
     it('appears on detection with the question, the seconds and the button', () => {
       vi.advanceTimersByTime(TICK);
       simulation.simulateFall();
-      vi.advanceTimersByTime(immobilityDurationMs - 1);
+      vi.advanceTimersByTime(TIME_TO_DETECT - 1);
       expect(overlay().hidden).toBe(true);
 
       vi.advanceTimersByTime(TICK);
@@ -268,7 +270,7 @@ describe('with the watch started', () => {
       silentFace.querySelector('.start-screen__button').click();
 
       createFallSimulation({ engine: silent.engine }).simulateFall();
-      vi.advanceTimersByTime(immobilityDurationMs + countdownSeconds * SECOND);
+      vi.advanceTimersByTime(TIME_TO_DETECT + countdownSeconds * SECOND);
 
       expect(silent.store.getState().deviceStatus.mode).toBe('sos');
       silent.engine.stop();
@@ -375,7 +377,7 @@ describe('with the watch started', () => {
       const headStart = 500;
       sosButton().focus();
       simulation.simulateFall();
-      vi.advanceTimersByTime(immobilityDurationMs - headStart);
+      vi.advanceTimersByTime(TIME_TO_DETECT - headStart);
       sosButton().dispatchEvent(new MouseEvent('pointerdown', { bubbles: true, button: 0 }));
       vi.advanceTimersByTime(headStart);
       expect(overlay().hidden).toBe(false);
