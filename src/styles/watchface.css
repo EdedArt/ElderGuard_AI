@@ -37,3 +37,17 @@
   min-height: 0;
   padding-bottom: 3%;
 }
+
+.watch-clock {
+  text-align: center;
+}
+
+.watch-clock__time {
+  font-size: calc(var(--watch-screen) * var(--watch-font-time));
+  font-variant-numeric: tabular-nums;
+}
+
+.watch-clock__date {
+  margin-top: calc(var(--watch-screen) * 0.01);
+  font-size: calc(var(--watch-screen) * var(--watch-font-secondary));
+}
