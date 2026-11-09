@@ -1,4 +1,5 @@
 import { createBatteryIndicator } from './batteryIndicator.js';
+import { createGpsIndicator } from './gpsIndicator.js';
 import { createHeartRateIndicator } from './heartRateIndicator.js';
 import { createWatchClock } from './watchClock.js';
 
@@ -17,7 +18,7 @@ export function createWatchface({ store }) {
   const bottomZone = createZone('bottom');
   root.append(statusZone, centerZone, bottomZone);
 
-  statusZone.append(createBatteryIndicator(store));
+  statusZone.append(createBatteryIndicator(store), createGpsIndicator(store));
   centerZone.append(createWatchClock(), createHeartRateIndicator(store));
 
   return root;

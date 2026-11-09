@@ -18,6 +18,10 @@ export const en = {
     battery: {
       value: '{value}%',
     },
+    gps: {
+      ok: 'GPS',
+      lost: 'No GPS',
+    },
     readout: {
       heartRate: '{value} BPM',
       battery: 'Battery {value}%',

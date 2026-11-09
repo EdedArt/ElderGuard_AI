@@ -109,6 +109,33 @@
   width: 100%;
 }
 
+.gps-indicator {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--watch-screen) * 0.008);
+}
+
+.gps-indicator[data-state='ok'] {
+  color: var(--color-status-normal);
+}
+
+.gps-indicator[data-state='lost'] {
+  color: var(--color-status-warning);
+}
+
+.gps-indicator[data-state='ok'] .gps-indicator__slash {
+  display: none;
+}
+
+.gps-indicator__icon {
+  display: flex;
+  width: calc(var(--watch-screen) * 0.06);
+}
+
+.gps-indicator__icon svg {
+  width: 100%;
+}
+
 @keyframes heart-pulse {
   50% {
     transform: scale(1.12);
