@@ -55,6 +55,9 @@ export function createFallMonitor({
     // alert it raised is over.
     getDetectorState: () => (fallAlertActive ? FALL_STATES.CONFIRMED : detector.getState()),
 
+    // Forgets a sequence in progress. An alert already raised is not affected.
+    resetDetector: () => detector.reset(),
+
     cancel() {
       if (store.getState().deviceStatus.mode !== MODE_FALL_COUNTDOWN) return;
       countdown.cancel();

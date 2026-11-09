@@ -32,6 +32,31 @@
   margin-top: var(--space-medium);
 }
 
+.simulator-section__content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-small);
+}
+
+.simulator-section__content > .fall-state,
+.simulator-section__content > .telemetry-readout {
+  flex-basis: 100%;
+}
+
+.simulator-action {
+  min-height: var(--touch-target-min);
+  padding: 0 var(--space-medium);
+  background-color: var(--color-background);
+  border: 0.125rem solid var(--color-border);
+  border-radius: var(--radius-small);
+  cursor: pointer;
+}
+
+.simulator-action:disabled {
+  border-style: dashed;
+  cursor: not-allowed;
+}
+
 .fall-state {
   display: flex;
   align-items: center;

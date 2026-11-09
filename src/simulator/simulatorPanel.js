@@ -1,4 +1,6 @@
 import { onLanguageChange, t } from '../i18n/index.js';
+import { createActionButton } from './actionButton.js';
+import { createDemoController } from './demoController.js';
 import { createFallStateIndicator } from './fallStateIndicator.js';
 import { createPanelSection } from './panelSection.js';
 import { createStartGate } from './startGate.js';
@@ -45,10 +47,20 @@ export function createSimulatorPanel({ device }) {
   gate.onOpen(() => {
     hint.hidden = true;
   });
+  const controller = createDemoController({ device });
+  const action = (name, labelKey, onClick) =>
+    createActionButton({ action: name, labelKey, onClick, gate }).button;
+
+  const scenarioControls = createPanelSection('simulator.sections.scenarios');
+  scenarioControls.content.append(
+    action('fall', 'simulator.actions.fall', () => controller.runScenario('fall')),
+    action('stumble', 'simulator.actions.stumble', () => controller.runScenario('stumble')),
+  );
+
   const status = createPanelSection('simulator.sections.status');
   const fallState = createFallStateIndicator(device);
   status.content.append(fallState.root, createTelemetryReadout(device.store));
-  body.append(hint, status.root);
+  body.append(hint, scenarioControls.root, status.root);
 
   panel.append(header, body);
 

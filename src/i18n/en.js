@@ -69,7 +69,12 @@ export const en = {
     expand: 'Expand',
     startFirst: 'Start the watch first',
     sections: {
+      scenarios: 'Scenarios',
       status: 'Status',
+    },
+    actions: {
+      fall: 'Simulate fall',
+      stumble: 'Stumble (false alarm)',
     },
     fallState: {
       label: 'Fall detector',

@@ -153,6 +153,17 @@ describe('getDetectorState', () => {
     expect(monitor.getDetectorState()).toBe(FALL_STATES.IDLE);
   });
 
+  it('resetDetector forgets a sequence in progress, but not an alert already raised', () => {
+    tick(SPIKE);
+    monitor.resetDetector();
+    expect(monitor.getDetectorState()).toBe(FALL_STATES.IDLE);
+
+    fall();
+    monitor.resetDetector();
+    expect(monitor.getDetectorState()).toBe(FALL_STATES.CONFIRMED);
+    expect(store.getState().deviceStatus.mode).toBe('fall-countdown');
+  });
+
   it('does not report a confirmed fall for a manual SOS', () => {
     store.update({ deviceStatus: { mode: 'sos' } });
     expect(monitor.getDetectorState()).toBe(FALL_STATES.IDLE);

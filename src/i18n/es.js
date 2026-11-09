@@ -69,7 +69,12 @@ export const es = {
     expand: 'Expandir',
     startFirst: 'Inicia el reloj primero',
     sections: {
+      scenarios: 'Escenarios',
       status: 'Estado',
+    },
+    actions: {
+      fall: 'Simular caída',
+      stumble: 'Tropiezo (falsa alarma)',
     },
     fallState: {
       label: 'Detector de caídas',
