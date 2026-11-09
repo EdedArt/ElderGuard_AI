@@ -85,6 +85,7 @@ export function createSimulatorPanel({ device, shortcutTarget = document }) {
     scenarioAction('fall'),
     scenarioAction('stumble'),
     scenarioAction('highHeartRate'),
+    scenarioAction('criticalHeartRate'),
     scenarioAction('lowBattery'),
     scenarioAction('criticalBattery'),
     action('restoreBattery', controller.restoreBattery),

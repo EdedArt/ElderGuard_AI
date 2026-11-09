@@ -317,6 +317,56 @@ describe('with the watch started', () => {
     });
   });
 
+  describe('critical heart rate button', () => {
+    const TIME_TO_ALERT = heartRateAnomalyConfig.sustainedDurationMs + TICK;
+
+    it('is labelled in both languages', () => {
+      expect(actionButton('criticalHeartRate').textContent).toBe('Ritmo cardíaco crítico (170)');
+      setLanguage('en');
+      expect(actionButton('criticalHeartRate').textContent).toBe('Critical heart rate (170)');
+    });
+
+    it('goes through the scenario runner', () => {
+      const started = vi.fn();
+      device.scenarioRunner.onStart(started);
+      click('criticalHeartRate');
+
+      expect(started.mock.calls[0][0].scenario).toBe(scenarios.criticalHeartRate);
+      expect(state().heartRate).toBe(170);
+    });
+
+    it('dispatches an alert with no countdown and no SOS screen', () => {
+      click('criticalHeartRate');
+      vi.advanceTimersByTime(TIME_TO_ALERT);
+
+      expect(panel.querySelectorAll('.alert-history__entry')).toHaveLength(1);
+      expect(overlay().hidden).toBe(true);
+      expect(sosScreen().hidden).toBe(true);
+      expect(mode()).toBe('monitoring');
+      expect(query('.heart-rate-banner--critical')).not.toBeNull();
+    });
+
+    it('replaces the high heart rate scenario without logging it as restored', () => {
+      click('highHeartRate');
+      click('criticalHeartRate');
+      expect(logMessages().join()).not.toMatch(/restablecido/);
+
+      click('reset');
+      expect(logMessages()).toContain('Escenario restablecido: Ritmo cardíaco crítico');
+      expect(logMessages()).not.toContain('Escenario restablecido: Ritmo cardíaco alto');
+    });
+
+    it('is ended by reset all, with no alert following', () => {
+      click('criticalHeartRate');
+      vi.advanceTimersByTime(TICK * 2);
+      click('reset');
+      vi.advanceTimersByTime(TIME_TO_ALERT * 2);
+
+      expect(panel.querySelectorAll('.alert-history__entry')).toHaveLength(0);
+      expect(state().heartRate).toBeLessThanOrEqual(telemetryConfig.heartRate.restingMax);
+    });
+  });
+
   describe('battery controls', () => {
     it('sets low, critical and restores, and holds each one', () => {
       click('lowBattery');

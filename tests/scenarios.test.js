@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { fallDetectionConfig } from '../src/config/fallDetection.config.js';
+import { criticalHeartRateConfig } from '../src/config/heartRateAnomaly.config.js';
 import { telemetryConfig } from '../src/config/telemetry.config.js';
 import { createDevice } from '../src/core/device.js';
 import { magnitude } from '../src/core/magnitude.js';
@@ -116,6 +117,19 @@ describe('high heart rate at rest', () => {
 
     expect(state().heartRate).toBe(140);
     expect(state().accelerometer).toEqual({ x: 0, y: 0, z: 1 });
+    expect(detected).not.toHaveBeenCalled();
+  });
+});
+
+describe('critical heart rate at rest', () => {
+  it('sends the alert by itself, with no countdown', () => {
+    runner.run(scenarios.criticalHeartRate);
+    vi.advanceTimersByTime(criticalHeartRateConfig.sustainedDurationMs + TICK);
+
+    expect(state().heartRate).toBe(170);
+    expect(device.alerts.getAlerts().map(({ type }) => type)).toEqual(['high-heart-rate']);
+    expect(state().deviceStatus.mode).toBe('monitoring');
+    expect(device.countdown.isRunning()).toBe(false);
     expect(detected).not.toHaveBeenCalled();
   });
 });

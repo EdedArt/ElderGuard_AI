@@ -15,6 +15,7 @@ const MOVEMENT = [
 export const SPIKE_HOLD_MS = 1000;
 
 const HIGH_HEART_RATE_BPM = 140;
+const CRITICAL_HEART_RATE_BPM = 170;
 const LOW_BATTERY_LEVEL = 15;
 const CRITICAL_BATTERY_LEVEL = 5;
 
@@ -64,6 +65,13 @@ export function createScenarios({
       id: 'highHeartRate',
       holds: 'heartRate',
       steps: [set(0, 'heartRate', HIGH_HEART_RATE_BPM), set(0, 'accelerometer', STILL)],
+    },
+
+    // A health alert, not a fall: the dispatcher sends it by itself, with no countdown.
+    criticalHeartRate: {
+      id: 'criticalHeartRate',
+      holds: 'heartRate',
+      steps: [set(0, 'heartRate', CRITICAL_HEART_RATE_BPM), set(0, 'accelerometer', STILL)],
     },
 
     lowBattery: {
