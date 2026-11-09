@@ -98,6 +98,8 @@ export const en = {
         manual: 'manual',
       },
       sosCancelled: 'SOS cancelled',
+      heartRateAnomaly: 'High heart rate at rest',
+      heartRateResolved: 'High heart rate resolved',
       battery: {
         normal: 'Battery normal: {level}%',
         low: 'Battery low: {level}%',

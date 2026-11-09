@@ -10,7 +10,7 @@ describe('createTelemetryStore', () => {
       accelerometer: { x: 0, y: 0, z: 1 },
       gps: { lat: gps.baseLat, lng: gps.baseLng, accuracy: gps.accuracyMin, signal: true },
       battery: { level: battery.startLevel, charging: false },
-      deviceStatus: { mode: 'monitoring', lastUpdate: null },
+      deviceStatus: { mode: 'monitoring', lastUpdate: null, healthAlert: null },
     });
   });
 

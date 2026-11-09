@@ -94,6 +94,10 @@ describe('createSosController', () => {
 
     sos.trigger({ reason: 'manual' });
 
-    expect(store.getState().deviceStatus).toEqual({ mode: 'sos', lastUpdate: 999 });
+    expect(store.getState().deviceStatus).toEqual({
+      mode: 'sos',
+      lastUpdate: 999,
+      healthAlert: null,
+    });
   });
 });

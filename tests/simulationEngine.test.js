@@ -104,7 +104,11 @@ describe('ticks', () => {
     const after = store.getState();
     expect(after.heartRate).toBe(before.heartRate + telemetryConfig.heartRate.noise);
     expect(after.battery.level).toBeLessThan(before.battery.level);
-    expect(after.deviceStatus).toEqual({ mode: 'monitoring', lastUpdate: 12345 });
+    expect(after.deviceStatus).toEqual({
+      mode: 'monitoring',
+      lastUpdate: 12345,
+      healthAlert: null,
+    });
     engine.stop();
   });
 

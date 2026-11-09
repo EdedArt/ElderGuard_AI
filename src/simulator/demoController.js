@@ -127,6 +127,7 @@ export function createDemoController({ device }) {
       device.sos.cancel();
       device.sos.dismissRequest();
       fall.resetDetector();
+      device.heartRateMonitor.reset();
       device.store.reset();
       emitter.emit('manual-change');
       emitter.emit('reset');

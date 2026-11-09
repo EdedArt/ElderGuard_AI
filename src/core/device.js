@@ -2,6 +2,7 @@ import { createAudioPlayer } from './audioPlayer.js';
 import { createCountdown } from './countdown.js';
 import { createEventEmitter } from './eventEmitter.js';
 import { createFallMonitor } from './fallMonitor.js';
+import { createHeartRateMonitor } from './heartRateMonitor.js';
 import { createScenarioRunner } from './scenarioRunner.js';
 import { createSimulationEngine } from './simulationEngine.js';
 import { createSosController } from './sosController.js';
@@ -15,6 +16,7 @@ export function createDevice({ createAudioContext } = {}) {
   const sos = createSosController({ store });
   const countdown = createCountdown();
   const fall = createFallMonitor({ store, sos, countdown });
+  const heartRateMonitor = createHeartRateMonitor({ store });
   const audio = createAudioPlayer({ createContext: createAudioContext });
   const scenarioRunner = createScenarioRunner({ engine });
 
@@ -26,6 +28,7 @@ export function createDevice({ createAudioContext } = {}) {
     sos,
     countdown,
     fall,
+    heartRateMonitor,
     audio,
     scenarioRunner,
 

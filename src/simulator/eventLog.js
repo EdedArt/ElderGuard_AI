@@ -67,7 +67,7 @@ export function createEventLog({
     empty.hidden = false;
   });
 
-  const { fall, scenarioRunner, sos, store } = device;
+  const { fall, heartRateMonitor, scenarioRunner, sos, store } = device;
 
   scenarioRunner.onStart(({ scenario }) => {
     const key = scenario.holds
@@ -87,6 +87,8 @@ export function createEventLog({
     add(() => t('simulator.log.sosTriggered', { reason: t(`simulator.log.sosReason.${reason}`) })),
   );
   sos.on('sos:cancelled', () => add(() => t('simulator.log.sosCancelled')));
+  heartRateMonitor.on('heartRate:anomaly', () => add(() => t('simulator.log.heartRateAnomaly')));
+  heartRateMonitor.on('heartRate:resolved', () => add(() => t('simulator.log.heartRateResolved')));
   controller.onScenarioRestored(({ scenario }) =>
     add(() => t('simulator.log.scenarioRestored', { name: scenarioName(scenario) })),
   );
