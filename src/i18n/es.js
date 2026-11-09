@@ -70,7 +70,11 @@ export const es = {
     startFirst: 'Inicia el reloj primero',
     sections: {
       scenarios: 'Escenarios',
+      manual: 'Sensores manuales',
       status: 'Estado',
+    },
+    manual: {
+      switch: 'Manual',
     },
     actions: {
       fall: 'Simular caída',

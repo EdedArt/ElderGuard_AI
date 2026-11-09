@@ -2,6 +2,7 @@ import { onLanguageChange, t } from '../i18n/index.js';
 import { createActionButton } from './actionButton.js';
 import { createDemoController } from './demoController.js';
 import { createFallStateIndicator } from './fallStateIndicator.js';
+import { createManualSliders } from './manualSliders.js';
 import { createPanelSection } from './panelSection.js';
 import { createStartGate } from './startGate.js';
 import { createTelemetryReadout } from './telemetryReadout.js';
@@ -77,10 +78,13 @@ export function createSimulatorPanel({ device }) {
     gpsToggle.button,
   );
 
+  const manualControls = createPanelSection('simulator.sections.manual');
+  manualControls.content.append(createManualSliders({ store: device.store, controller, gate }));
+
   const status = createPanelSection('simulator.sections.status');
   const fallState = createFallStateIndicator(device);
   status.content.append(fallState.root, createTelemetryReadout(device.store));
-  body.append(hint, scenarioControls.root, status.root);
+  body.append(hint, scenarioControls.root, manualControls.root, status.root);
 
   panel.append(header, body);
 

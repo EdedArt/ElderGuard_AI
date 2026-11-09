@@ -39,8 +39,49 @@
 }
 
 .simulator-section__content > .fall-state,
-.simulator-section__content > .telemetry-readout {
+.simulator-section__content > .telemetry-readout,
+.simulator-section__content > .manual-sliders {
   flex-basis: 100%;
+}
+
+.manual-sliders {
+  display: grid;
+  gap: var(--space-medium);
+}
+
+.manual-slider {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.25rem var(--space-small);
+  align-items: center;
+}
+
+.manual-slider__value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.manual-slider__input {
+  width: 100%;
+  min-height: 2rem;
+  accent-color: var(--color-accent);
+}
+
+.manual-slider__input:disabled {
+  cursor: not-allowed;
+}
+
+.manual-slider__switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  cursor: pointer;
+}
+
+.manual-slider__switch input {
+  width: 1.25rem;
+  height: 1.25rem;
+  accent-color: var(--color-accent);
 }
 
 .simulator-action {

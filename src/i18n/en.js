@@ -70,7 +70,11 @@ export const en = {
     startFirst: 'Start the watch first',
     sections: {
       scenarios: 'Scenarios',
+      manual: 'Manual sensors',
       status: 'Status',
+    },
+    manual: {
+      switch: 'Manual',
     },
     actions: {
       fall: 'Simulate fall',
