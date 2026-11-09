@@ -1,0 +1,39 @@
+/*
+ * The screen is a circle, so its usable width depends on the height. The zones keep
+ * their content where the circle is wide enough, in fractions of the diameter:
+ * status 0-16%, center 16-66.5%, bottom 66.5-100%.
+ * Sizes derive from --watch-screen (see watch.css) so everything scales with the watch.
+ */
+.watchface {
+  position: relative;
+  display: grid;
+  grid-template-rows: 16% 50.5% 33.5%;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
+}
+
+.watchface__status {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: calc(var(--watch-screen) * 0.04);
+  min-height: 0;
+  font-size: calc(var(--watch-screen) * var(--watch-font-secondary));
+}
+
+.watchface__center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+.watchface__bottom {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: 0;
+  padding-bottom: 3%;
+}

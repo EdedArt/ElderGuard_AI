@@ -2,6 +2,7 @@ import './styles/tokens.css';
 import './styles/base.css';
 import './styles/layout.css';
 import './styles/watch.css';
+import './styles/watchface.css';
 import { createSimulationEngine } from './core/simulationEngine.js';
 import { createTelemetryStore } from './core/telemetryStore.js';
 import { createSimulatorPanel } from './simulator/simulatorPanel.js';
