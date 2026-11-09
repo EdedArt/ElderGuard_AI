@@ -56,6 +56,9 @@ export const en = {
   fall: {
     question: 'Did you fall?',
     cancel: "I'M OK",
+    announceStart:
+      "Did you fall? Help will be called in {seconds} seconds. Press I'm OK if you do not need help.",
+    announceRemaining: '{seconds}',
   },
   start: {
     button: 'Tap to start',

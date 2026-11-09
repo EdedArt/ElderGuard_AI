@@ -211,7 +211,7 @@
 /* Out of sight until focused, so a keyboard user can always see where the focus is. */
 .sos-alternative {
   position: absolute;
-  top: 46%;
+  top: 49%;
   left: 50%;
   min-height: var(--watch-touch-target-min);
   padding: 0 calc(var(--watch-screen) * 0.05);

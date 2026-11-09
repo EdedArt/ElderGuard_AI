@@ -528,8 +528,10 @@ describe('accessibility', () => {
     }
   });
 
-  it('has a single live region', () => {
-    expect(face.querySelectorAll('[aria-live]')).toHaveLength(1);
+  it('has one polite and one assertive live region', () => {
+    expect(face.querySelectorAll('[aria-live="polite"]')).toHaveLength(1);
+    expect(face.querySelectorAll('[aria-live="assertive"]')).toHaveLength(1);
+    expect(face.querySelectorAll('[aria-live]')).toHaveLength(2);
   });
 
   it('stays silent for routine readings', () => {

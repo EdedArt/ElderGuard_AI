@@ -55,7 +55,13 @@ export function createWatchface({ store, sos, fall, countdown, onStart }) {
     lock,
     returnFocusTo: sosButton,
   });
-  const fallOverlay = createFallOverlay({ store, countdown, lock, onCancel: fall.cancel });
+  const fallOverlay = createFallOverlay({
+    store,
+    countdown,
+    lock,
+    onCancel: fall.cancel,
+    returnFocusTo: sosButton,
+  });
   const startScreen = createStartScreen({ lock, onStart, returnFocusTo: sosButton });
   root.append(
     statusZone,
@@ -63,10 +69,11 @@ export function createWatchface({ store, sos, fall, countdown, onStart }) {
     bottomZone,
     holdHint.root,
     sosConfirm.root,
-    fallOverlay,
+    fallOverlay.root,
     sosScreen,
     startScreen,
     announcer.root,
+    fallOverlay.liveRegion,
   );
 
   const renderLabel = () => root.setAttribute('aria-label', t('watch.face'));

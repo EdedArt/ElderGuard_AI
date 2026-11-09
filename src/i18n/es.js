@@ -56,6 +56,9 @@ export const es = {
   fall: {
     question: '¿Te caíste?',
     cancel: 'ESTOY BIEN',
+    announceStart:
+      '¿Te caíste? Se pedirá ayuda en {seconds} segundos. Pulsa Estoy bien si no necesitas ayuda.',
+    announceRemaining: '{seconds}',
   },
   start: {
     button: 'Toca para iniciar',
