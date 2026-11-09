@@ -227,6 +227,7 @@ describe('configuration', () => {
       immobilityDurationMs: 5000,
       immobilityStartWindowMs: 3000,
       countdownSeconds: 10,
+      urgentSeconds: 3,
     });
   });
 
