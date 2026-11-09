@@ -4,6 +4,15 @@ node_modules/
 # Build output
 dist/
 
+# Native Wear OS app (Gradle and Android Studio output)
+wear-app/**/build/
+wear-app/.gradle/
+wear-app/.kotlin/
+wear-app/local.properties
+wear-app/**/*.apk
+wear-app/**/*.aab
+wear-app/**/*.iml
+
 # Environment files
 .env
 .env.*
