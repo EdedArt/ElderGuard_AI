@@ -136,6 +136,34 @@
   width: 100%;
 }
 
+.sos-button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: max(var(--watch-touch-target-min), calc(var(--watch-screen) * var(--watch-sos-size)));
+  aspect-ratio: 1;
+  padding: 0;
+  background-color: var(--color-danger);
+  border: 0.125rem solid var(--color-danger-border);
+  border-radius: var(--radius-circle);
+  color: var(--color-on-danger);
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.sos-button__title {
+  font-size: calc(var(--watch-screen) * var(--watch-font-sos));
+}
+
+.sos-button__label {
+  margin-top: calc(var(--watch-screen) * 0.005);
+  font-size: calc(var(--watch-screen) * 0.045);
+}
+
 @keyframes heart-pulse {
   50% {
     transform: scale(1.12);

@@ -28,6 +28,10 @@ export const en = {
       movement: 'Movement {value} g',
     },
   },
+  sos: {
+    title: 'SOS',
+    label: 'HELP',
+  },
   simulator: {
     title: 'Sensor simulator (coming soon)',
   },
