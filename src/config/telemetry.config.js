@@ -20,5 +20,7 @@ export const telemetryConfig = {
   battery: {
     startLevel: 100, // Percent
     drainPerTick: 0.01, // Percent
+    lowLevel: 20, // Percent, inclusive
+    criticalLevel: 10, // Percent, inclusive
   },
 };
