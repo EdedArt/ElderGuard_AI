@@ -90,6 +90,7 @@ export function createDemoController({ device }) {
       engine.clearAllOverrides();
       fall.cancel();
       device.sos.cancel();
+      device.sos.dismissRequest();
       fall.resetDetector();
       device.store.reset();
       emitter.emit('manual-change');

@@ -516,6 +516,25 @@ describe('with the watch started', () => {
       expect(state().accelerometer).not.toEqual({ x: 0, y: 0, z: 1 });
     });
 
+    it('closes the open help-request dialog and unlocks the watch', () => {
+      const dialog = query('.sos-confirm');
+      query('.sos-alternative').click();
+      expect(dialog.hidden).toBe(false);
+      expect(query('.watchface__bottom').hasAttribute('inert')).toBe(true);
+
+      click('reset');
+      expect(dialog.hidden).toBe(true);
+      expect(query('.watchface__bottom').hasAttribute('inert')).toBe(false);
+      expect(mode()).toBe('monitoring');
+    });
+
+    it('closes the dialog from the shortcut too, without leaving the focus lost', () => {
+      query('.sos-alternative').click();
+      pressShortcut('0');
+      expect(query('.sos-confirm').hidden).toBe(true);
+      expect(document.activeElement).toBe(query('.sos-alternative'));
+    });
+
     it('leaves a new fall working', () => {
       click('fall');
       vi.advanceTimersByTime(TIME_TO_DETECT);

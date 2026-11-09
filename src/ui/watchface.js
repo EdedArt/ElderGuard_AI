@@ -39,6 +39,7 @@ export function createWatchface({ store, sos, fall, countdown, onStart }) {
   });
   const sosConfirm = createSosConfirmScreen({
     store,
+    sos,
     lock,
     onConfirm: triggerManualSos,
     returnFocusTo: () => sosAlternative,

@@ -17,7 +17,7 @@ function ignoreKeyRepeat(event) {
 }
 
 // Confirmation for the screen reader alternative to the SOS long press.
-export function createSosConfirmScreen({ store, lock, onConfirm, returnFocusTo }) {
+export function createSosConfirmScreen({ store, sos, lock, onConfirm, returnFocusTo }) {
   const root = document.createElement('div');
   root.className = 'sos-confirm';
   root.hidden = true;
@@ -51,6 +51,10 @@ export function createSosConfirmScreen({ store, lock, onConfirm, returnFocusTo }
     if (!root.hidden && changedKeys.includes('deviceStatus')) {
       if (state.deviceStatus.mode !== 'monitoring') close({ restoreFocus: false });
     }
+  });
+
+  sos.on('sos:request-dismissed', () => {
+    if (!root.hidden) close({ restoreFocus: true });
   });
 
   const render = () => {
