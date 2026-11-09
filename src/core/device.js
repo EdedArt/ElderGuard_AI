@@ -1,3 +1,4 @@
+import { createAlertDispatcher } from './alertDispatcher.js';
 import { createAudioPlayer } from './audioPlayer.js';
 import { createCountdown } from './countdown.js';
 import { createEventEmitter } from './eventEmitter.js';
@@ -17,6 +18,7 @@ export function createDevice({ createAudioContext } = {}) {
   const countdown = createCountdown();
   const fall = createFallMonitor({ store, sos, countdown });
   const heartRateMonitor = createHeartRateMonitor({ store });
+  const alerts = createAlertDispatcher({ store, sos });
   const audio = createAudioPlayer({ createContext: createAudioContext });
   const scenarioRunner = createScenarioRunner({ engine });
 
@@ -29,6 +31,7 @@ export function createDevice({ createAudioContext } = {}) {
     countdown,
     fall,
     heartRateMonitor,
+    alerts,
     audio,
     scenarioRunner,
 

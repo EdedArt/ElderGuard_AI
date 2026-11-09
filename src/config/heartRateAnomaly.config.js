@@ -5,3 +5,9 @@ export const heartRateAnomalyConfig = {
   sustainedDurationMs: 8000, // How long it must stay high, at rest, before warning
   stillnessToleranceG: fallDetectionConfig.immobilityToleranceG, // Largest distance from 1 g at rest
 };
+
+// Same detection with a higher bar, for what is serious enough to tell the family.
+export const criticalHeartRateConfig = {
+  ...heartRateAnomalyConfig,
+  bpmThreshold: 160,
+};
