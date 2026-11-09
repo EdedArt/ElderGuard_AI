@@ -53,6 +53,10 @@ export const en = {
     active: 'Calling for help…',
     cancel: 'Cancel',
   },
+  fall: {
+    question: 'Did you fall?',
+    cancel: "I'M OK",
+  },
   start: {
     button: 'Tap to start',
   },

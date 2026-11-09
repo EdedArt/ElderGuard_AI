@@ -53,6 +53,10 @@ export const es = {
     active: 'Pidiendo ayuda…',
     cancel: 'Cancelar',
   },
+  fall: {
+    question: '¿Te caíste?',
+    cancel: 'ESTOY BIEN',
+  },
   start: {
     button: 'Toca para iniciar',
   },

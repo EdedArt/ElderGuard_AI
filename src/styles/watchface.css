@@ -330,6 +330,88 @@
   cursor: pointer;
 }
 
+/* Amber asks for attention. It turns to the alarm red in the last seconds. */
+.fall-overlay {
+  --fall-surface: var(--color-warning);
+  --fall-text: var(--color-on-warning);
+
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--fall-surface);
+  color: var(--fall-text);
+}
+
+.fall-overlay[hidden] {
+  display: none;
+}
+
+.fall-overlay--urgent {
+  --fall-surface: var(--color-danger);
+  --fall-text: var(--color-on-danger);
+}
+
+.fall-overlay__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.fall-overlay__ring-track,
+.fall-overlay__ring-progress {
+  fill: none;
+  stroke: var(--fall-text);
+  stroke-width: 3;
+}
+
+.fall-overlay__ring-track {
+  opacity: 0.3;
+}
+
+.fall-overlay__ring-progress {
+  stroke-dasharray: 100;
+  animation: fall-ring-drain var(--fall-countdown-duration) linear forwards;
+}
+
+@keyframes fall-ring-drain {
+  to {
+    stroke-dashoffset: 100;
+  }
+}
+
+.fall-overlay__title {
+  font-size: calc(var(--watch-screen) * 0.085);
+}
+
+.fall-overlay__seconds {
+  font-size: calc(var(--watch-screen) * var(--watch-font-countdown));
+  font-variant-numeric: tabular-nums;
+  line-height: 0.95;
+}
+
+.fall-overlay__cancel {
+  width: 66%;
+  min-height: max(var(--watch-touch-target-min), calc(var(--watch-screen) * 0.23));
+  margin-top: calc(var(--watch-screen) * 0.025);
+  background-color: var(--color-background);
+  border: 0.25rem solid var(--color-text);
+  border-radius: var(--radius-medium);
+  color: var(--color-text);
+  font-size: calc(var(--watch-screen) * 0.085);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.fall-overlay__cancel:focus-visible {
+  outline-color: var(--fall-text);
+}
+
 .start-screen {
   position: absolute;
   inset: 0;

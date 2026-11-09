@@ -1,6 +1,7 @@
 import { sosConfig } from '../config/sos.config.js';
 import { createLongPress } from '../core/longPress.js';
 import { onLanguageChange, t } from '../i18n/index.js';
+import { vibrate } from './vibrate.js';
 
 const ACTIVATION_KEYS = ['Enter', ' '];
 const VIBRATION_HOLD_START = 50;
@@ -11,10 +12,6 @@ const PROGRESS_RING = `
     <circle class="sos-button__ring-progress" cx="50" cy="50" r="46" pathLength="100" />
   </svg>
 `;
-
-function vibrate(pattern) {
-  if (typeof navigator.vibrate === 'function') navigator.vibrate(pattern);
-}
 
 // Activation moves focus to another button while the key is still down. Without this, key
 // repeat or the release would press that button too, cancelling the alert straight away.

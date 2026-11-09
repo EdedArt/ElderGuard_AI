@@ -1,6 +1,7 @@
 import { onLanguageChange, t } from '../i18n/index.js';
 import { createBackgroundLock } from './backgroundLock.js';
 import { createBatteryIndicator } from './batteryIndicator.js';
+import { createFallOverlay } from './fallOverlay.js';
 import { createGpsIndicator } from './gpsIndicator.js';
 import { createHeartRateIndicator } from './heartRateIndicator.js';
 import { createHoldHint } from './holdHint.js';
@@ -18,7 +19,7 @@ function createZone(name) {
   return zone;
 }
 
-export function createWatchface({ store, sos, onStart }) {
+export function createWatchface({ store, sos, fall, countdown, onStart }) {
   const root = document.createElement('div');
   root.className = 'watchface';
   root.setAttribute('role', 'group');
@@ -53,6 +54,7 @@ export function createWatchface({ store, sos, onStart }) {
     lock,
     returnFocusTo: sosButton,
   });
+  const fallOverlay = createFallOverlay({ store, countdown, lock, onCancel: fall.cancel });
   const startScreen = createStartScreen({ lock, onStart, returnFocusTo: sosButton });
   root.append(
     statusZone,
@@ -60,6 +62,7 @@ export function createWatchface({ store, sos, onStart }) {
     bottomZone,
     holdHint.root,
     sosConfirm.root,
+    fallOverlay,
     sosScreen,
     startScreen,
     announcer.root,

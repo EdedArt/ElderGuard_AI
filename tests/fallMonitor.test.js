@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fallDetectionConfig } from '../src/config/fallDetection.config.js';
+import { createCountdown } from '../src/core/countdown.js';
 import { createFallDetector, FALL_STATES } from '../src/core/fallDetector.js';
 import { createFallMonitor } from '../src/core/fallMonitor.js';
 import { createTelemetryStore } from '../src/core/telemetryStore.js';
@@ -12,6 +13,7 @@ const STILL = { x: 0, y: 0, z: 1 };
 let time;
 let store;
 let detector;
+let countdown;
 let monitor;
 let detected;
 
@@ -30,7 +32,9 @@ beforeEach(() => {
   time = 1000;
   store = createTelemetryStore();
   detector = createFallDetector();
-  monitor = createFallMonitor({ store, detector, now: () => time });
+  // The clock is only ever advanced by hand, so the countdown stays at its starting value here.
+  countdown = createCountdown({ timer: { start: () => 1, stop: () => {} } });
+  monitor = createFallMonitor({ store, countdown, detector, now: () => time });
   detected = vi.fn();
   monitor.on('fall:detected', detected);
 });
@@ -107,6 +111,45 @@ describe('while an alert is active', () => {
     store.update({ deviceStatus: { mode: 'monitoring' } });
     fall();
     expect(detected).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('countdown', () => {
+  it('starts when a fall is detected, from the configured value', () => {
+    const ticks = [];
+    countdown.onTick((remaining) => ticks.push(remaining));
+    fall();
+
+    expect(countdown.isRunning()).toBe(true);
+    expect(ticks).toEqual([fallDetectionConfig.countdownSeconds]);
+  });
+
+  it('stops if something else takes the watch out of the countdown', () => {
+    fall();
+    store.update({ deviceStatus: { mode: 'sos' } });
+    expect(countdown.isRunning()).toBe(false);
+  });
+
+  it('survives telemetry ticks while it runs', () => {
+    fall();
+    tick(STILL);
+    tick(SPIKE);
+    expect(countdown.isRunning()).toBe(true);
+    expect(store.getState().deviceStatus.mode).toBe('fall-countdown');
+  });
+
+  it('cancel stops it and returns to monitoring', () => {
+    fall();
+    monitor.cancel();
+
+    expect(countdown.isRunning()).toBe(false);
+    expect(store.getState().deviceStatus.mode).toBe('monitoring');
+  });
+
+  it('cancel does not end an alert of another kind', () => {
+    store.update({ deviceStatus: { mode: 'sos' } });
+    monitor.cancel();
+    expect(store.getState().deviceStatus.mode).toBe('sos');
   });
 });
 

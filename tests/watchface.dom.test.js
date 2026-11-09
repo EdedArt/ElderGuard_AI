@@ -1,13 +1,13 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { sosConfig } from '../src/config/sos.config.js';
-import { createSosController } from '../src/core/sosController.js';
-import { createTelemetryStore } from '../src/core/telemetryStore.js';
+import { createDevice } from '../src/core/device.js';
 import { setLanguage } from '../src/i18n/index.js';
 import { createWatchface } from '../src/ui/watchface.js';
 
 const HOLD = sosConfig.holdDurationMs;
 
+let device;
 let store;
 let sos;
 let face;
@@ -34,9 +34,9 @@ beforeEach(() => {
   setLanguage('es');
   localStorage.clear();
 
-  store = createTelemetryStore();
-  sos = createSosController({ store });
-  face = createWatchface({ store, sos, onStart });
+  device = createDevice();
+  ({ store, sos } = device);
+  face = createWatchface({ ...device, onStart });
   document.body.replaceChildren(face);
   query('.start-screen__button').click();
 });
@@ -51,7 +51,7 @@ describe('start screen', () => {
 
   beforeEach(() => {
     onStart.mockClear();
-    face = createWatchface({ store, sos, onStart });
+    face = createWatchface({ ...device, onStart });
     document.body.replaceChildren(face);
   });
 
