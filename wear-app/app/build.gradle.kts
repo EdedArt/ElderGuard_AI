@@ -51,4 +51,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
+
+    // Local unit tests in src/test, run on the JVM with `gradlew.bat test` (no emulator needed).
+    testImplementation(libs.junit)
+    // Virtual time for coroutines, the equivalent of Vitest's fake timers.
+    testImplementation(libs.kotlinx.coroutines.test)
 }
