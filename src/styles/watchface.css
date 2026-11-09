@@ -208,6 +208,76 @@
   font-size: calc(var(--watch-screen) * 0.045);
 }
 
+/* Out of sight until focused, so a keyboard user can always see where the focus is. */
+.sos-alternative {
+  position: absolute;
+  top: 46%;
+  left: 50%;
+  min-height: var(--watch-touch-target-min);
+  padding: 0 calc(var(--watch-screen) * 0.05);
+  background-color: var(--color-accent);
+  border: 0.125rem solid var(--color-on-accent);
+  border-radius: var(--radius-medium);
+  color: var(--color-on-accent);
+  font-size: calc(var(--watch-screen) * 0.075);
+  font-weight: 700;
+  white-space: nowrap;
+  transform: translateX(-50%);
+  cursor: pointer;
+}
+
+.sos-alternative:not(:focus) {
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.sos-confirm {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--watch-screen) * 0.035);
+  background-color: var(--color-background);
+}
+
+.sos-confirm[hidden] {
+  display: none;
+}
+
+.sos-confirm__title {
+  font-size: calc(var(--watch-screen) * 0.085);
+}
+
+.sos-confirm__yes,
+.sos-confirm__no {
+  min-height: max(var(--watch-touch-target-min), calc(var(--watch-screen) * 0.19));
+  border-radius: var(--radius-medium);
+  font-size: calc(var(--watch-screen) * 0.075);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sos-confirm__yes {
+  width: 80%;
+  background-color: var(--color-danger);
+  border: 0.125rem solid var(--color-danger-border);
+  color: var(--color-on-danger);
+}
+
+.sos-confirm__no {
+  width: 46%;
+  background-color: var(--color-surface);
+  border: 0.125rem solid var(--color-border);
+  color: var(--color-text);
+}
+
 /* Sits just above the SOS button, where the circle is still at its widest. */
 .hold-hint {
   position: absolute;

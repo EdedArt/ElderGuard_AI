@@ -40,6 +40,8 @@ Para evitar activaciones accidentales, un toque simple no hace nada:
 3. Al completar los 2 segundos aparece la pantalla roja `Pidiendo ayuda…`. El estado `deviceStatus.mode` cambia a `sos` y se emite el evento `sos:triggered` con la hora y la ubicación.
 4. El botón `Cancelar` cierra esa pantalla y devuelve el reloj al modo `monitoring`.
 
+Mantener pulsado es difícil con un lector de pantalla, así que existe una alternativa: un botón `Pedir ayuda` que solo se ve al recibir el foco y abre una confirmación dentro del reloj (`Sí, pedir ayuda` o `No`). Al confirmar se activa el mismo flujo de SOS.
+
 Por ahora no se envía ninguna alerta: el envío real se agregará en una fase posterior, escuchando ese evento.
 
 ## Arquitectura de telemetría

@@ -44,6 +44,12 @@ export const es = {
     label: 'AUXILIO',
     hint: 'SOS, auxilio. Mantén pulsado {seconds} segundos para pedir ayuda',
     holdHint: 'Mantén presionado',
+    alternative: 'Pedir ayuda',
+    confirm: {
+      title: '¿Pedir ayuda?',
+      yes: 'Sí, pedir ayuda',
+      no: 'No',
+    },
     active: 'Pidiendo ayuda…',
     cancel: 'Cancelar',
   },

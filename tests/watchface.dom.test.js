@@ -319,6 +319,92 @@ describe('SOS long press with a keyboard', () => {
   });
 });
 
+describe('screen reader alternative to the long press', () => {
+  const alternative = () => query('.sos-alternative');
+  const confirm = () => query('.sos-confirm');
+  const yes = () => query('.sos-confirm__yes');
+  const no = () => query('.sos-confirm__no');
+
+  it('is a real focusable button with its own label', () => {
+    expect(alternative().tagName).toBe('BUTTON');
+    expect(alternative().textContent).toBe('Pedir ayuda');
+    alternative().focus();
+    expect(document.activeElement).toBe(alternative());
+  });
+
+  it('opens a modal confirmation with focus on the answer, without triggering SOS', () => {
+    alternative().click();
+
+    expect(confirm().hidden).toBe(false);
+    expect(confirm().getAttribute('role')).toBe('alertdialog');
+    expect(document.getElementById(confirm().getAttribute('aria-labelledby')).textContent).toBe(
+      '¿Pedir ayuda?',
+    );
+    expect(yes().textContent).toBe('Sí, pedir ayuda');
+    expect(no().textContent).toBe('No');
+    expect(document.activeElement).toBe(yes());
+    expect(query('.watchface__bottom').hasAttribute('inert')).toBe(true);
+    expect(store.getState().deviceStatus.mode).toBe('monitoring');
+  });
+
+  it('runs the same SOS flow on confirmation', () => {
+    const listener = vi.fn();
+    sos.on('sos:triggered', listener);
+    alternative().click();
+    yes().click();
+
+    expect(confirm().hidden).toBe(true);
+    expect(overlay().hidden).toBe(false);
+    expect(store.getState().deviceStatus.mode).toBe('sos');
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(cancelButton());
+    expect(query('.watchface__bottom').hasAttribute('inert')).toBe(true);
+  });
+
+  it('No closes it, restores the watchface and returns focus', () => {
+    alternative().click();
+    no().click();
+
+    expect(confirm().hidden).toBe(true);
+    expect(query('.watchface__bottom').hasAttribute('inert')).toBe(false);
+    expect(document.activeElement).toBe(alternative());
+    expect(store.getState().deviceStatus.mode).toBe('monitoring');
+  });
+
+  it('Escape closes it like No', () => {
+    alternative().click();
+    keyboard('keydown', 'Escape', yes());
+    expect(confirm().hidden).toBe(true);
+    expect(document.activeElement).toBe(alternative());
+  });
+
+  it('keeps the background disabled across telemetry ticks', () => {
+    alternative().click();
+    store.update({ deviceStatus: { lastUpdate: 1 } });
+    expect(query('.watchface__bottom').hasAttribute('inert')).toBe(true);
+  });
+
+  it('ignores key repeat from the press that opened it', () => {
+    alternative().click();
+    expect(keyboard('keydown', 'Enter', yes(), { repeat: true }).defaultPrevented).toBe(true);
+    expect(keyboard('keydown', 'Enter', yes()).defaultPrevented).toBe(false);
+  });
+
+  it('closes without taking focus when another alert takes over', () => {
+    alternative().click();
+    sos.trigger();
+    expect(confirm().hidden).toBe(true);
+    expect(document.activeElement).toBe(cancelButton());
+  });
+
+  it('follows the language', () => {
+    setLanguage('en');
+    expect(alternative().textContent).toBe('Request help');
+    expect(yes().textContent).toBe('Yes, get help');
+    expect(query('.sos-confirm__title').textContent).toBe('Get help?');
+  });
+});
+
 describe('vibration', () => {
   afterEach(() => {
     delete navigator.vibrate;

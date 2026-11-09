@@ -2,7 +2,7 @@ import { onLanguageChange, t } from '../i18n/index.js';
 
 const TITLE_ID = 'sos-screen-title';
 
-export function createSosScreen({ store, onCancel, background, returnFocusTo }) {
+export function createSosScreen({ store, onCancel, lock, returnFocusTo }) {
   const root = document.createElement('div');
   root.className = 'sos-screen';
   root.setAttribute('role', 'alertdialog');
@@ -23,7 +23,7 @@ export function createSosScreen({ store, onCancel, background, returnFocusTo }) 
   const render = ({ deviceStatus }) => {
     const nextActive = deviceStatus.mode === 'sos';
     root.hidden = !nextActive;
-    for (const element of background) element.toggleAttribute('inert', nextActive);
+    lock.set('sos', nextActive);
 
     if (nextActive !== active) (nextActive ? cancel : returnFocusTo).focus();
     active = nextActive;
