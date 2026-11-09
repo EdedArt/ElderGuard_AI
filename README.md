@@ -10,7 +10,7 @@ Simulador web de un smartwatch para la seguridad de personas mayores. Es un proy
 - Panel externo para simular los datos de los sensores.
 - Interfaz de alto contraste (WCAG AAA) con botones muy grandes y poco texto, pensada para personas mayores.
 
-Estado actual: estructura base del proyecto, pantalla circular del reloj, panel del simulador (por ahora vacío), cambio de tema claro/oscuro, interfaz en español e inglés, y motor de telemetría simulada con una lectura temporal en vivo dentro del reloj.
+Estado actual: estructura base del proyecto, pantalla circular del reloj, panel del simulador (por ahora vacío), cambio de tema claro/oscuro, interfaz en español e inglés, motor de telemetría simulada, pantalla del reloj con datos en vivo y botón SOS.
 
 ## Tema e idioma
 
@@ -18,6 +18,29 @@ La aplicación abre en tema claro y en español, sin importar la configuración 
 
 - **Idioma:** pulsa `ES` para español o `EN` para inglés. El botón resaltado indica el idioma actual.
 - **Tema:** pulsa `Tema oscuro` o `Tema claro` (`Dark theme` o `Light theme` en inglés). El botón muestra el tema al que se va a cambiar.
+
+## Pantalla del reloj
+
+Todo el contenido queda dentro del área segura del círculo y se escala con el tamaño del reloj. La pantalla tiene tres zonas:
+
+- **Arriba, estado:** batería con ícono y porcentaje, y GPS con ícono y etiqueta.
+  - Batería: verde por encima de 20 %, ámbar con 20 % o menos y rojo con 10 % o menos.
+  - GPS: muestra `GPS` con señal y `Sin GPS` en ámbar sin ella.
+- **Centro, datos:** hora en formato HH:MM de 24 horas, fecha corta y frecuencia cardíaca. El corazón late al ritmo de las pulsaciones, salvo si el sistema pide reducir el movimiento.
+- **Abajo, SOS:** botón rojo grande con la palabra `SOS` y la etiqueta `AUXILIO`.
+
+Los lectores de pantalla solo anuncian los cambios de estado (batería baja, pérdida o recuperación del GPS), nunca cada lectura.
+
+### Botón SOS
+
+Para evitar activaciones accidentales, un toque simple no hace nada:
+
+1. Mantén pulsado el botón durante 2 segundos con el dedo, el ratón o las teclas `Enter` o `Espacio`. Un anillo se va llenando alrededor del botón y, si el dispositivo lo permite, este vibra.
+2. Si sueltas antes de tiempo, se cancela y no pasa nada.
+3. Al completar los 2 segundos aparece la pantalla roja `Pidiendo ayuda…`. El estado `deviceStatus.mode` cambia a `sos` y se emite el evento `sos:triggered` con la hora y la ubicación.
+4. El botón `Cancelar` cierra esa pantalla y devuelve el reloj al modo `monitoring`.
+
+Por ahora no se envía ninguna alerta: el envío real se agregará en una fase posterior, escuchando ese evento.
 
 ## Arquitectura de telemetría
 
