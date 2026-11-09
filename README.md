@@ -2,6 +2,17 @@
 
 Simulador web de un smartwatch para la seguridad de personas mayores. Es un proyecto universitario que se puede demostrar por completo en el navegador, sin necesidad de un reloj físico.
 
+## Dos implementaciones
+
+El repositorio contiene dos versiones independientes de la aplicación:
+
+| Carpeta     | Qué es                                                                   | Tecnología                                 | Uso                                                                                   |
+| ----------- | ------------------------------------------------------------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------- |
+| `src/`      | Simulador web original, con todas las pruebas y el panel de demostración | Vite y JavaScript, se abre en el navegador | Desarrollo y demostración de respaldo                                                 |
+| `wear-app/` | Aplicación nativa para Wear OS                                           | Kotlin y Jetpack Compose para Wear OS      | Entrega final para el smartwatch, en el emulador de Android Studio o en un reloj real |
+
+Cada una se compila por separado: `npm` solo trabaja con la versión web y Gradle solo con `wear-app/`. Las instrucciones de la aplicación nativa están en [`wear-app/README.md`](wear-app/README.md). El resto de este documento describe la versión web.
+
 ## Funcionalidades
 
 - Detección de caídas.
