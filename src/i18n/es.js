@@ -79,6 +79,8 @@ export const es = {
       lowBattery: 'Batería baja (15 %)',
       criticalBattery: 'Batería crítica (5 %)',
       restoreBattery: 'Restaurar batería (100 %)',
+      gpsLose: 'Perder GPS',
+      gpsRestore: 'Recuperar GPS',
     },
     fallState: {
       label: 'Detector de caídas',

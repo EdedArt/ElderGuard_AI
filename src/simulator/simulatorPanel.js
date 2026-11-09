@@ -48,23 +48,33 @@ export function createSimulatorPanel({ device }) {
     hint.hidden = true;
   });
   const controller = createDemoController({ device });
-  const action = (name, labelKey, onClick) =>
-    createActionButton({ action: name, labelKey, onClick, gate }).button;
+  const action = (name, onClick) =>
+    createActionButton({ action: name, labelKey: `simulator.actions.${name}`, onClick, gate })
+      .button;
+  const scenarioAction = (id) => action(id, () => controller.runScenario(id));
+
+  const gpsToggle = createActionButton({
+    action: 'gpsToggle',
+    labelKey: () =>
+      device.store.getState().gps.signal
+        ? 'simulator.actions.gpsLose'
+        : 'simulator.actions.gpsRestore',
+    onClick: controller.toggleGps,
+    gate,
+  });
+  device.store.subscribe((state, changedKeys) => {
+    if (changedKeys.includes('gps')) gpsToggle.render();
+  });
 
   const scenarioControls = createPanelSection('simulator.sections.scenarios');
   scenarioControls.content.append(
-    action('fall', 'simulator.actions.fall', () => controller.runScenario('fall')),
-    action('stumble', 'simulator.actions.stumble', () => controller.runScenario('stumble')),
-    action('highHeartRate', 'simulator.actions.highHeartRate', () =>
-      controller.runScenario('highHeartRate'),
-    ),
-    action('lowBattery', 'simulator.actions.lowBattery', () =>
-      controller.runScenario('lowBattery'),
-    ),
-    action('criticalBattery', 'simulator.actions.criticalBattery', () =>
-      controller.runScenario('criticalBattery'),
-    ),
-    action('restoreBattery', 'simulator.actions.restoreBattery', controller.restoreBattery),
+    scenarioAction('fall'),
+    scenarioAction('stumble'),
+    scenarioAction('highHeartRate'),
+    scenarioAction('lowBattery'),
+    scenarioAction('criticalBattery'),
+    action('restoreBattery', controller.restoreBattery),
+    gpsToggle.button,
   );
 
   const status = createPanelSection('simulator.sections.status');

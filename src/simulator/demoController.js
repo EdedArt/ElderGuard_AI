@@ -25,5 +25,10 @@ export function createDemoController({ device }) {
     runScenario: (id) => runner.run(scenarios[id]),
 
     restoreBattery: () => applyOnce('battery', { level: telemetryConfig.battery.startLevel }),
+
+    toggleGps() {
+      if (device.store.getState().gps.signal) runner.run(scenarios.gpsLost);
+      else applyOnce('gps', { signal: true });
+    },
   };
 }
