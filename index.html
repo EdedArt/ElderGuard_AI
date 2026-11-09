@@ -5,6 +5,24 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>ElderGuard AI</title>
+    <!-- Applies the saved theme before first paint. The storage key matches themeToggle.js. -->
+    <script>
+      try {
+        var savedTheme = localStorage.getItem('elderguard.theme');
+        if (savedTheme === 'light' || savedTheme === 'dark') {
+          document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+      } catch {
+        // Storage can be unavailable; the app then opens in the default light theme.
+      }
+    </script>
+    <!-- Keeps the page dark until the stylesheets load. The color matches tokens.css. -->
+    <style>
+      :root[data-theme='dark'] {
+        color-scheme: dark;
+        background-color: #000000;
+      }
+    </style>
   </head>
   <body>
     <div id="app"></div>
