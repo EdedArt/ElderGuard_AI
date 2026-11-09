@@ -138,7 +138,7 @@ Con `npm run dev`, después de tocar `Toca para iniciar`, se puede ejecutar esto
 window.elderguard.simulateFall();
 ```
 
-La función inyecta un impacto y luego quietud mediante las anulaciones del motor, por lo que se ejecuta el detector real de principio a fin: la cuenta regresiva aparece unos 5 segundos después. Solo existe en desarrollo y no se incluye en la versión de producción. El panel del simulador la reemplazará en la demostración.
+La función inyecta un impacto y luego quietud mediante las anulaciones del motor, por lo que se ejecuta el detector real de principio a fin: la cuenta regresiva aparece entre 5 y 6 segundos después, porque el detector exige 5 segundos de quietud y la comprueba en cada ciclo de 1 segundo. Solo existe en desarrollo y no se incluye en la versión de producción. El panel del simulador la reemplazará en la demostración.
 
 ## Arquitectura de telemetría
 
