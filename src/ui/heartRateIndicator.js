@@ -10,6 +10,7 @@ const HEART_ICON = `
 export function createHeartRateIndicator(store) {
   const root = document.createElement('div');
   root.className = 'heart-rate';
+  root.setAttribute('role', 'img');
 
   const icon = document.createElement('span');
   icon.className = 'heart-rate__icon';
@@ -21,20 +22,18 @@ export function createHeartRateIndicator(store) {
   unit.className = 'heart-rate__unit';
   root.append(icon, value, unit);
 
-  const renderValue = (bpm) => {
-    value.textContent = String(bpm);
-    root.style.setProperty('--heartbeat-interval', `${heartbeatIntervalMs(bpm)}ms`);
-  };
-  const renderText = () => {
+  const render = ({ heartRate }) => {
+    value.textContent = String(heartRate);
     unit.textContent = t('watch.heartRate.unit');
+    root.setAttribute('aria-label', t('watch.heartRate.label', { value: heartRate }));
+    root.style.setProperty('--heartbeat-interval', `${heartbeatIntervalMs(heartRate)}ms`);
   };
 
   store.subscribe((state, changedKeys) => {
-    if (changedKeys.includes('heartRate')) renderValue(state.heartRate);
+    if (changedKeys.includes('heartRate')) render(state);
   });
-  onLanguageChange(renderText);
-  renderValue(store.getState().heartRate);
-  renderText();
+  onLanguageChange(() => render(store.getState()));
+  render(store.getState());
 
   return root;
 }

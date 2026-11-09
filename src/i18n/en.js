@@ -12,15 +12,29 @@ export const en = {
   },
   watch: {
     areaLabel: 'Smartwatch',
+    face: 'Watch screen',
+    clock: {
+      label: 'Time and date',
+    },
     heartRate: {
       unit: 'BPM',
+      label: '{value} beats per minute',
     },
     battery: {
       value: '{value}%',
+      label: 'Battery at {value}%',
     },
     gps: {
       ok: 'GPS',
       lost: 'No GPS',
+      okLabel: 'GPS connected',
+      lostLabel: 'No GPS signal',
+    },
+    status: {
+      batteryLow: 'Battery low',
+      batteryCritical: 'Battery very low',
+      gpsLost: 'GPS signal lost',
+      gpsRestored: 'GPS signal restored',
     },
     readout: {
       heartRate: '{value} BPM',
@@ -31,6 +45,7 @@ export const en = {
   sos: {
     title: 'SOS',
     label: 'HELP',
+    hint: 'SOS, help. Press and hold for {seconds} seconds to call for help',
     active: 'Calling for help…',
     cancel: 'Cancel',
   },

@@ -96,6 +96,7 @@ export function createSosButton({ onActivate = () => {} } = {}) {
   const render = () => {
     title.textContent = t('sos.title');
     label.textContent = t('sos.label');
+    button.setAttribute('aria-label', t('sos.hint', { seconds: sosConfig.holdDurationMs / 1000 }));
   };
 
   onLanguageChange(render);

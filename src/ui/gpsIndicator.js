@@ -11,6 +11,7 @@ const GPS_ICON = `
 export function createGpsIndicator(store) {
   const root = document.createElement('div');
   root.className = 'gps-indicator';
+  root.setAttribute('role', 'img');
 
   const icon = document.createElement('span');
   icon.className = 'gps-indicator__icon';
@@ -24,6 +25,7 @@ export function createGpsIndicator(store) {
     const state = gpsState(gps);
     root.dataset.state = state;
     label.textContent = t(`watch.gps.${state}`);
+    root.setAttribute('aria-label', t(`watch.gps.${state}Label`));
   };
 
   store.subscribe((state, changedKeys) => {

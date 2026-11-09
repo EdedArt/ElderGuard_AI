@@ -4,6 +4,7 @@ import {
   batteryState,
   gpsState,
   heartbeatIntervalMs,
+  statusChanges,
 } from '../src/core/watchStatus.js';
 
 describe('heartbeatIntervalMs', () => {
@@ -46,6 +47,37 @@ describe('batteryState', () => {
     expect(batteryState(10)).toBe('critical');
     expect(batteryState(1)).toBe('critical');
     expect(batteryState(0)).toBe('critical');
+  });
+});
+
+describe('statusChanges', () => {
+  const state = (level, signal = true) => ({ battery: { level }, gps: { signal } });
+
+  it('reports nothing for routine changes', () => {
+    expect(statusChanges(state(80), state(79))).toEqual([]);
+    expect(statusChanges(state(15), state(14))).toEqual([]);
+  });
+
+  it('reports the battery crossing into low and critical', () => {
+    expect(statusChanges(state(21), state(20))).toEqual(['batteryLow']);
+    expect(statusChanges(state(11), state(10))).toEqual(['batteryCritical']);
+  });
+
+  it('follows the displayed percentage', () => {
+    expect(statusChanges(state(20.6), state(20.4))).toEqual(['batteryLow']);
+  });
+
+  it('does not announce the battery returning to normal', () => {
+    expect(statusChanges(state(15), state(50))).toEqual([]);
+  });
+
+  it('reports GPS lost and restored', () => {
+    expect(statusChanges(state(80, true), state(80, false))).toEqual(['gpsLost']);
+    expect(statusChanges(state(80, false), state(80, true))).toEqual(['gpsRestored']);
+  });
+
+  it('can report several changes at once', () => {
+    expect(statusChanges(state(21, true), state(20, false))).toEqual(['batteryLow', 'gpsLost']);
   });
 });
 

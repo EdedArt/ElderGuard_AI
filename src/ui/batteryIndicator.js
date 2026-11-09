@@ -13,6 +13,7 @@ const BATTERY_ICON = `
 export function createBatteryIndicator(store) {
   const root = document.createElement('div');
   root.className = 'battery-indicator';
+  root.setAttribute('role', 'img');
 
   const icon = document.createElement('span');
   icon.className = 'battery-indicator__icon';
@@ -29,6 +30,7 @@ export function createBatteryIndicator(store) {
     root.dataset.state = batteryState(percent);
     fill.setAttribute('width', String((FILL_MAX_WIDTH * percent) / 100));
     value.textContent = t('watch.battery.value', { value: percent });
+    root.setAttribute('aria-label', t('watch.battery.label', { value: percent }));
   };
 
   store.subscribe((state, changedKeys) => {

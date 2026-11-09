@@ -12,15 +12,29 @@ export const es = {
   },
   watch: {
     areaLabel: 'Reloj inteligente',
+    face: 'Pantalla del reloj',
+    clock: {
+      label: 'Hora y fecha',
+    },
     heartRate: {
       unit: 'LPM',
+      label: '{value} latidos por minuto',
     },
     battery: {
       value: '{value} %',
+      label: 'Batería al {value} %',
     },
     gps: {
       ok: 'GPS',
       lost: 'Sin GPS',
+      okLabel: 'GPS conectado',
+      lostLabel: 'Sin señal de GPS',
+    },
+    status: {
+      batteryLow: 'Batería baja',
+      batteryCritical: 'Batería muy baja',
+      gpsLost: 'Se perdió la señal de GPS',
+      gpsRestored: 'Se recuperó la señal de GPS',
     },
     readout: {
       heartRate: '{value} LPM',
@@ -31,6 +45,7 @@ export const es = {
   sos: {
     title: 'SOS',
     label: 'AUXILIO',
+    hint: 'SOS, auxilio. Mantén pulsado {seconds} segundos para pedir ayuda',
     active: 'Pidiendo ayuda…',
     cancel: 'Cancelar',
   },
