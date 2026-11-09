@@ -10,7 +10,7 @@ Simulador web de un smartwatch para la seguridad de personas mayores. Es un proy
 - Panel externo para simular los datos de los sensores.
 - Interfaz de alto contraste (WCAG AAA) con botones muy grandes y poco texto, pensada para personas mayores.
 
-Estado actual: estructura base del proyecto, pantalla circular del reloj, panel del simulador (por ahora vacío), cambio de tema claro/oscuro, interfaz en español e inglés, motor de telemetría simulada, pantalla del reloj con datos en vivo, botón SOS y detección de caídas con cuenta regresiva.
+Estado actual: estructura base del proyecto, pantalla circular del reloj, cambio de tema claro/oscuro, interfaz en español e inglés, motor de telemetría simulada, pantalla del reloj con datos en vivo, botón SOS, detección de caídas con cuenta regresiva y panel de demostración. La detección de frecuencia cardíaca anormal llegará en la siguiente fase.
 
 ## Tema e idioma
 
@@ -42,7 +42,7 @@ Para evitar activaciones accidentales, un toque simple no hace nada:
 1. Mantén pulsado el botón durante 2 segundos con el dedo, el ratón o las teclas `Enter` o `Espacio`. Un anillo se va llenando alrededor del botón y, si el dispositivo lo permite, este vibra.
 2. Si sueltas antes de tiempo, se cancela y el reloj muestra durante 2 segundos el recordatorio `Mantén presionado`.
 3. Al completar los 2 segundos aparece la pantalla roja `Pidiendo ayuda…`. El estado `deviceStatus.mode` cambia a `sos` y se emite el evento `sos:triggered` con el motivo (`reason`, que es `manual` en este caso y `fall` si viene de una caída), la hora y la ubicación.
-4. El botón `Cancelar` cierra esa pantalla y devuelve el reloj al modo `monitoring`.
+4. El botón `Cancelar` cierra esa pantalla, devuelve el reloj al modo `monitoring` y emite el evento `sos:cancelled`.
 
 Mantener pulsado es difícil con un lector de pantalla, así que existe una alternativa: un botón `Pedir ayuda` que solo se ve al recibir el foco y abre una confirmación dentro del reloj (`Sí, pedir ayuda` o `No`). Al confirmar se activa el mismo flujo de SOS.
 
@@ -140,6 +140,66 @@ window.elderguard.simulateFall();
 
 La función reproduce el mismo escenario de caída que usa el panel del simulador: inyecta un impacto durante 1 segundo y luego quietud mediante las anulaciones del motor, por lo que se ejecuta el detector real de principio a fin. La cuenta regresiva aparece entre 5 y 6 segundos después de que empieza la quietud (entre 6 y 7 segundos después de llamar a la función), porque el detector exige 5 segundos de quietud y la comprueba en cada ciclo de 1 segundo. Solo existe en desarrollo y no se incluye en la versión de producción.
 
+## Panel de demostración
+
+El panel `Modo demostración` es la herramienta del presentador. Está fuera del reloj, tiene un marco punteado y un color propio para no confundirlo con lo que ve la persona mayor, y queda debajo del reloj en pantallas angostas. Se contrae con el botón `Contraer` y recuerda ese estado al recargar.
+
+Hasta que se toca `Toca para iniciar` en el reloj, sus controles están desactivados y muestra el aviso `Inicia el reloj primero`.
+
+Ningún control cambia la interfaz directamente. Todos pasan por las anulaciones del motor y por la lógica real de alertas, de modo que lo que se ve en la demostración es el detector funcionando de verdad.
+
+### Controles
+
+**Escenarios.** Solo se ejecuta uno a la vez; iniciar otro detiene el que esté en curso.
+
+| Control                     | Qué hace                                                                                                                                                                            |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Simular caída`             | Impacto de 4,4 g durante 1 segundo y luego quietud. La cuenta regresiva aparece entre 5 y 6 segundos después de que empieza la quietud, es decir, entre 6 y 7 segundos tras pulsar. |
+| `Tropiezo (falsa alarma)`   | Impacto de 2,9 g seguido de movimiento normal durante 5 segundos. El detector marca `Impacto` y vuelve a `En espera` sin alertar.                                                   |
+| `Ritmo cardíaco alto (140)` | Mantiene 140 LPM con el acelerómetro quieto hasta reiniciar. Por ahora no genera ninguna alerta: la detección de anomalías llegará en la siguiente fase.                            |
+| `Batería baja (15 %)`       | Mantiene la batería en 15 %.                                                                                                                                                        |
+| `Batería crítica (5 %)`     | Mantiene la batería en 5 %.                                                                                                                                                         |
+| `Restaurar batería (100 %)` | Devuelve la batería a 100 %, y esta vuelve a descargarse sola.                                                                                                                      |
+| `Perder GPS`                | Quita la señal y conserva la última posición. El botón pasa a `Recuperar GPS`.                                                                                                      |
+| `Reiniciar todo`            | Detiene el escenario, quita todas las anulaciones, reinicia el detector, cierra la cuenta regresiva o el SOS y deja el reloj en vigilancia con la batería al 100 %.                 |
+
+**Sensores manuales.** Hay un deslizador para la frecuencia cardíaca (de 40 a 180 LPM) y uno para cada eje del acelerómetro (de −4 a 4 g), cada uno con su interruptor `Manual`. Con el interruptor apagado, el deslizador sigue la lectura real. Con el interruptor encendido, su valor es la lectura del sensor, y al apagarlo se vuelve a la generación automática. Los ejes del acelerómetro que sigan en automático quedan en su valor de reposo mientras otro eje esté en manual.
+
+Los deslizadores también pasan por el detector real: llevar un eje a 4 g produce un impacto de verdad. Un escenario que use un sensor apaga el interruptor de ese sensor, y encender un interruptor detiene el escenario que esté usando el mismo sensor.
+
+**Estado.** Muestra en vivo el estado del detector de caídas (`En espera`, `Impacto`, `Inmovilidad` o `Caída confirmada`, cada uno con su color) y todas las lecturas: frecuencia cardíaca, acelerómetro y magnitud, GPS y señal, batería y modo del reloj. El estado `Caída confirmada` se mantiene mientras dura la alerta que provocó.
+
+**Registro.** Lista con hora, de la más reciente a la más antigua y con un máximo de 50 entradas: escenarios iniciados, terminados y detenidos, caídas detectadas y canceladas, SOS activados con su motivo, SOS cancelados, cambios de batería y de GPS, y reinicios. `Borrar registro` la vacía.
+
+### Atajos de teclado
+
+El botón `?` muestra esta misma lista. Los atajos funcionan aunque el panel esté contraído, pero no antes de iniciar el reloj ni mientras se escribe en un campo de texto.
+
+| Atajo   | Acción                 |
+| ------- | ---------------------- |
+| `Alt+1` | Simular caída          |
+| `Alt+2` | Tropiezo               |
+| `Alt+3` | Ritmo cardíaco alto    |
+| `Alt+4` | Batería baja           |
+| `Alt+5` | Perder o recuperar GPS |
+| `Alt+0` | Reiniciar todo         |
+
+### Guion de defensa (5 minutos)
+
+Antes de empezar, abre la página con `npm run dev`, elige el idioma y el tema, y deja a la vista el reloj y el panel. Los únicos toques en el reloj son iniciar y las respuestas de la persona (`ESTOY BIEN` y `Cancelar`); todo lo demás se hace desde el panel.
+
+| Tiempo | Paso                  | Qué hacer                                                                             | Qué decir o señalar                                                                                                                                               |
+| ------ | --------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0:00   | Iniciar el reloj      | Señala los controles desactivados y toca `Toca para iniciar` en el reloj.             | El primer toque desbloquea el audio y pone en marcha la telemetría.                                                                                               |
+| 0:30   | Lecturas normales     | No toques nada durante unos segundos.                                                 | Hora, batería, GPS y pulso en el reloj; en `Estado`, las lecturas cambian cada segundo, la magnitud ronda 1 g y el detector sigue `En espera`.                    |
+| 1:00   | Tropiezo              | Pulsa `Tropiezo (falsa alarma)` (`Alt+2`) y espera unos 6 segundos.                   | El detector marca `Impacto` y vuelve a `En espera`. El reloj no alerta: un golpe seguido de movimiento no es una caída.                                           |
+| 1:30   | Caída con cancelación | Pulsa `Simular caída` (`Alt+1`). Cuando aparezca `¿Te caíste?`, pulsa `ESTOY BIEN`.   | Secuencia `Impacto`, `Inmovilidad`, `Caída confirmada`. Hay 10 segundos para cancelar, con pitidos, y el registro anota la detección y la cancelación.            |
+| 2:15   | Caída hasta el SOS    | Pulsa `Simular caída` de nuevo y no toques nada hasta que aparezca `Pidiendo ayuda…`. | Unos 17 segundos en total. Quien no puede responder también recibe ayuda: los últimos 3 segundos son más insistentes y el registro anota el motivo `caída`.       |
+| 3:00   | Cerrar el SOS         | Pulsa `Cancelar` en el reloj.                                                         | El reloj vuelve a la vigilancia y el registro anota la cancelación.                                                                                               |
+| 3:15   | Ritmo cardíaco alto   | Pulsa `Ritmo cardíaco alto (140)` (`Alt+3`).                                          | El pulso sube a 140 LPM con la persona en reposo y el corazón late más rápido. Aclara que la alerta por anomalía se agrega en la siguiente fase.                  |
+| 3:45   | Batería y GPS         | Pulsa `Batería baja`, `Batería crítica` y `Perder GPS`; luego `Recuperar GPS`.        | El indicador de batería pasa a ámbar y a rojo, y el GPS muestra `Sin GPS`. Los lectores de pantalla anuncian estos cambios de estado, nunca cada lectura.         |
+| 4:30   | Reiniciar             | Pulsa `Reiniciar todo` (`Alt+0`).                                                     | Todo vuelve al estado inicial, con la batería al 100 % y el detector `En espera`. Termina señalando en el `Registro` todo lo que ocurrió durante la demostración. |
+
 ## Arquitectura de telemetría
 
 Como no hay un reloj físico, los datos de los sensores se simulan. Todo este código está en `src/core`, es JavaScript puro sin acceso al DOM y recibe su función aleatoria por parámetro, de modo que las pruebas son deterministas. Los valores (intervalo, rangos, ruido, ubicación y batería) se configuran en `src/config/telemetry.config.js`.
@@ -147,7 +207,7 @@ Como no hay un reloj físico, los datos de los sensores se simulan. Todo este c�
 ```text
 Generadores ──> Motor de simulación ──> Store ──> Interfaz (suscriptores)
                        ^
-                       └── Anulaciones (futuro panel de demostración)
+                       └── Anulaciones (panel de demostración)
 ```
 
 - **Store (`telemetryStore.js`):** guarda el estado central y es la única fuente de datos para la interfaz. `getState()` devuelve una copia, `update(partial)` combina los cambios y avisa a los suscriptores con el estado nuevo y las claves que cambiaron, `subscribe(listener)` devuelve la función para cancelar la suscripción y `reset()` restaura el estado inicial.
@@ -172,7 +232,7 @@ Generadores ──> Motor de simulación ──> Store ──> Interfaz (suscrip
 
 ### Anulaciones (overrides)
 
-El futuro panel de demostración usará las anulaciones para inyectar eventos sin tocar los generadores. Mientras un sensor (`heartRate`, `accelerometer`, `gps` o `battery`) tiene una anulación, su generador no se ejecuta y se usa el valor indicado. El valor se aplica de inmediato y los demás sensores siguen generándose con normalidad.
+El panel de demostración usa las anulaciones para inyectar eventos sin tocar los generadores. Mientras un sensor (`heartRate`, `accelerometer`, `gps` o `battery`) tiene una anulación, su generador no se ejecuta y se usa el valor indicado. El valor se aplica de inmediato y los demás sensores siguen generándose con normalidad.
 
 ```js
 engine.setOverride('heartRate', 150); // Simula una frecuencia cardíaca anormal
