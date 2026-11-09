@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- The accent blue of the web app (the color-accent token in tokens.css). -->
+    <color name="ic_launcher_background">#00408C</color>
+</resources>

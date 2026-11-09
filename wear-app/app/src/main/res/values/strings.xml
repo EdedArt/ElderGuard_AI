@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Spanish, the default language. English is in values-en. -->
+<resources>
+    <string name="app_name">ElderGuard AI</string>
+</resources>

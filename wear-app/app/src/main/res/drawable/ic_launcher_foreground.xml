@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The favicon's 32-unit shield and heart, scaled into the central 66 of the 108 adaptive-icon units
+  so no launcher mask crops it: translate 21, scale 2.0625.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group
+        android:scaleX="2.0625"
+        android:scaleY="2.0625"
+        android:translateX="21"
+        android:translateY="21">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M16,1 L3,6 L3,15 C3,23 8.4,28.6 16,31 C23.6,28.6 29,23 29,15 L29,6 Z" />
+        <path
+            android:fillColor="#00408C"
+            android:pathData="M16,24.5 C16,24.5 8,19.3 8,13.8 C8,11 10.1,9 12.5,9 C14,9 15.3,9.8 16,11 C16.7,9.8 18,9 19.5,9 C21.9,9 24,11 24,13.8 C24,19.3 16,24.5 16,24.5 Z" />
+    </group>
+</vector>
