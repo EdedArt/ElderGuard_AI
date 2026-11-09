@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { telemetryConfig } from '../src/config/telemetry.config.js';
-import { accelerometerMagnitude, nextAccelerometer } from '../src/core/generators/accelerometer.js';
+import { nextAccelerometer } from '../src/core/generators/accelerometer.js';
+import { magnitude } from '../src/core/magnitude.js';
 import { nextBattery } from '../src/core/generators/battery.js';
 import { nextGps } from '../src/core/generators/gps.js';
 import { nextHeartRate } from '../src/core/generators/heartRate.js';
@@ -64,7 +65,7 @@ describe('nextAccelerometer', () => {
     const random = seededRandom(3);
     for (let i = 0; i < STEPS; i++) {
       const reading = nextAccelerometer({ random });
-      expect(Math.abs(accelerometerMagnitude(reading) - 1)).toBeLessThan(0.05);
+      expect(Math.abs(magnitude(reading) - 1)).toBeLessThan(0.05);
       for (const axis of ['x', 'y', 'z']) {
         // The small margin absorbs float error: |0.98 - 1| is 0.020000000000000018.
         expect(Math.abs(reading[axis] - rest[axis])).toBeLessThanOrEqual(noise + 1e-9);
@@ -84,12 +85,6 @@ describe('nextAccelerometer', () => {
   it('never produces negative zero', () => {
     const reading = nextAccelerometer({ random: () => 0.4999 });
     expect(Object.is(reading.x, -0)).toBe(false);
-  });
-});
-
-describe('accelerometerMagnitude', () => {
-  it('computes the vector length', () => {
-    expect(accelerometerMagnitude({ x: 3, y: 4, z: 0 })).toBe(5);
   });
 });
 

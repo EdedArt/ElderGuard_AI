@@ -12,7 +12,3 @@ export function nextAccelerometer({
     z: roundTo(rest.z + randomOffset(random, noise), 2),
   };
 }
-
-export function accelerometerMagnitude({ x, y, z }) {
-  return Math.hypot(x, y, z);
-}
