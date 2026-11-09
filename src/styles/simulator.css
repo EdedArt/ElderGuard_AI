@@ -28,6 +28,22 @@
   font-weight: 700;
 }
 
+.simulator-section {
+  margin-top: var(--space-medium);
+}
+
+.telemetry-readout__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-medium);
+}
+
+.telemetry-readout__row dd {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  text-align: right;
+}
+
 @media (max-width: 25rem) {
   .simulator-panel {
     padding: var(--space-medium);

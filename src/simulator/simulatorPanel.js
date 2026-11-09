@@ -1,5 +1,7 @@
 import { onLanguageChange, t } from '../i18n/index.js';
+import { createPanelSection } from './panelSection.js';
 import { createStartGate } from './startGate.js';
+import { createTelemetryReadout } from './telemetryReadout.js';
 
 const COLLAPSED_STORAGE_KEY = 'elderguard.simulator.collapsed';
 
@@ -42,7 +44,9 @@ export function createSimulatorPanel({ device }) {
   gate.onOpen(() => {
     hint.hidden = true;
   });
-  body.append(hint);
+  const status = createPanelSection('simulator.sections.status');
+  status.content.append(createTelemetryReadout(device.store));
+  body.append(hint, status.root);
 
   panel.append(header, body);
 
