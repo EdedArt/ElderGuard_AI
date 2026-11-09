@@ -153,6 +153,38 @@
   font-weight: 700;
   line-height: 1;
   cursor: pointer;
+  /* Keeps touch gestures and text selection from interrupting the hold. */
+  touch-action: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* The ring is the only feedback that a hold is working, so it stays with reduced motion. */
+.sos-button__ring {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+  pointer-events: none;
+}
+
+.sos-button__ring-progress {
+  fill: none;
+  stroke: var(--color-on-danger);
+  stroke-width: 7;
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+}
+
+.sos-button--holding .sos-button__ring-progress {
+  animation: sos-ring-fill var(--sos-hold-duration) linear forwards;
+}
+
+@keyframes sos-ring-fill {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 .sos-button__title {
