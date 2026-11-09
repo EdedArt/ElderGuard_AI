@@ -109,7 +109,8 @@ export function createSimulatorPanel({ device, shortcutTarget = document }) {
   const log = createPanelSection('simulator.sections.log');
   log.content.append(createEventLog({ device, controller }));
 
-  body.append(hint, scenarioControls.root, manualControls.root, status.root, log.root);
+  // The state stays right below the scenarios, so it is on screen while the audience watches them.
+  body.append(hint, scenarioControls.root, status.root, manualControls.root, log.root);
 
   // Outside the body, since the shortcuts also work with the panel collapsed.
   panel.append(header, shortcutHelp.list, body);

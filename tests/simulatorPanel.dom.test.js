@@ -831,6 +831,13 @@ describe('with the watch started', () => {
 });
 
 describe('structure and language', () => {
+  it('keeps the detector state above the manual sensors', () => {
+    const titles = [...panel.querySelectorAll('.simulator-section__title')].map(
+      ({ textContent }) => textContent,
+    );
+    expect(titles).toEqual(['Escenarios', 'Estado', 'Sensores manuales', 'Registro']);
+  });
+
   it('names the groups of controls with fieldsets and legends', () => {
     const legends = [...panel.querySelectorAll('fieldset > legend')].map(
       ({ textContent }) => textContent,
