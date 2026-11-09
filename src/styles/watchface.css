@@ -64,6 +64,40 @@
   font-size: max(var(--watch-font-min), calc(var(--watch-screen) * var(--watch-font-secondary)));
 }
 
+/* Takes the place of the date, the one reading the wearer can do without for a while. */
+.watchface__center:has(.heart-rate-banner:not([hidden])) .watch-clock__date {
+  display: none;
+}
+
+.heart-rate-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--watch-screen) * 0.015);
+  max-width: 94%;
+  margin-top: calc(var(--watch-screen) * 0.01);
+  padding: calc(var(--watch-screen) * 0.012) calc(var(--watch-screen) * 0.025);
+  background-color: var(--color-warning);
+  border-radius: var(--radius-small);
+  color: var(--color-on-warning);
+  font-size: max(var(--watch-font-min), calc(var(--watch-screen) * 0.052));
+  line-height: 1.1;
+}
+
+.heart-rate-banner[hidden] {
+  display: none;
+}
+
+.heart-rate-banner__icon {
+  display: flex;
+  flex-shrink: 0;
+  width: calc(var(--watch-screen) * 0.06);
+}
+
+.heart-rate-banner__icon svg {
+  width: 100%;
+}
+
 .heart-rate {
   display: flex;
   align-items: center;

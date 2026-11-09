@@ -3,6 +3,7 @@ import { createBackgroundLock } from './backgroundLock.js';
 import { createBatteryIndicator } from './batteryIndicator.js';
 import { createFallOverlay } from './fallOverlay.js';
 import { createGpsIndicator } from './gpsIndicator.js';
+import { createHeartRateBanner } from './heartRateBanner.js';
 import { createHeartRateIndicator } from './heartRateIndicator.js';
 import { createHoldHint } from './holdHint.js';
 import { createSosAlternativeButton } from './sosAlternativeButton.js';
@@ -47,7 +48,11 @@ export function createWatchface({ store, sos, fall, countdown, onStart }) {
   const sosAlternative = createSosAlternativeButton({ onActivate: sosConfirm.open });
 
   statusZone.append(createBatteryIndicator(store), createGpsIndicator(store));
-  centerZone.append(createWatchClock(), createHeartRateIndicator(store));
+  centerZone.append(
+    createWatchClock(),
+    createHeartRateBanner({ store, announce: announcer.announce }),
+    createHeartRateIndicator(store),
+  );
   bottomZone.append(sosButton, sosAlternative);
 
   const sosScreen = createSosScreen({

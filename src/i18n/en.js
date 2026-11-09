@@ -32,6 +32,9 @@ export const en = {
       okLabel: 'GPS connected',
       lostLabel: 'No GPS signal',
     },
+    heartRateAlert: {
+      high: 'High heart rate at rest',
+    },
     status: {
       batteryLow: 'Battery low',
       batteryCritical: 'Battery very low',
