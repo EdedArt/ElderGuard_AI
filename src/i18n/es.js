@@ -71,6 +71,13 @@ export const es = {
     sections: {
       status: 'Estado',
     },
+    fallState: {
+      label: 'Detector de caídas',
+      idle: 'En espera',
+      impact: 'Impacto',
+      immobility: 'Inmovilidad',
+      confirmed: 'Caída confirmada',
+    },
     telemetry: {
       bpm: 'Frecuencia cardíaca',
       bpmValue: '{value} {unit}',

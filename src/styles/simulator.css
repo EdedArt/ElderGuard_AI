@@ -32,6 +32,41 @@
   margin-top: var(--space-medium);
 }
 
+.fall-state {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-small);
+  margin-bottom: var(--space-small);
+}
+
+.fall-state__value {
+  padding: 0.125rem var(--space-small);
+  border-radius: var(--radius-small);
+  font-weight: 700;
+}
+
+.fall-state[data-state='idle'] .fall-state__value {
+  background-color: var(--color-success);
+  color: var(--color-on-success);
+}
+
+.fall-state[data-state='impact'] .fall-state__value {
+  background-color: var(--color-warning);
+  color: var(--color-on-warning);
+}
+
+.fall-state[data-state='immobility'] .fall-state__value {
+  background-color: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.fall-state[data-state='confirmed'] .fall-state__value {
+  background-color: var(--color-danger);
+  color: var(--color-on-danger);
+}
+
 .telemetry-readout__row {
   display: flex;
   justify-content: space-between;

@@ -1,4 +1,5 @@
 import { onLanguageChange, t } from '../i18n/index.js';
+import { createFallStateIndicator } from './fallStateIndicator.js';
 import { createPanelSection } from './panelSection.js';
 import { createStartGate } from './startGate.js';
 import { createTelemetryReadout } from './telemetryReadout.js';
@@ -45,7 +46,8 @@ export function createSimulatorPanel({ device }) {
     hint.hidden = true;
   });
   const status = createPanelSection('simulator.sections.status');
-  status.content.append(createTelemetryReadout(device.store));
+  const fallState = createFallStateIndicator(device);
+  status.content.append(fallState.root, createTelemetryReadout(device.store));
   body.append(hint, status.root);
 
   panel.append(header, body);

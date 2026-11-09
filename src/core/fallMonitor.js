@@ -1,6 +1,6 @@
 import { fallDetectionConfig } from '../config/fallDetection.config.js';
 import { createEventEmitter } from './eventEmitter.js';
-import { createFallDetector } from './fallDetector.js';
+import { FALL_STATES, createFallDetector } from './fallDetector.js';
 
 const MODE_MONITORING = 'monitoring';
 const MODE_FALL_COUNTDOWN = 'fall-countdown';
@@ -16,8 +16,10 @@ export function createFallMonitor({
 }) {
   const emitter = createEventEmitter();
   let previousMode = store.getState().deviceStatus.mode;
+  let fallAlertActive = false;
 
   detector.onConfirmed(() => {
+    fallAlertActive = true;
     store.update({ deviceStatus: { mode: MODE_FALL_COUNTDOWN } });
     emitter.emit('fall:detected', { timestamp: now(), gps: store.getState().gps });
     countdown.start(config.countdownSeconds);
@@ -32,6 +34,7 @@ export function createFallMonitor({
     const wasMonitoring = previousMode === MODE_MONITORING;
     previousMode = mode;
 
+    if (mode === MODE_MONITORING) fallAlertActive = false;
     if (mode !== MODE_FALL_COUNTDOWN) countdown.cancel();
 
     if (mode !== MODE_MONITORING) {
@@ -46,6 +49,11 @@ export function createFallMonitor({
   return {
     on: emitter.on,
     off: emitter.off,
+
+    // The detector itself goes back to idle the moment the alert starts, so the time it spends
+    // confirmed is never long enough to see. For an observer, a fall stays confirmed until the
+    // alert it raised is over.
+    getDetectorState: () => (fallAlertActive ? FALL_STATES.CONFIRMED : detector.getState()),
 
     cancel() {
       if (store.getState().deviceStatus.mode !== MODE_FALL_COUNTDOWN) return;

@@ -127,6 +127,38 @@ describe('while an alert is active', () => {
   });
 });
 
+describe('getDetectorState', () => {
+  it('follows the detector during monitoring', () => {
+    expect(monitor.getDetectorState()).toBe(FALL_STATES.IDLE);
+    tick(SPIKE);
+    expect(monitor.getDetectorState()).toBe(FALL_STATES.IMPACT);
+    tick(STILL);
+    expect(monitor.getDetectorState()).toBe(FALL_STATES.IMMOBILITY);
+  });
+
+  it('stays confirmed through the countdown and the SOS that follows', () => {
+    fall();
+    expect(monitor.getDetectorState()).toBe(FALL_STATES.CONFIRMED);
+
+    store.update({ deviceStatus: { mode: 'sos' } });
+    expect(monitor.getDetectorState()).toBe(FALL_STATES.CONFIRMED);
+
+    store.update({ deviceStatus: { mode: 'monitoring' } });
+    expect(monitor.getDetectorState()).toBe(FALL_STATES.IDLE);
+  });
+
+  it('goes back to idle when the countdown is cancelled', () => {
+    fall();
+    monitor.cancel();
+    expect(monitor.getDetectorState()).toBe(FALL_STATES.IDLE);
+  });
+
+  it('does not report a confirmed fall for a manual SOS', () => {
+    store.update({ deviceStatus: { mode: 'sos' } });
+    expect(monitor.getDetectorState()).toBe(FALL_STATES.IDLE);
+  });
+});
+
 describe('countdown', () => {
   it('starts when a fall is detected, from the configured value', () => {
     const ticks = [];
