@@ -14,13 +14,33 @@
   gap: var(--space-small);
 }
 
-.simulator-panel__collapse {
+.simulator-panel__header-actions {
+  display: flex;
+  gap: var(--space-small);
+}
+
+.simulator-panel__collapse,
+.simulator-panel__help {
   min-height: var(--touch-target-min);
   padding: 0 var(--space-medium);
   background-color: var(--color-background);
   border: 0.125rem solid var(--color-border);
   border-radius: var(--radius-small);
   cursor: pointer;
+}
+
+.shortcut-list {
+  margin-top: var(--space-medium);
+}
+
+.shortcut-list__row {
+  display: flex;
+  gap: var(--space-small);
+}
+
+.shortcut-list__row dt {
+  flex-shrink: 0;
+  font-weight: 700;
 }
 
 .simulator-panel__hint {

@@ -5,6 +5,7 @@ import { createEventLog } from './eventLog.js';
 import { createFallStateIndicator } from './fallStateIndicator.js';
 import { createManualSliders } from './manualSliders.js';
 import { createPanelSection } from './panelSection.js';
+import { createShortcutHelp, installPresenterShortcuts } from './shortcuts.js';
 import { createStartGate } from './startGate.js';
 import { createTelemetryReadout } from './telemetryReadout.js';
 
@@ -26,7 +27,7 @@ function saveCollapsed(collapsed) {
   }
 }
 
-export function createSimulatorPanel({ device }) {
+export function createSimulatorPanel({ device, shortcutTarget = document }) {
   const panel = document.createElement('aside');
   panel.className = 'simulator-panel';
 
@@ -37,7 +38,11 @@ export function createSimulatorPanel({ device }) {
   const collapse = document.createElement('button');
   collapse.type = 'button';
   collapse.className = 'simulator-panel__collapse';
-  header.append(heading, collapse);
+  const shortcutHelp = createShortcutHelp();
+  const headerActions = document.createElement('div');
+  headerActions.className = 'simulator-panel__header-actions';
+  headerActions.append(shortcutHelp.toggle, collapse);
+  header.append(heading, headerActions);
 
   const body = document.createElement('div');
   body.className = 'simulator-panel__body';
@@ -100,7 +105,10 @@ export function createSimulatorPanel({ device }) {
 
   body.append(hint, scenarioControls.root, manualControls.root, status.root, log.root);
 
-  panel.append(header, body);
+  // Outside the body, since the shortcuts also work with the panel collapsed.
+  panel.append(header, shortcutHelp.list, body);
+
+  installPresenterShortcuts({ controller, gate, target: shortcutTarget });
 
   let collapsed = loadCollapsed();
 

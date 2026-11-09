@@ -110,6 +110,12 @@ export const es = {
     manual: {
       switch: 'Manual',
     },
+    shortcuts: {
+      toggle: '?',
+      toggleLabel: 'Atajos de teclado',
+      combo: 'Alt+{key}',
+      gps: 'Perder o recuperar GPS',
+    },
     actions: {
       fall: 'Simular caída',
       stumble: 'Tropiezo (falsa alarma)',
