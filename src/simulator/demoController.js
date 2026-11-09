@@ -16,6 +16,8 @@ export function createDemoController({ device }) {
   const emitter = createEventEmitter();
   // Manual values by channel: heartRate, x, y or z.
   const manual = new Map();
+  // Scenarios still in force after ending, by the sensor that keeps them so.
+  const held = new Map();
 
   // Writes a reading right away and hands the sensor straight back to its generator.
   const applyOnce = (sensor, value) => {
@@ -41,6 +43,31 @@ export function createDemoController({ device }) {
     else engine.clearOverride(channel);
   };
 
+  const hasManualValue = (sensor) =>
+    [...manual.keys()].some((channel) => sensorOf(channel) === sensor);
+
+  // A held scenario is over: hands back what else it had overridden, unless someone else now uses it.
+  const releaseHeld = (sensor) => {
+    const scenario = held.get(sensor);
+    if (!scenario) return;
+    held.delete(sensor);
+
+    const current = runner.getCurrent();
+    for (const { setOverride } of scenario.steps) {
+      if (!setOverride || setOverride.sensor === sensor) continue;
+      const inUse =
+        hasManualValue(setOverride.sensor) ||
+        (current && overridesSensor(current, setOverride.sensor));
+      if (!inUse) engine.clearOverride(setOverride.sensor);
+    }
+    emitter.emit('scenario-restored', { scenario });
+  };
+
+  // One held scenario replacing another on the same sensor restores nothing: the sensor stays held.
+  runner.onStart(({ scenario }) => {
+    if (scenario.holds) held.set(scenario.holds, scenario);
+  });
+
   // Generated readings count as lying still, so a stumble cut short would turn into a fall alert.
   // A sequence left unfinished is not something the wearer did, so the detector forgets it.
   runner.onEnd(({ scenario, completed }) => {
@@ -61,11 +88,17 @@ export function createDemoController({ device }) {
   return {
     runScenario: (id) => runner.run(scenarios[id]),
 
-    restoreBattery: () => applyOnce('battery', { level: telemetryConfig.battery.startLevel }),
+    restoreBattery() {
+      applyOnce('battery', { level: telemetryConfig.battery.startLevel });
+      releaseHeld('battery');
+    },
 
     toggleGps() {
       if (device.store.getState().gps.signal) runner.run(scenarios.gpsLost);
-      else applyOnce('gps', { signal: true });
+      else {
+        applyOnce('gps', { signal: true });
+        releaseHeld('gps');
+      }
     },
 
     isManual: (channel) => manual.has(channel),
@@ -76,6 +109,7 @@ export function createDemoController({ device }) {
       if (current && overridesSensor(current, sensorOf(channel))) runner.stop();
       manual.set(channel, value);
       applyManual(channel);
+      releaseHeld(sensorOf(channel));
     },
 
     releaseManual(channel) {
@@ -88,6 +122,7 @@ export function createDemoController({ device }) {
       runner.stop();
       manual.clear();
       engine.clearAllOverrides();
+      for (const sensor of [...held.keys()]) releaseHeld(sensor);
       fall.cancel();
       device.sos.cancel();
       device.sos.dismissRequest();
@@ -99,5 +134,6 @@ export function createDemoController({ device }) {
 
     onManualChange: (listener) => emitter.on('manual-change', listener),
     onReset: (listener) => emitter.on('reset', listener),
+    onScenarioRestored: (listener) => emitter.on('scenario-restored', listener),
   };
 }

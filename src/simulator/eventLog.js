@@ -69,10 +69,15 @@ export function createEventLog({
 
   const { fall, scenarioRunner, sos, store } = device;
 
-  scenarioRunner.onStart(({ scenario }) =>
-    add(() => t('simulator.log.scenarioStarted', { name: scenarioName(scenario) })),
-  );
+  scenarioRunner.onStart(({ scenario }) => {
+    const key = scenario.holds
+      ? 'simulator.log.scenarioActivated'
+      : 'simulator.log.scenarioStarted';
+    add(() => t(key, { name: scenarioName(scenario) }));
+  });
   scenarioRunner.onEnd(({ scenario, completed }) => {
+    // Having applied its steps, a held scenario is not over: it is logged when actually cleared.
+    if (scenario.holds && completed) return;
     const key = completed ? 'simulator.log.scenarioFinished' : 'simulator.log.scenarioStopped';
     add(() => t(key, { name: scenarioName(scenario) }));
   });
@@ -82,6 +87,9 @@ export function createEventLog({
     add(() => t('simulator.log.sosTriggered', { reason: t(`simulator.log.sosReason.${reason}`) })),
   );
   sos.on('sos:cancelled', () => add(() => t('simulator.log.sosCancelled')));
+  controller.onScenarioRestored(({ scenario }) =>
+    add(() => t('simulator.log.scenarioRestored', { name: scenarioName(scenario) })),
+  );
   controller.onReset(() => add(() => t('simulator.log.reset')));
 
   const initial = store.getState();

@@ -591,17 +591,83 @@ describe('with the watch started', () => {
       click('criticalBattery');
       expect(logMessages()).toContain('Batería crítica: 5 %');
       click('restoreBattery');
-      expect(logMessages()[0]).toBe('Batería normal: 100 %');
+      expect(logMessages()).toContain('Batería normal: 100 %');
 
       click('gpsToggle');
       expect(logMessages()).toContain('Señal de GPS perdida');
       click('gpsToggle');
-      expect(logMessages()[0]).toBe('Señal de GPS recuperada');
+      expect(logMessages()).toContain('Señal de GPS recuperada');
     });
 
     it('does not record routine readings', () => {
       vi.advanceTimersByTime(TICK * 20);
       expect(logMessages()).toEqual([]);
+    });
+
+    describe('scenarios that stay in force', () => {
+      it.each([
+        ['lowBattery', 'Batería baja'],
+        ['criticalBattery', 'Batería crítica'],
+        ['highHeartRate', 'Ritmo cardíaco alto'],
+        ['gpsToggle', 'GPS perdido'],
+      ])('%s logs activated and never finished, until cleared', (action, name) => {
+        click(action);
+        vi.advanceTimersByTime(LONG_WAIT);
+
+        expect(logMessages()).toContain(`Escenario activado: ${name}`);
+        expect(logMessages().join()).not.toMatch(/Escenario (iniciado|terminado|restablecido)/);
+
+        click('reset');
+        expect(logMessages()).toContain(`Escenario restablecido: ${name}`);
+        expect(logMessages().join()).not.toMatch(/Escenario terminado/);
+      });
+
+      it('logs restored when the battery is restored', () => {
+        click('lowBattery');
+        click('restoreBattery');
+        expect(logMessages()).toContain('Escenario restablecido: Batería baja');
+      });
+
+      it('logs restored when the GPS is restored', () => {
+        click('gpsToggle');
+        click('gpsToggle');
+        expect(logMessages()).toContain('Escenario restablecido: GPS perdido');
+      });
+
+      it('restores nothing when restoring a battery no scenario was holding', () => {
+        click('restoreBattery');
+        expect(logMessages().join()).not.toMatch(/restablecido/);
+      });
+
+      it('does not count critical battery replacing low battery as restored', () => {
+        click('lowBattery');
+        click('criticalBattery');
+        expect(logMessages().join()).not.toMatch(/restablecido/);
+
+        click('restoreBattery');
+        const restored = logMessages().filter((message) => message.includes('restablecido'));
+        expect(restored).toEqual(['Escenario restablecido: Batería crítica']);
+      });
+
+      it('logs the high heart rate as restored once manual control takes over', () => {
+        click('highHeartRate');
+        manualSwitch('heartRate').click();
+        expect(logMessages()[0]).toBe('Escenario restablecido: Ritmo cardíaco alto');
+
+        // The stillness it was holding goes with it.
+        manualSwitch('heartRate').click();
+        vi.advanceTimersByTime(TICK * 5);
+        expect(state().accelerometer).not.toEqual({ x: 0, y: 0, z: 1 });
+      });
+
+      it('leaves the wording of fall and stumble as it was', () => {
+        click('stumble');
+        vi.advanceTimersByTime(LONG_WAIT);
+        expect(logMessages()).toEqual([
+          'Escenario terminado: Tropiezo',
+          'Escenario iniciado: Tropiezo',
+        ]);
+      });
     });
 
     it('tells a stopped scenario from a finished one', () => {
@@ -622,7 +688,7 @@ describe('with the watch started', () => {
       }
       const entries = panel.querySelectorAll('.event-log__entry');
       expect(entries).toHaveLength(simulatorConfig.logMaxEntries);
-      expect(logMessages()[0]).toBe('Señal de GPS recuperada');
+      expect(logMessages()[0]).toBe('Escenario restablecido: GPS perdido');
     });
 
     it('is emptied by the clear button, and goes on recording', () => {
@@ -632,13 +698,16 @@ describe('with the watch started', () => {
       expect(panel.querySelector('.event-log__empty').hidden).toBe(false);
 
       click('restoreBattery');
-      expect(logMessages()).toEqual(['Batería normal: 100 %']);
+      expect(logMessages()).toEqual([
+        'Escenario restablecido: Batería baja',
+        'Batería normal: 100 %',
+      ]);
     });
 
     it('translates the entries already there', () => {
       click('lowBattery');
       setLanguage('en');
-      expect(logMessages()).toContain('Scenario started: Low battery');
+      expect(logMessages()).toContain('Scenario activated: Low battery');
       expect(logMessages()).toContain('Battery low: 15%');
     });
 

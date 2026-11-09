@@ -22,6 +22,7 @@ const set = (atMs, sensor, value) => ({ atMs, setOverride: { sensor, value } });
 const clear = (atMs, sensor) => ({ atMs, clearOverride: sensor });
 
 // Scenarios with no final clear stay in force after ending, until something else clears them.
+// `holds` names the sensor that keeps such a scenario in force for as long as it stays overridden.
 export function createScenarios({
   detection = fallDetectionConfig,
   telemetry = telemetryConfig,
@@ -61,21 +62,25 @@ export function createScenarios({
 
     highHeartRate: {
       id: 'highHeartRate',
+      holds: 'heartRate',
       steps: [set(0, 'heartRate', HIGH_HEART_RATE_BPM), set(0, 'accelerometer', STILL)],
     },
 
     lowBattery: {
       id: 'lowBattery',
+      holds: 'battery',
       steps: [set(0, 'battery', { level: LOW_BATTERY_LEVEL })],
     },
 
     criticalBattery: {
       id: 'criticalBattery',
+      holds: 'battery',
       steps: [set(0, 'battery', { level: CRITICAL_BATTERY_LEVEL })],
     },
 
     gpsLost: {
       id: 'gpsLost',
+      holds: 'gps',
       steps: [set(0, 'gps', { signal: false })],
     },
   };

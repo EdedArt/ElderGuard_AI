@@ -88,6 +88,8 @@ export const en = {
       scenarioStarted: 'Scenario started: {name}',
       scenarioFinished: 'Scenario finished: {name}',
       scenarioStopped: 'Scenario stopped: {name}',
+      scenarioActivated: 'Scenario activated: {name}',
+      scenarioRestored: 'Scenario restored: {name}',
       fallDetected: 'Fall detected',
       fallCancelled: 'Fall alert cancelled',
       sosTriggered: 'SOS triggered (reason: {reason})',
