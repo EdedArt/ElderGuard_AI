@@ -26,6 +26,11 @@
   --color-on-warning: #ffffff;
   --color-success: #0b5d1e;
   --color-on-success: #ffffff;
+  /* Only for the presenter's simulator panel, which must not look like part of the watch. */
+  --color-demo: #4a1d96;
+  --color-on-demo: #ffffff;
+  --color-demo-surface: #ece4fa;
+  --color-demo-text: #4a1d96;
 
   --font-size-base: 1.25rem;
   --font-size-large: 1.75rem;
@@ -82,4 +87,8 @@
   --color-on-warning: #000000;
   --color-success: #4ade80;
   --color-on-success: #000000;
+  --color-demo: #c9b3ff;
+  --color-on-demo: #000000;
+  --color-demo-surface: #1d1433;
+  --color-demo-text: #c9b3ff;
 }

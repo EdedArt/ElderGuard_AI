@@ -54,7 +54,7 @@
 
 .page__main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 22rem;
+  grid-template-columns: minmax(0, 1fr) 26rem;
   gap: var(--space-large);
   padding: var(--space-large);
 }
@@ -65,6 +65,15 @@
   justify-content: center;
   min-width: 0;
   container-type: inline-size;
+}
+
+/* The panel is taller than the screen, and the watch must stay in view while it scrolls. */
+@media (min-width: 60.0625rem) {
+  .page__watch-area {
+    position: sticky;
+    top: var(--space-medium);
+    align-self: start;
+  }
 }
 
 @media (max-width: 60rem) {
