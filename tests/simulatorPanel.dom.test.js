@@ -881,6 +881,11 @@ describe('with the watch started', () => {
       expect(state().gps.signal).toBe(true);
     });
 
+    it('Alt+6 runs the critical heart rate', () => {
+      pressShortcut('6');
+      expect(state().heartRate).toBe(170);
+    });
+
     it('Alt+0 resets everything', () => {
       pressShortcut('4');
       pressShortcut('5');
@@ -958,7 +963,7 @@ describe('with the watch started', () => {
       expect(list.hidden).toBe(false);
       expect(help.getAttribute('aria-expanded')).toBe('true');
       const combos = [...list.querySelectorAll('dt')].map(({ textContent }) => textContent);
-      expect(combos).toEqual(['Alt+1', 'Alt+2', 'Alt+3', 'Alt+4', 'Alt+5', 'Alt+0']);
+      expect(combos).toEqual(['Alt+1', 'Alt+2', 'Alt+3', 'Alt+4', 'Alt+5', 'Alt+6', 'Alt+0']);
     });
   });
 });

@@ -255,6 +255,7 @@ El botón `?` muestra esta misma lista. Los atajos funcionan aunque el panel est
 | `Alt+3` | Ritmo cardíaco alto    |
 | `Alt+4` | Batería baja           |
 | `Alt+5` | Perder o recuperar GPS |
+| `Alt+6` | Ritmo cardíaco crítico |
 | `Alt+0` | Reiniciar todo         |
 
 ### Guion de defensa (5 a 6 minutos)
@@ -270,7 +271,7 @@ Antes de empezar, abre la página con `npm run dev`, elige el idioma y el tema, 
 | 1:50   | Caída hasta el SOS     | Pulsa `Simular caída` de nuevo y no toques nada hasta que aparezca `Pidiendo ayuda…`. | Unos 17 segundos en total. Quien no puede responder también recibe ayuda. La pantalla roja muestra los contactos avisados y las coordenadas enviadas. Aclara que es una simulación, sin llamadas de red. |
 | 2:40   | Cerrar el SOS          | Pulsa `Cancelar` en el reloj.                                                         | El reloj vuelve a la vigilancia, pero la alerta queda en `Alertas a la familia`.                                                                                                                         |
 | 2:55   | Ritmo cardíaco alto    | Pulsa `Ritmo cardíaco alto (140)` (`Alt+3`) y espera 8 o 9 segundos.                  | Aparece en ámbar `Ritmo cardíaco alto en reposo`. Es un aviso: el reloj sigue funcionando, no pide nada y no envía ninguna alerta. Un pico breve o el movimiento no lo activan.                          |
-| 3:30   | Ritmo cardíaco crítico | Pulsa `Ritmo cardíaco crítico (170)` y espera 8 o 9 segundos.                         | El aviso pasa a rojo: `Ritmo crítico: familia avisada`. La alerta sale sola y sin cuenta regresiva, porque es de salud y no una caída.                                                                   |
+| 3:30   | Ritmo cardíaco crítico | Pulsa `Ritmo cardíaco crítico (170)` (`Alt+6`) y espera 8 o 9 segundos.               | El aviso pasa a rojo: `Ritmo crítico: familia avisada`. La alerta sale sola y sin cuenta regresiva, porque es de salud y no una caída.                                                                   |
 | 4:10   | Batería                | Pulsa `Batería baja` (`Alt+4`) y `Batería crítica`.                                   | El indicador pasa a ámbar y a rojo. El registro anota `Escenario activado`, y `restablecido` solo al quitarlo.                                                                                           |
 | 4:30   | GPS                    | Pulsa `Perder GPS` (`Alt+5`) y luego `Recuperar GPS`.                                 | El reloj muestra `Sin GPS`. Los lectores de pantalla anuncian estos cambios de estado, nunca cada lectura.                                                                                               |
 | 4:50   | Historial de alertas   | Señala `Alertas a la familia`.                                                        | Hay dos alertas, la de la caída y la del ritmo crítico, con su hora, contactos y coordenadas: esto es lo que habría recibido la familia.                                                                 |

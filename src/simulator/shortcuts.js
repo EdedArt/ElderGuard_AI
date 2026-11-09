@@ -29,6 +29,11 @@ const SHORTCUTS = [
     run: (controller) => controller.toggleGps(),
   },
   {
+    key: '6',
+    labelKey: 'simulator.actions.criticalHeartRate',
+    run: (controller) => controller.runScenario('criticalHeartRate'),
+  },
+  {
     key: '0',
     labelKey: 'simulator.actions.reset',
     run: (controller) => controller.resetAll(),
