@@ -20,7 +20,7 @@ function createZone(name) {
   return zone;
 }
 
-export function createWatchface({ store, sos, fall, countdown, onStart }) {
+export function createWatchface({ store, sos, fall, countdown, alerts, onStart }) {
   const root = document.createElement('div');
   root.className = 'watchface';
   root.setAttribute('role', 'group');
@@ -50,13 +50,15 @@ export function createWatchface({ store, sos, fall, countdown, onStart }) {
   statusZone.append(createBatteryIndicator(store), createGpsIndicator(store));
   centerZone.append(
     createWatchClock(),
-    createHeartRateBanner({ store, announce: announcer.announce }),
+    createHeartRateBanner({ store, alerts, announce: announcer.announce }),
     createHeartRateIndicator(store),
   );
   bottomZone.append(sosButton, sosAlternative);
 
   const sosScreen = createSosScreen({
     store,
+    alerts,
+    announce: announcer.announce,
     onCancel: sos.cancel,
     lock,
     returnFocusTo: sosButton,

@@ -34,6 +34,7 @@ export const en = {
     },
     heartRateAlert: {
       high: 'High heart rate at rest',
+      critical: 'Critical heart rate: family notified',
     },
     status: {
       batteryLow: 'Battery low',
@@ -55,6 +56,10 @@ export const en = {
     },
     active: 'Calling for help…',
     cancel: 'Cancel',
+    notified: 'Notified (mock)',
+    notifiedAnnounce: '{names} notified. This is a simulation.',
+    location: 'GPS: {lat}, {lng}',
+    lastLocation: 'Last position: {lat}, {lng}',
   },
   fall: {
     question: 'Did you fall?',

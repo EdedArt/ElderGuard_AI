@@ -34,6 +34,7 @@ export const es = {
     },
     heartRateAlert: {
       high: 'Ritmo cardíaco alto en reposo',
+      critical: 'Ritmo crítico: familia avisada',
     },
     status: {
       batteryLow: 'Batería baja',
@@ -55,6 +56,10 @@ export const es = {
     },
     active: 'Pidiendo ayuda…',
     cancel: 'Cancelar',
+    notified: 'Avisados (simulado)',
+    notifiedAnnounce: 'Se avisó a {names}. Es una simulación.',
+    location: 'GPS: {lat}, {lng}',
+    lastLocation: 'Última posición: {lat}, {lng}',
   },
   fall: {
     question: '¿Te caíste?',

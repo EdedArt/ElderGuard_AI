@@ -8,8 +8,15 @@ const WARNING_ICON = `
   </svg>
 `;
 
+function bannerLevel({ deviceStatus }, alerts) {
+  if (alerts.isCriticalActive()) return 'critical';
+  return deviceStatus.healthAlert === HEALTH_ALERT_HIGH ? 'high' : null;
+}
+
 // A warning, not an alert: the wearer can read it and go on, and everything else keeps working.
-export function createHeartRateBanner({ store, announce }) {
+// It is also the only place where the wearer learns that a critical alert went out, since that one
+// has no screen of its own.
+export function createHeartRateBanner({ store, alerts, announce }) {
   const root = document.createElement('div');
   root.className = 'heart-rate-banner';
 
@@ -19,25 +26,28 @@ export function createHeartRateBanner({ store, announce }) {
   const text = document.createElement('span');
   root.append(icon, text);
 
-  let active = false;
+  let level = null;
 
   const renderText = () => {
-    text.textContent = t('watch.heartRateAlert.high');
+    text.textContent = level === null ? '' : t(`watch.heartRateAlert.${level}`);
   };
 
-  const render = ({ deviceStatus }) => {
-    const nextActive = deviceStatus.healthAlert === HEALTH_ALERT_HIGH;
-    root.hidden = !nextActive;
+  const render = (state) => {
+    const nextLevel = bannerLevel(state, alerts);
+    if (nextLevel === level) return;
+    level = nextLevel;
+
+    root.hidden = level === null;
+    root.classList.toggle('heart-rate-banner--critical', level === 'critical');
+    renderText();
     // Through the page's status announcer, which stays readable while an alert covers the watch.
-    if (nextActive && !active) announce(text.textContent);
-    active = nextActive;
+    if (level !== null) announce(text.textContent);
   };
 
-  store.subscribe((state, changedKeys) => {
-    if (changedKeys.includes('deviceStatus')) render(state);
-  });
+  // On every change: the critical state can end with nothing but the heart rate changing.
+  store.subscribe(render);
   onLanguageChange(renderText);
-  renderText();
+  root.hidden = true;
   render(store.getState());
 
   return root;

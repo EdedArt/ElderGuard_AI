@@ -84,6 +84,11 @@
   line-height: 1.1;
 }
 
+.heart-rate-banner--critical {
+  background-color: var(--color-danger);
+  color: var(--color-on-danger);
+}
+
 .heart-rate-banner[hidden] {
   display: none;
 }
@@ -350,6 +355,39 @@
   font-size: calc(var(--watch-screen) * 0.11);
   line-height: 1.1;
   text-wrap: balance;
+}
+
+/* With the details on screen the title gives up some room, so nothing leaves the circle. */
+.sos-screen:has(.sos-screen__details:not([hidden])) {
+  gap: calc(var(--watch-screen) * 0.025);
+}
+
+.sos-screen:has(.sos-screen__details:not([hidden])) .sos-screen__title {
+  font-size: calc(var(--watch-screen) * 0.085);
+}
+
+.sos-screen__details {
+  width: 84%;
+  font-size: max(var(--watch-font-min), calc(var(--watch-screen) * 0.05));
+  line-height: 1.15;
+}
+
+.sos-screen__details[hidden] {
+  display: none;
+}
+
+.sos-screen__contacts {
+  font-size: max(var(--watch-font-min), calc(var(--watch-screen) * 0.058));
+  text-wrap: balance;
+}
+
+.sos-screen__contact {
+  white-space: nowrap;
+}
+
+.sos-screen__location {
+  margin-top: calc(var(--watch-screen) * 0.012);
+  font-variant-numeric: tabular-nums;
 }
 
 .sos-screen__cancel {
