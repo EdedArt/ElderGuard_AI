@@ -51,7 +51,7 @@
    * Watchface sizes, as fractions of the watch screen diameter so they scale with it:
    * calc(var(--watch-screen) * var(--watch-font-time)).
    */
-  --watch-font-time: 0.2;
+  --watch-font-time: 0.22;
   --watch-font-bpm: 0.15;
   --watch-font-secondary: 0.055;
   --watch-font-sos: 0.095;

@@ -15,6 +15,8 @@ export const en = {
     face: 'Watch screen',
     clock: {
       label: 'Time and date',
+      am: 'AM',
+      pm: 'PM',
     },
     heartRate: {
       unit: 'BPM',

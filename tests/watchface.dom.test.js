@@ -54,14 +54,20 @@ describe('layout', () => {
 });
 
 describe('clock', () => {
-  it('renders the time and short date', () => {
-    expect(query('.watch-clock__time').textContent).toBe('14:05');
+  it('renders the 12-hour time, the period and the short date', () => {
+    expect(query('.watch-clock__time').textContent).toBe('2:05');
+    expect(query('.watch-clock__period').textContent).toBe('p. m.');
     expect(query('.watch-clock__date').textContent).toContain('nov');
   });
 
   it('keeps up with the real time', () => {
     vi.advanceTimersByTime(30000);
-    expect(query('.watch-clock__time').textContent).toBe('14:06');
+    expect(query('.watch-clock__time').textContent).toBe('2:06');
+  });
+
+  it('uses the period label of the current language', () => {
+    setLanguage('en');
+    expect(query('.watch-clock__period').textContent).toBe('PM');
   });
 });
 

@@ -42,9 +42,21 @@
   text-align: center;
 }
 
+.watch-clock__reading {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: calc(var(--watch-screen) * 0.012);
+}
+
 .watch-clock__time {
   font-size: calc(var(--watch-screen) * var(--watch-font-time));
   font-variant-numeric: tabular-nums;
+}
+
+.watch-clock__period {
+  font-size: calc(var(--watch-screen) * var(--watch-font-secondary));
+  white-space: nowrap;
 }
 
 .watch-clock__date {

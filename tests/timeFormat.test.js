@@ -5,21 +5,25 @@ import { formatShortDate, formatTime } from '../src/core/timeFormat.js';
 const afternoon = new Date(2026, 10, 8, 14, 5);
 const morning = new Date(2026, 10, 8, 7, 9);
 const midnight = new Date(2026, 10, 8, 0, 0);
+const noon = new Date(2026, 10, 8, 12, 0);
 
 describe('formatTime', () => {
-  it('uses 24-hour HH:MM in Spanish', () => {
-    expect(formatTime(afternoon, 'es')).toBe('14:05');
-    expect(formatTime(morning, 'es')).toBe('07:09');
+  it('uses a 12-hour clock without a leading zero', () => {
+    expect(formatTime(afternoon)).toEqual({ time: '2:05', period: 'pm' });
+    expect(formatTime(morning)).toEqual({ time: '7:09', period: 'am' });
   });
 
-  it('uses HH:MM in English too', () => {
-    expect(formatTime(afternoon, 'en')).toBe('14:05');
-    expect(formatTime(morning, 'en')).toBe('07:09');
+  it('shows midnight as 12:00 am, never 0:00', () => {
+    expect(formatTime(midnight)).toEqual({ time: '12:00', period: 'am' });
   });
 
-  it('shows midnight as 00:00, never 24:00', () => {
-    expect(formatTime(midnight, 'es')).toBe('00:00');
-    expect(formatTime(midnight, 'en')).toBe('00:00');
+  it('shows noon as 12:00 pm', () => {
+    expect(formatTime(noon)).toEqual({ time: '12:00', period: 'pm' });
+  });
+
+  it('switches period at the last minute of the morning and of the day', () => {
+    expect(formatTime(new Date(2026, 10, 8, 11, 59)).period).toBe('am');
+    expect(formatTime(new Date(2026, 10, 8, 23, 59))).toEqual({ time: '11:59', period: 'pm' });
   });
 });
 

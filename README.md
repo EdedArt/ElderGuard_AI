@@ -26,7 +26,7 @@ Todo el contenido queda dentro del área segura del círculo y se escala con el 
 - **Arriba, estado:** batería con ícono y porcentaje, y GPS con ícono y etiqueta.
   - Batería: verde por encima de 20 %, ámbar con 20 % o menos y rojo con 10 % o menos.
   - GPS: muestra `GPS` con señal y `Sin GPS` en ámbar sin ella.
-- **Centro, datos:** hora en formato HH:MM de 24 horas, fecha corta y frecuencia cardíaca. El corazón late al ritmo de las pulsaciones, salvo si el sistema pide reducir el movimiento.
+- **Centro, datos:** hora en formato de 12 horas con una etiqueta pequeña (`a. m.`/`p. m.` en español, `AM`/`PM` en inglés), fecha corta y frecuencia cardíaca. El corazón late al ritmo de las pulsaciones, salvo si el sistema pide reducir el movimiento.
 - **Abajo, SOS:** botón rojo grande con la palabra `SOS` y la etiqueta `AUXILIO`.
 
 Los lectores de pantalla solo anuncian los cambios de estado (batería baja, pérdida o recuperación del GPS), nunca cada lectura.

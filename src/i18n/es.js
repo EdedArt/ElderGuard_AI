@@ -15,6 +15,8 @@ export const es = {
     face: 'Pantalla del reloj',
     clock: {
       label: 'Hora y fecha',
+      am: 'a. m.',
+      pm: 'p. m.',
     },
     heartRate: {
       unit: 'LPM',
