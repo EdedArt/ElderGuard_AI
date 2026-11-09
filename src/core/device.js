@@ -1,5 +1,6 @@
 import { createAudioPlayer } from './audioPlayer.js';
 import { createCountdown } from './countdown.js';
+import { createEventEmitter } from './eventEmitter.js';
 import { createFallMonitor } from './fallMonitor.js';
 import { createSimulationEngine } from './simulationEngine.js';
 import { createSosController } from './sosController.js';
@@ -7,6 +8,7 @@ import { createTelemetryStore } from './telemetryStore.js';
 
 // Everything the watch runs on, wired together, with no user interface.
 export function createDevice({ createAudioContext } = {}) {
+  const emitter = createEventEmitter();
   const store = createTelemetryStore();
   const engine = createSimulationEngine({ store });
   const sos = createSosController({ store });
@@ -28,6 +30,9 @@ export function createDevice({ createAudioContext } = {}) {
     start() {
       audio.unlock();
       engine.start();
+      emitter.emit('started');
     },
+
+    onStart: (listener) => emitter.on('started', listener),
   };
 }

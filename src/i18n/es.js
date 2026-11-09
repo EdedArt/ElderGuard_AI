@@ -64,7 +64,10 @@ export const es = {
     button: 'Toca para iniciar',
   },
   simulator: {
-    title: 'Simulador de sensores (próximamente)',
+    title: 'Modo demostración',
+    collapse: 'Contraer',
+    expand: 'Expandir',
+    startFirst: 'Inicia el reloj primero',
   },
   theme: {
     toDark: 'Tema oscuro',

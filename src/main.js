@@ -3,6 +3,7 @@ import './styles/base.css';
 import './styles/layout.css';
 import './styles/watch.css';
 import './styles/watchface.css';
+import './styles/simulator.css';
 import { createDevice } from './core/device.js';
 import { createFallSimulation } from './simulator/fallSimulation.js';
 import { createSimulatorPanel } from './simulator/simulatorPanel.js';
@@ -19,7 +20,7 @@ headerActions.append(createLanguageToggle(), createThemeToggle());
 watchArea.append(
   createWatchFrame({ content: createWatchface({ ...device, onStart: device.start }) }),
 );
-simulatorArea.append(createSimulatorPanel());
+simulatorArea.append(createSimulatorPanel({ device }));
 document.querySelector('#app').append(root);
 
 // Removed from production builds. The simulator panel will take over this job for the demo.

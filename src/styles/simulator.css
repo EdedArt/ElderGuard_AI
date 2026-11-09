@@ -1,0 +1,35 @@
+.simulator-panel {
+  align-self: start;
+  padding: var(--space-large);
+  background-color: var(--color-surface);
+  border: 0.125rem solid var(--color-border);
+  border-radius: var(--radius-medium);
+}
+
+.simulator-panel__header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--space-small);
+}
+
+.simulator-panel__collapse {
+  min-height: var(--touch-target-min);
+  padding: 0 var(--space-medium);
+  background-color: var(--color-background);
+  border: 0.125rem solid var(--color-border);
+  border-radius: var(--radius-small);
+  cursor: pointer;
+}
+
+.simulator-panel__hint {
+  margin-top: var(--space-medium);
+  font-weight: 700;
+}
+
+@media (max-width: 25rem) {
+  .simulator-panel {
+    padding: var(--space-medium);
+  }
+}

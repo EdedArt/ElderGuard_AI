@@ -64,7 +64,10 @@ export const en = {
     button: 'Tap to start',
   },
   simulator: {
-    title: 'Sensor simulator (coming soon)',
+    title: 'Demo mode',
+    collapse: 'Collapse',
+    expand: 'Expand',
+    startFirst: 'Start the watch first',
   },
   theme: {
     toDark: 'Dark theme',

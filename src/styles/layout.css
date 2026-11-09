@@ -67,14 +67,6 @@
   container-type: inline-size;
 }
 
-.simulator-panel {
-  height: 100%;
-  padding: var(--space-large);
-  background-color: var(--color-surface);
-  border: 0.125rem solid var(--color-border);
-  border-radius: var(--radius-medium);
-}
-
 @media (max-width: 60rem) {
   .page__main {
     grid-template-columns: minmax(0, 1fr);
@@ -95,9 +87,5 @@
 
   .page__main {
     padding: var(--space-small) 0.25rem;
-  }
-
-  .simulator-panel {
-    padding: var(--space-medium);
   }
 }
