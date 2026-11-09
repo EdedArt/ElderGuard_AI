@@ -196,6 +196,41 @@
   font-size: calc(var(--watch-screen) * 0.045);
 }
 
+.sos-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: calc(var(--watch-screen) * 0.06);
+  background-color: var(--color-danger);
+  color: var(--color-on-danger);
+}
+
+.sos-screen[hidden] {
+  display: none;
+}
+
+.sos-screen__title {
+  width: 76%;
+  font-size: calc(var(--watch-screen) * 0.11);
+  line-height: 1.1;
+  text-wrap: balance;
+}
+
+.sos-screen__cancel {
+  width: 60%;
+  min-height: max(var(--watch-touch-target-min), calc(var(--watch-screen) * 0.2));
+  background-color: var(--color-background);
+  border: 0.125rem solid var(--color-text);
+  border-radius: var(--radius-medium);
+  color: var(--color-text);
+  font-size: calc(var(--watch-screen) * 0.08);
+  font-weight: 700;
+  cursor: pointer;
+}
+
 @keyframes heart-pulse {
   50% {
     transform: scale(1.12);

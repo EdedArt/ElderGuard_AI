@@ -31,6 +31,8 @@ export const en = {
   sos: {
     title: 'SOS',
     label: 'HELP',
+    active: 'Calling for help…',
+    cancel: 'Cancel',
   },
   simulator: {
     title: 'Sensor simulator (coming soon)',
