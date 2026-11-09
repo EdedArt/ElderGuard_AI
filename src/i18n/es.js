@@ -12,6 +12,9 @@ export const es = {
   },
   watch: {
     areaLabel: 'Reloj inteligente',
+    heartRate: {
+      unit: 'LPM',
+    },
     readout: {
       heartRate: '{value} LPM',
       battery: 'Batería {value} %',

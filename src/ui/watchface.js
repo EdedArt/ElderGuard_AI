@@ -1,3 +1,4 @@
+import { createHeartRateIndicator } from './heartRateIndicator.js';
 import { createWatchClock } from './watchClock.js';
 
 function createZone(name) {
@@ -6,7 +7,7 @@ function createZone(name) {
   return zone;
 }
 
-export function createWatchface() {
+export function createWatchface({ store }) {
   const root = document.createElement('div');
   root.className = 'watchface';
 
@@ -15,7 +16,7 @@ export function createWatchface() {
   const bottomZone = createZone('bottom');
   root.append(statusZone, centerZone, bottomZone);
 
-  centerZone.append(createWatchClock());
+  centerZone.append(createWatchClock(), createHeartRateIndicator(store));
 
   return root;
 }

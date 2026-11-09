@@ -51,3 +51,44 @@
   margin-top: calc(var(--watch-screen) * 0.01);
   font-size: calc(var(--watch-screen) * var(--watch-font-secondary));
 }
+
+.heart-rate {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--watch-screen) * 0.015);
+  margin-top: calc(var(--watch-screen) * 0.015);
+}
+
+.heart-rate__icon {
+  display: flex;
+  width: calc(var(--watch-screen) * 0.11);
+  color: var(--color-status-critical);
+  animation: heart-pulse var(--heartbeat-interval) ease-in-out infinite;
+}
+
+.heart-rate__icon svg {
+  width: 100%;
+}
+
+.heart-rate__value {
+  font-size: calc(var(--watch-screen) * var(--watch-font-bpm));
+  font-variant-numeric: tabular-nums;
+}
+
+.heart-rate__unit {
+  align-self: flex-end;
+  padding-bottom: calc(var(--watch-screen) * 0.015);
+  font-size: calc(var(--watch-screen) * var(--watch-font-secondary));
+}
+
+@keyframes heart-pulse {
+  50% {
+    transform: scale(1.12);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .heart-rate__icon {
+    animation: none;
+  }
+}
