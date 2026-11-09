@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- A watch app. Not required, so the same APK can also be installed on a phone for testing. -->
+    <!-- A dedicated Wear OS app: it installs only on watches, not on phones. -->
     <uses-feature
         android:name="android.hardware.type.watch"
-        android:required="false" />
+        android:required="true" />
 
     <application
         android:allowBackup="true"
