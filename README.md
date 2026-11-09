@@ -2,15 +2,15 @@
 
 Simulador web de un smartwatch para la seguridad de personas mayores. Es un proyecto universitario que se puede demostrar por completo en el navegador, sin necesidad de un reloj físico.
 
-## Funcionalidades planeadas
+## Funcionalidades
 
 - Detección de caídas.
-- Detección de frecuencia cardíaca anormal.
-- Alertas SOS con ubicación GPS simulada.
+- Detección de frecuencia cardíaca anormal en reposo.
+- Alertas a la familia con ubicación GPS, simuladas (no se hace ninguna llamada de red).
 - Panel externo para simular los datos de los sensores.
 - Interfaz de alto contraste (WCAG AAA) con botones muy grandes y poco texto, pensada para personas mayores.
 
-Estado actual: estructura base del proyecto, pantalla circular del reloj, cambio de tema claro/oscuro, interfaz en español e inglés, motor de telemetría simulada, pantalla del reloj con datos en vivo, botón SOS, detección de caídas con cuenta regresiva y panel de demostración. La detección de frecuencia cardíaca anormal llegará en la siguiente fase.
+Estado actual: versión 1.0.0, con todas las funcionalidades anteriores, tema claro/oscuro e interfaz en español e inglés.
 
 ## Tema e idioma
 
@@ -46,7 +46,7 @@ Para evitar activaciones accidentales, un toque simple no hace nada:
 
 Mantener pulsado es difícil con un lector de pantalla, así que existe una alternativa: un botón `Pedir ayuda` que solo se ve al recibir el foco y abre una confirmación dentro del reloj (`Sí, pedir ayuda` o `No`). Al confirmar se activa el mismo flujo de SOS.
 
-Por ahora no se envía ninguna alerta: el envío real se agregará en una fase posterior, escuchando ese evento.
+Al activarse, se envía una alerta simulada a los contactos de emergencia y la pantalla roja los muestra junto con las coordenadas. Consulta [Alertas de emergencia](#alertas-de-emergencia).
 
 ## Detección de caídas
 
@@ -140,6 +140,74 @@ window.elderguard.simulateFall();
 
 La función reproduce el mismo escenario de caída que usa el panel del simulador: inyecta un impacto durante 1 segundo y luego quietud mediante las anulaciones del motor, por lo que se ejecuta el detector real de principio a fin. La cuenta regresiva aparece entre 5 y 6 segundos después de que empieza la quietud (entre 6 y 7 segundos después de llamar a la función), porque el detector exige 5 segundos de quietud y la comprueba en cada ciclo de 1 segundo. Solo existe en desarrollo y no se incluye en la versión de producción.
 
+## Frecuencia cardíaca anormal
+
+Un corazón rápido es normal al moverse y no preocupa si dura un momento. Por eso el reloj solo avisa cuando se mantiene alto **en reposo**. La lógica está en `src/core/heartRateAnomalyDetector.js` y, como la de las caídas, recibe el tiempo dentro de cada muestra.
+
+Los valores están en `src/config/heartRateAnomaly.config.js`:
+
+| Parámetro             | Valor  | Significado                                                                             |
+| --------------------- | ------ | --------------------------------------------------------------------------------------- |
+| `bpmThreshold`        | 120    | Por encima de este valor, la frecuencia cardíaca se considera alta.                     |
+| `sustainedDurationMs` | 8000   | Tiempo que debe mantenerse alta, en reposo, para avisar.                                |
+| `stillnessToleranceG` | 0,15 g | Distancia máxima a 1 g que aún se considera reposo, igual que en el detector de caídas. |
+
+```text
+              alta y en reposo
+  ┌─────────┐ ───────────────> ┌───────────┐  durante 8 s  ┌─────────┐
+  │ normal  │                  │ elevated  │ ────────────> │ warning │
+  └─────────┘ <─────────────── └───────────┘               └─────────┘
+       ^        baja o movimiento                               │
+       └─────────────────────────────────────────────────────────┘
+                 baja o movimiento (emite "resolved")
+```
+
+Al avisar, se emite `heartRate:anomaly` y `deviceStatus.healthAlert` pasa a `high-heart-rate`. Mientras dure, el reloj muestra en ámbar `Ritmo cardíaco alto en reposo` en el lugar de la fecha, y los lectores de pantalla lo anuncian una sola vez.
+
+**No interrumpe nada.** `deviceStatus.mode` no cambia y este detector funciona en paralelo al de caídas, en cualquier modo. Si ocurre una caída, la cuenta regresiva cubre la pantalla y sigue su curso; al cancelarla, el aviso sigue ahí si la condición continúa.
+
+## Alertas de emergencia
+
+**Es una simulación: no se hace ninguna llamada de red ni se envía nada a nadie.** El despachador solo registra la alerta en memoria y avisa a la interfaz. Un sistema real sustituiría ese registro por el envío a un servicio de mensajería. Los contactos de `src/config/contacts.config.js` son ficticios, con números 555-01xx reservados para ficción.
+
+### Qué genera una alerta
+
+| Origen                 | Condición                                                   | Tipo              | ¿Cuenta regresiva?           |
+| ---------------------- | ----------------------------------------------------------- | ----------------- | ---------------------------- |
+| Caída                  | La cuenta regresiva llega a cero (`sos:triggered`, `fall`)  | `fall`            | Sí, de la caída              |
+| SOS manual             | Pulsación larga o `Pedir ayuda` (`sos:triggered`, `manual`) | `manual-sos`      | No                           |
+| Ritmo cardíaco crítico | Más de 160 LPM en reposo durante 8 segundos                 | `high-heart-rate` | No: es de salud, no de caída |
+
+El ritmo crítico reutiliza el mismo detector con un umbral más alto (`criticalHeartRateConfig`), y se envía una sola alerta por episodio. No abre la pantalla de SOS ni cambia el modo del reloj: el aviso pasa a rojo y dice `Ritmo crítico: familia avisada`.
+
+No generan alerta: un tropiezo, una caída cancelada a tiempo, un pico breve de pulso, un pulso alto en movimiento ni un aviso de 120 a 160 LPM que se resuelve.
+
+### Contenido
+
+`buildAlertPayload` (`src/core/alertPayload.js`) es una función pura que copia los datos del momento, de modo que una alerta registrada no cambia aunque la ubicación o la batería cambien después:
+
+```js
+{
+  type: 'fall',                                  // 'fall' | 'manual-sos' | 'high-heart-rate'
+  timestamp: 1794239354551,
+  gps: { lat, lng, accuracy, signal },           // Sin señal, es la última posición conocida
+  heartRate: 72,
+  batteryLevel: 98,
+  contacts: [{ name, relationship, phone }],
+}
+```
+
+### Flujo
+
+```text
+sos:triggered (caída o manual) ──┐
+                                 ├─> buildAlertPayload ─> registro ─> alert:dispatched ─┬─> Pantalla de SOS
+Ritmo crítico sostenido ─────────┘                                                      ├─> Historial del panel
+                                                                                        └─> Registro del panel
+```
+
+`src/core/alertDispatcher.js` ofrece `on(evento, función)`, `getAlerts()`, `isCriticalActive()` y `reset()`. La pantalla de SOS muestra los contactos avisados y las coordenadas enviadas, e indica `Última posición` si no hay señal de GPS.
+
 ## Panel de demostración
 
 El panel `Modo demostración` es la herramienta del presentador. Está fuera del reloj, tiene un marco punteado y un color propio para no confundirlo con lo que ve la persona mayor, y queda debajo del reloj en pantallas angostas. Se contrae con el botón `Contraer` y recuerda ese estado al recargar.
@@ -152,16 +220,17 @@ Ningún control cambia la interfaz directamente. Todos pasan por las anulaciones
 
 **Escenarios.** Solo se ejecuta uno a la vez; iniciar otro detiene el que esté en curso.
 
-| Control                     | Qué hace                                                                                                                                                                            |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Simular caída`             | Impacto de 4,4 g durante 1 segundo y luego quietud. La cuenta regresiva aparece entre 5 y 6 segundos después de que empieza la quietud, es decir, entre 6 y 7 segundos tras pulsar. |
-| `Tropiezo (falsa alarma)`   | Impacto de 2,9 g seguido de movimiento normal durante 5 segundos. El detector marca `Impacto` y vuelve a `En espera` sin alertar.                                                   |
-| `Ritmo cardíaco alto (140)` | Mantiene 140 LPM con el acelerómetro quieto hasta reiniciar. Por ahora no genera ninguna alerta: la detección de anomalías llegará en la siguiente fase.                            |
-| `Batería baja (15 %)`       | Mantiene la batería en 15 %.                                                                                                                                                        |
-| `Batería crítica (5 %)`     | Mantiene la batería en 5 %.                                                                                                                                                         |
-| `Restaurar batería (100 %)` | Devuelve la batería a 100 %, y esta vuelve a descargarse sola.                                                                                                                      |
-| `Perder GPS`                | Quita la señal y conserva la última posición. El botón pasa a `Recuperar GPS`.                                                                                                      |
-| `Reiniciar todo`            | Detiene el escenario, quita todas las anulaciones, reinicia el detector, cierra la cuenta regresiva o el SOS y deja el reloj en vigilancia con la batería al 100 %.                 |
+| Control                        | Qué hace                                                                                                                                                                                                                           |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Simular caída`                | Impacto de 4,4 g durante 1 segundo y luego quietud. La cuenta regresiva aparece entre 5 y 6 segundos después de que empieza la quietud, es decir, entre 6 y 7 segundos tras pulsar.                                                |
+| `Tropiezo (falsa alarma)`      | Impacto de 2,9 g seguido de movimiento normal durante 5 segundos. El detector marca `Impacto` y vuelve a `En espera` sin alertar.                                                                                                  |
+| `Ritmo cardíaco alto (140)`    | Mantiene 140 LPM con el acelerómetro quieto. A los 8 o 9 segundos aparece en el reloj el aviso `Ritmo cardíaco alto en reposo`. No envía ninguna alerta.                                                                           |
+| `Ritmo cardíaco crítico (170)` | Mantiene 170 LPM con el acelerómetro quieto. A los 8 o 9 segundos se envía una alerta simulada sin cuenta regresiva, y el aviso del reloj pasa a rojo: `Ritmo crítico: familia avisada`.                                           |
+| `Batería baja (15 %)`          | Mantiene la batería en 15 %.                                                                                                                                                                                                       |
+| `Batería crítica (5 %)`        | Mantiene la batería en 5 %.                                                                                                                                                                                                        |
+| `Restaurar batería (100 %)`    | Devuelve la batería a 100 %, y esta vuelve a descargarse sola.                                                                                                                                                                     |
+| `Perder GPS`                   | Quita la señal y conserva la última posición. El botón pasa a `Recuperar GPS`.                                                                                                                                                     |
+| `Reiniciar todo`               | Detiene el escenario, quita todas las anulaciones, reinicia los detectores, cierra la cuenta regresiva, el SOS o la pregunta `¿Pedir ayuda?`, vacía el historial de alertas y deja el reloj en vigilancia con la batería al 100 %. |
 
 **Sensores manuales.** Hay un deslizador para la frecuencia cardíaca (de 40 a 180 LPM) y uno para cada eje del acelerómetro (de −4 a 4 g), cada uno con su interruptor `Manual`. Con el interruptor apagado, el deslizador sigue la lectura real. Con el interruptor encendido, su valor es la lectura del sensor, y al apagarlo se vuelve a la generación automática. Los ejes del acelerómetro que sigan en automático quedan en su valor de reposo mientras otro eje esté en manual.
 
@@ -169,7 +238,11 @@ Los deslizadores también pasan por el detector real: llevar un eje a 4 g produc
 
 **Estado.** Muestra en vivo el estado del detector de caídas (`En espera`, `Impacto`, `Inmovilidad` o `Caída confirmada`, cada uno con su color) y todas las lecturas: frecuencia cardíaca, acelerómetro y magnitud, GPS y señal, batería y modo del reloj. El estado `Caída confirmada` se mantiene mientras dura la alerta que provocó.
 
-**Registro.** Lista con hora, de la más reciente a la más antigua y con un máximo de 50 entradas: escenarios iniciados, terminados y detenidos, caídas detectadas y canceladas, SOS activados con su motivo, SOS cancelados, cambios de batería y de GPS, y reinicios. `Borrar registro` la vacía.
+**Alertas a la familia.** Lista de las alertas simuladas, de la más reciente a la más antigua, con su tipo, hora, contactos y coordenadas: lo que habría recibido la familia. Solo se vacía con `Reiniciar todo`.
+
+**Registro.** Lista con hora, de la más reciente a la más antigua y con un máximo de 50 entradas: escenarios iniciados, terminados y detenidos, escenarios activados y restablecidos, caídas detectadas y canceladas, SOS activados con su motivo, SOS cancelados, avisos de ritmo cardíaco, alertas enviadas, cambios de batería y de GPS, y reinicios. `Borrar registro` la vacía.
+
+Los escenarios que se mantienen en el tiempo (ritmo cardíaco, batería y GPS) se anotan como `activado` al pulsarlos, y como `restablecido` solo cuando dejan de estar en vigor, no al terminar de aplicarse.
 
 ### Atajos de teclado
 
@@ -184,21 +257,24 @@ El botón `?` muestra esta misma lista. Los atajos funcionan aunque el panel est
 | `Alt+5` | Perder o recuperar GPS |
 | `Alt+0` | Reiniciar todo         |
 
-### Guion de defensa (5 minutos)
+### Guion de defensa (5 a 6 minutos)
 
 Antes de empezar, abre la página con `npm run dev`, elige el idioma y el tema, y deja a la vista el reloj y el panel. Los únicos toques en el reloj son iniciar y las respuestas de la persona (`ESTOY BIEN` y `Cancelar`); todo lo demás se hace desde el panel.
 
-| Tiempo | Paso                  | Qué hacer                                                                             | Qué decir o señalar                                                                                                                                               |
-| ------ | --------------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0:00   | Iniciar el reloj      | Señala los controles desactivados y toca `Toca para iniciar` en el reloj.             | El primer toque desbloquea el audio y pone en marcha la telemetría.                                                                                               |
-| 0:30   | Lecturas normales     | No toques nada durante unos segundos.                                                 | Hora, batería, GPS y pulso en el reloj; en `Estado`, las lecturas cambian cada segundo, la magnitud ronda 1 g y el detector sigue `En espera`.                    |
-| 1:00   | Tropiezo              | Pulsa `Tropiezo (falsa alarma)` (`Alt+2`) y espera unos 6 segundos.                   | El detector marca `Impacto` y vuelve a `En espera`. El reloj no alerta: un golpe seguido de movimiento no es una caída.                                           |
-| 1:30   | Caída con cancelación | Pulsa `Simular caída` (`Alt+1`). Cuando aparezca `¿Te caíste?`, pulsa `ESTOY BIEN`.   | Secuencia `Impacto`, `Inmovilidad`, `Caída confirmada`. Hay 10 segundos para cancelar, con pitidos, y el registro anota la detección y la cancelación.            |
-| 2:15   | Caída hasta el SOS    | Pulsa `Simular caída` de nuevo y no toques nada hasta que aparezca `Pidiendo ayuda…`. | Unos 17 segundos en total. Quien no puede responder también recibe ayuda: los últimos 3 segundos son más insistentes y el registro anota el motivo `caída`.       |
-| 3:00   | Cerrar el SOS         | Pulsa `Cancelar` en el reloj.                                                         | El reloj vuelve a la vigilancia y el registro anota la cancelación.                                                                                               |
-| 3:15   | Ritmo cardíaco alto   | Pulsa `Ritmo cardíaco alto (140)` (`Alt+3`).                                          | El pulso sube a 140 LPM con la persona en reposo y el corazón late más rápido. Aclara que la alerta por anomalía se agrega en la siguiente fase.                  |
-| 3:45   | Batería y GPS         | Pulsa `Batería baja`, `Batería crítica` y `Perder GPS`; luego `Recuperar GPS`.        | El indicador de batería pasa a ámbar y a rojo, y el GPS muestra `Sin GPS`. Los lectores de pantalla anuncian estos cambios de estado, nunca cada lectura.         |
-| 4:30   | Reiniciar             | Pulsa `Reiniciar todo` (`Alt+0`).                                                     | Todo vuelve al estado inicial, con la batería al 100 % y el detector `En espera`. Termina señalando en el `Registro` todo lo que ocurrió durante la demostración. |
+| Tiempo | Paso                   | Qué hacer                                                                             | Qué decir o señalar                                                                                                                                                                                      |
+| ------ | ---------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0:00   | Iniciar el reloj       | Señala los controles desactivados y toca `Toca para iniciar` en el reloj.             | El primer toque desbloquea el audio y pone en marcha la telemetría.                                                                                                                                      |
+| 0:20   | Lecturas normales      | No toques nada durante unos segundos.                                                 | Hora, batería, GPS y pulso en el reloj; en `Estado`, las lecturas cambian cada segundo, la magnitud ronda 1 g y el detector sigue `En espera`.                                                           |
+| 0:40   | Tropiezo               | Pulsa `Tropiezo (falsa alarma)` (`Alt+2`) y espera unos 6 segundos.                   | El detector marca `Impacto` y vuelve a `En espera`. El reloj no alerta: un golpe seguido de movimiento no es una caída.                                                                                  |
+| 1:10   | Caída con cancelación  | Pulsa `Simular caída` (`Alt+1`). Cuando aparezca `¿Te caíste?`, pulsa `ESTOY BIEN`.   | Secuencia `Impacto`, `Inmovilidad`, `Caída confirmada`. Hay 10 segundos para cancelar, con pitidos. Al cancelar no sale ninguna alerta: el historial sigue vacío.                                        |
+| 1:50   | Caída hasta el SOS     | Pulsa `Simular caída` de nuevo y no toques nada hasta que aparezca `Pidiendo ayuda…`. | Unos 17 segundos en total. Quien no puede responder también recibe ayuda. La pantalla roja muestra los contactos avisados y las coordenadas enviadas. Aclara que es una simulación, sin llamadas de red. |
+| 2:40   | Cerrar el SOS          | Pulsa `Cancelar` en el reloj.                                                         | El reloj vuelve a la vigilancia, pero la alerta queda en `Alertas a la familia`.                                                                                                                         |
+| 2:55   | Ritmo cardíaco alto    | Pulsa `Ritmo cardíaco alto (140)` (`Alt+3`) y espera 8 o 9 segundos.                  | Aparece en ámbar `Ritmo cardíaco alto en reposo`. Es un aviso: el reloj sigue funcionando, no pide nada y no envía ninguna alerta. Un pico breve o el movimiento no lo activan.                          |
+| 3:30   | Ritmo cardíaco crítico | Pulsa `Ritmo cardíaco crítico (170)` y espera 8 o 9 segundos.                         | El aviso pasa a rojo: `Ritmo crítico: familia avisada`. La alerta sale sola y sin cuenta regresiva, porque es de salud y no una caída.                                                                   |
+| 4:10   | Batería                | Pulsa `Batería baja` (`Alt+4`) y `Batería crítica`.                                   | El indicador pasa a ámbar y a rojo. El registro anota `Escenario activado`, y `restablecido` solo al quitarlo.                                                                                           |
+| 4:30   | GPS                    | Pulsa `Perder GPS` (`Alt+5`) y luego `Recuperar GPS`.                                 | El reloj muestra `Sin GPS`. Los lectores de pantalla anuncian estos cambios de estado, nunca cada lectura.                                                                                               |
+| 4:50   | Historial de alertas   | Señala `Alertas a la familia`.                                                        | Hay dos alertas, la de la caída y la del ritmo crítico, con su hora, contactos y coordenadas: esto es lo que habría recibido la familia.                                                                 |
+| 5:20   | Reiniciar              | Pulsa `Reiniciar todo` (`Alt+0`).                                                     | Todo vuelve al estado inicial: sin avisos, batería al 100 %, detector `En espera` e historial vacío.                                                                                                     |
 
 ## Arquitectura de telemetría
 
@@ -226,7 +302,7 @@ Generadores ──> Motor de simulación ──> Store ──> Interfaz (suscrip
   accelerometer: { x: 0, y: 0, z: 1 },           // g
   gps: { lat, lng, accuracy, signal: true },     // accuracy en metros
   battery: { level: 100, charging: false },      // level de 0 a 100
-  deviceStatus: { mode: 'monitoring', lastUpdate: null }, // marca de tiempo tras el primer ciclo
+  deviceStatus: { mode: 'monitoring', lastUpdate: null, healthAlert: null }, // lastUpdate: marca de tiempo tras el primer ciclo; healthAlert: 'high-heart-rate' durante un aviso
 }
 ```
 
