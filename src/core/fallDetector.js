@@ -1,6 +1,6 @@
 import { fallDetectionConfig } from '../config/fallDetection.config.js';
 import { createEventEmitter } from './eventEmitter.js';
-import { magnitude } from './magnitude.js';
+import { isAtRest, magnitude } from './magnitude.js';
 
 export const FALL_STATES = Object.freeze({
   IDLE: 'idle',
@@ -8,8 +8,6 @@ export const FALL_STATES = Object.freeze({
   IMMOBILITY: 'immobility',
   CONFIRMED: 'confirmed',
 });
-
-const RESTING_MAGNITUDE_G = 1;
 
 // A fall is an impact followed by stillness. Either one alone happens in daily life: clapping or
 // bumping the wrist makes a spike, and resting makes stillness. Time comes from the samples, so
@@ -51,7 +49,7 @@ export function createFallDetector({ config = fallDetectionConfig } = {}) {
         return;
       }
 
-      const still = Math.abs(value - RESTING_MAGNITUDE_G) <= config.immobilityToleranceG;
+      const still = isAtRest(accelerometer, config.immobilityToleranceG);
       if (state === FALL_STATES.IMPACT) processAfterImpact(still, timestamp);
       else if (state === FALL_STATES.IMMOBILITY) processImmobility(still, timestamp);
     },

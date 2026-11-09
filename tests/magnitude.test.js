@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { magnitude } from '../src/core/magnitude.js';
+import { isAtRest, magnitude } from '../src/core/magnitude.js';
 
 describe('magnitude', () => {
   it('is the Euclidean norm of the three axes', () => {
@@ -18,5 +18,18 @@ describe('magnitude', () => {
 
   it('is 0 in free fall', () => {
     expect(magnitude({ x: 0, y: 0, z: 0 })).toBe(0);
+  });
+});
+
+describe('isAtRest', () => {
+  it('accepts about 1 g in any orientation', () => {
+    expect(isAtRest({ x: 0, y: 0, z: 1 }, 0.15)).toBe(true);
+    expect(isAtRest({ x: 1, y: 0, z: 0 }, 0.15)).toBe(true);
+    expect(isAtRest({ x: 0, y: 0, z: 1.1 }, 0.15)).toBe(true);
+  });
+
+  it('rejects readings off 1 g by more than the tolerance', () => {
+    expect(isAtRest({ x: 0, y: 0, z: 1.2 }, 0.15)).toBe(false);
+    expect(isAtRest({ x: 0, y: 0, z: 0.8 }, 0.15)).toBe(false);
   });
 });
