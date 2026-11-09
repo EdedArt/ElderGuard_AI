@@ -3,6 +3,7 @@ import { fallDetectionConfig } from '../src/config/fallDetection.config.js';
 import { createCountdown } from '../src/core/countdown.js';
 import { createFallDetector, FALL_STATES } from '../src/core/fallDetector.js';
 import { createFallMonitor } from '../src/core/fallMonitor.js';
+import { createSosController } from '../src/core/sosController.js';
 import { createTelemetryStore } from '../src/core/telemetryStore.js';
 
 const { impactThresholdG, immobilityDurationMs } = fallDetectionConfig;
@@ -13,7 +14,9 @@ const STILL = { x: 0, y: 0, z: 1 };
 let time;
 let store;
 let detector;
+let sos;
 let countdown;
+let fireCountdownTick;
 let monitor;
 let detected;
 
@@ -32,9 +35,19 @@ beforeEach(() => {
   time = 1000;
   store = createTelemetryStore();
   detector = createFallDetector();
-  // The clock is only ever advanced by hand, so the countdown stays at its starting value here.
-  countdown = createCountdown({ timer: { start: () => 1, stop: () => {} } });
-  monitor = createFallMonitor({ store, countdown, detector, now: () => time });
+  sos = createSosController({ store, now: () => time });
+  // Fired by hand, so the countdown stays at its starting value unless a test moves it on.
+  fireCountdownTick = null;
+  countdown = createCountdown({
+    timer: {
+      start: (callback) => {
+        fireCountdownTick = callback;
+        return 1;
+      },
+      stop: () => {},
+    },
+  });
+  monitor = createFallMonitor({ store, sos, countdown, detector, now: () => time });
   detected = vi.fn();
   monitor.on('fall:detected', detected);
 });
@@ -144,6 +157,57 @@ describe('countdown', () => {
 
     expect(countdown.isRunning()).toBe(false);
     expect(store.getState().deviceStatus.mode).toBe('monitoring');
+  });
+
+  it('cancel emits fall:cancelled and resets the detector', () => {
+    const cancelled = vi.fn();
+    monitor.on('fall:cancelled', cancelled);
+    fall();
+    expect(detector.getState()).toBe(FALL_STATES.IDLE);
+
+    tick(SPIKE);
+    expect(detector.getState()).toBe(FALL_STATES.IDLE);
+
+    monitor.cancel();
+
+    expect(cancelled).toHaveBeenCalledTimes(1);
+    expect(cancelled).toHaveBeenCalledWith({ timestamp: time });
+    expect(detector.getState()).toBe(FALL_STATES.IDLE);
+  });
+
+  it('cancel only emits when a countdown was running', () => {
+    const cancelled = vi.fn();
+    monitor.on('fall:cancelled', cancelled);
+    monitor.cancel();
+    expect(cancelled).not.toHaveBeenCalled();
+  });
+
+  it('dispatches SOS with reason fall when it ends', () => {
+    const triggered = vi.fn();
+    sos.on('sos:triggered', triggered);
+    fall();
+
+    for (let second = 0; second < fallDetectionConfig.countdownSeconds - 1; second += 1) {
+      fireCountdownTick();
+    }
+    expect(triggered).not.toHaveBeenCalled();
+
+    fireCountdownTick();
+    expect(triggered).toHaveBeenCalledTimes(1);
+    expect(triggered.mock.calls[0][0].reason).toBe('fall');
+    expect(store.getState().deviceStatus.mode).toBe('sos');
+  });
+
+  it('can detect another fall after the SOS is cancelled', () => {
+    fall();
+    for (let second = 0; second < fallDetectionConfig.countdownSeconds; second += 1) {
+      fireCountdownTick();
+    }
+    sos.cancel();
+    fall();
+
+    expect(detected).toHaveBeenCalledTimes(2);
+    expect(store.getState().deviceStatus.mode).toBe('fall-countdown');
   });
 
   it('cancel does not end an alert of another kind', () => {

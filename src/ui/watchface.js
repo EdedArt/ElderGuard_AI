@@ -31,15 +31,16 @@ export function createWatchface({ store, sos, fall, countdown, onStart }) {
 
   const announcer = createStatusAnnouncer(store);
   const holdHint = createHoldHint({ announce: announcer.announce });
+  const triggerManualSos = () => sos.trigger({ reason: 'manual' });
   const sosButton = createSosButton({
-    onActivate: sos.trigger,
+    onActivate: triggerManualSos,
     onHoldStart: holdHint.hide,
     onShortPress: holdHint.show,
   });
   const sosConfirm = createSosConfirmScreen({
     store,
     lock,
-    onConfirm: sos.trigger,
+    onConfirm: triggerManualSos,
     returnFocusTo: () => sosAlternative,
   });
   const sosAlternative = createSosAlternativeButton({ onActivate: sosConfirm.open });

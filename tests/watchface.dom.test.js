@@ -216,6 +216,7 @@ describe('SOS long press with a pointer', () => {
     vi.advanceTimersByTime(HOLD);
 
     expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener.mock.calls[0][0].reason).toBe('manual');
   });
 });
 
@@ -392,6 +393,7 @@ describe('screen reader alternative to the long press', () => {
     expect(overlay().hidden).toBe(false);
     expect(store.getState().deviceStatus.mode).toBe('sos');
     expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener.mock.calls[0][0].reason).toBe('manual');
     expect(document.activeElement).toBe(cancelButton());
     expect(query('.watchface__bottom').hasAttribute('inert')).toBe(true);
   });
@@ -427,7 +429,7 @@ describe('screen reader alternative to the long press', () => {
 
   it('closes without taking focus when another alert takes over', () => {
     alternative().click();
-    sos.trigger();
+    sos.trigger({ reason: 'manual' });
     expect(confirm().hidden).toBe(true);
     expect(document.activeElement).toBe(cancelButton());
   });

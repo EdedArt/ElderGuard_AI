@@ -18,11 +18,25 @@ describe('createSosController', () => {
     const listener = vi.fn();
     sos.on('sos:triggered', listener);
 
-    sos.trigger();
+    sos.trigger({ reason: 'manual' });
 
     expect(store.getState().deviceStatus.mode).toBe('sos');
     expect(sos.isActive()).toBe(true);
-    expect(listener).toHaveBeenCalledWith({ timestamp: 12345, gps: store.getState().gps });
+    expect(listener).toHaveBeenCalledWith({
+      reason: 'manual',
+      timestamp: 12345,
+      gps: store.getState().gps,
+    });
+  });
+
+  it('reports the reason it was given', () => {
+    const { sos } = setup();
+    const listener = vi.fn();
+    sos.on('sos:triggered', listener);
+
+    sos.trigger({ reason: 'fall' });
+
+    expect(listener.mock.calls[0][0].reason).toBe('fall');
   });
 
   it('emits only once while already active', () => {
@@ -30,8 +44,8 @@ describe('createSosController', () => {
     const listener = vi.fn();
     sos.on('sos:triggered', listener);
 
-    sos.trigger();
-    sos.trigger();
+    sos.trigger({ reason: 'manual' });
+    sos.trigger({ reason: 'manual' });
 
     expect(listener).toHaveBeenCalledTimes(1);
   });
@@ -41,12 +55,12 @@ describe('createSosController', () => {
     const listener = vi.fn();
     sos.on('sos:triggered', listener);
 
-    sos.trigger();
+    sos.trigger({ reason: 'manual' });
     sos.cancel();
     expect(store.getState().deviceStatus.mode).toBe('monitoring');
     expect(sos.isActive()).toBe(false);
 
-    sos.trigger();
+    sos.trigger({ reason: 'manual' });
     expect(listener).toHaveBeenCalledTimes(2);
   });
 
@@ -64,7 +78,7 @@ describe('createSosController', () => {
     const { store, sos } = setup();
     store.update({ deviceStatus: { lastUpdate: 999 } });
 
-    sos.trigger();
+    sos.trigger({ reason: 'manual' });
 
     expect(store.getState().deviceStatus).toEqual({ mode: 'sos', lastUpdate: 999 });
   });

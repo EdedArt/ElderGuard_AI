@@ -11,7 +11,7 @@ export function createDevice({ createAudioContext } = {}) {
   const engine = createSimulationEngine({ store });
   const sos = createSosController({ store });
   const countdown = createCountdown();
-  const fall = createFallMonitor({ store, countdown });
+  const fall = createFallMonitor({ store, sos, countdown });
   const audio = createAudioPlayer({ createContext: createAudioContext });
 
   countdown.onTick(audio.playCountdownBeep);

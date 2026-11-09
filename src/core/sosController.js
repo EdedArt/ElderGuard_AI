@@ -13,10 +13,10 @@ export function createSosController({ store, now = Date.now }) {
     on: emitter.on,
     off: emitter.off,
 
-    trigger() {
+    trigger({ reason }) {
       if (isActive()) return;
       store.update({ deviceStatus: { mode: MODE_SOS } });
-      emitter.emit('sos:triggered', { timestamp: now(), gps: store.getState().gps });
+      emitter.emit('sos:triggered', { reason, timestamp: now(), gps: store.getState().gps });
     },
 
     cancel() {
