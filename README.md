@@ -36,7 +36,7 @@ Los lectores de pantalla solo anuncian los cambios de estado (batería baja, pé
 Para evitar activaciones accidentales, un toque simple no hace nada:
 
 1. Mantén pulsado el botón durante 2 segundos con el dedo, el ratón o las teclas `Enter` o `Espacio`. Un anillo se va llenando alrededor del botón y, si el dispositivo lo permite, este vibra.
-2. Si sueltas antes de tiempo, se cancela y no pasa nada.
+2. Si sueltas antes de tiempo, se cancela y el reloj muestra durante 2 segundos el recordatorio `Mantén presionado`.
 3. Al completar los 2 segundos aparece la pantalla roja `Pidiendo ayuda…`. El estado `deviceStatus.mode` cambia a `sos` y se emite el evento `sos:triggered` con la hora y la ubicación.
 4. El botón `Cancelar` cierra esa pantalla y devuelve el reloj al modo `monitoring`.
 

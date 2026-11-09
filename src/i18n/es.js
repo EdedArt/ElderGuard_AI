@@ -43,6 +43,7 @@ export const es = {
     title: 'SOS',
     label: 'AUXILIO',
     hint: 'SOS, auxilio. Mantén pulsado {seconds} segundos para pedir ayuda',
+    holdHint: 'Mantén presionado',
     active: 'Pidiendo ayuda…',
     cancel: 'Cancelar',
   },

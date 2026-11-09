@@ -8,15 +8,19 @@ export function createStatusAnnouncer(store) {
   root.setAttribute('role', 'status');
   root.setAttribute('aria-live', 'polite');
 
+  const announce = (text) => {
+    root.textContent = text;
+  };
+
   let previous = store.getState();
 
   store.subscribe((state) => {
     const changes = statusChanges(previous, state);
     previous = state;
     if (changes.length > 0) {
-      root.textContent = changes.map((change) => t(`watch.status.${change}`)).join('. ');
+      announce(changes.map((change) => t(`watch.status.${change}`)).join('. '));
     }
   });
 
-  return root;
+  return { root, announce };
 }

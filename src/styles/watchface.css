@@ -208,6 +208,23 @@
   font-size: calc(var(--watch-screen) * 0.045);
 }
 
+/* Sits just above the SOS button, where the circle is still at its widest. */
+.hold-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: max-content;
+  max-width: 84%;
+  padding: calc(var(--watch-screen) * 0.025) calc(var(--watch-screen) * 0.04);
+  background-color: var(--color-text);
+  border-radius: var(--radius-medium);
+  color: var(--color-background);
+  font-size: calc(var(--watch-screen) * 0.065);
+  line-height: 1.1;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
 .sos-screen {
   position: absolute;
   inset: 0;

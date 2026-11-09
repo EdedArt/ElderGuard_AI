@@ -184,6 +184,81 @@ describe('SOS long press with a pointer', () => {
   });
 });
 
+describe('hold hint', () => {
+  const hint = () => query('.hold-hint');
+  const HINT_DURATION = sosConfig.holdHintDurationMs;
+
+  it('starts hidden', () => {
+    expect(hint().hidden).toBe(true);
+  });
+
+  it.each(['pointerup', 'pointerleave'])('shows for 2 seconds after an early %s', (type) => {
+    pointer('pointerdown');
+    vi.advanceTimersByTime(100);
+    pointer(type);
+
+    expect(hint().hidden).toBe(false);
+    expect(hint().textContent).toBe('Mantén presionado');
+
+    vi.advanceTimersByTime(HINT_DURATION - 1);
+    expect(hint().hidden).toBe(false);
+    vi.advanceTimersByTime(1);
+    expect(hint().hidden).toBe(true);
+  });
+
+  it('shows after an early key release', () => {
+    keyboard('keydown', 'Enter');
+    keyboard('keyup', 'Enter');
+    expect(hint().hidden).toBe(false);
+  });
+
+  it('is announced to screen readers', () => {
+    pointer('pointerdown');
+    pointer('pointerup');
+    expect(query('[aria-live="polite"]').textContent).toBe('Mantén presionado');
+  });
+
+  it('uses the current language', () => {
+    pointer('pointerdown');
+    pointer('pointerup');
+    setLanguage('en');
+    expect(hint().textContent).toBe('Hold to call for help');
+  });
+
+  it('does not show after a completed hold or on release afterwards', () => {
+    pointer('pointerdown');
+    vi.advanceTimersByTime(HOLD);
+    pointer('pointerup');
+    pointer('pointerleave');
+    expect(hint().hidden).toBe(true);
+  });
+
+  it('does not show without a press, or when the system interrupts the hold', () => {
+    pointer('pointerup');
+    pointer('pointerleave');
+    pointer('pointerdown');
+    pointer('pointercancel');
+    expect(hint().hidden).toBe(true);
+  });
+
+  it('hides as soon as a new hold starts', () => {
+    pointer('pointerdown');
+    pointer('pointerup');
+    pointer('pointerdown');
+    expect(hint().hidden).toBe(true);
+  });
+
+  it('stays the full time after a second short press', () => {
+    pointer('pointerdown');
+    pointer('pointerup');
+    vi.advanceTimersByTime(HINT_DURATION - 1);
+    pointer('pointerdown');
+    pointer('pointerup');
+    vi.advanceTimersByTime(HINT_DURATION - 1);
+    expect(hint().hidden).toBe(false);
+  });
+});
+
 describe('SOS long press with a keyboard', () => {
   describe.each([
     ['Enter', 'Enter'],

@@ -2,6 +2,7 @@ import { onLanguageChange, t } from '../i18n/index.js';
 import { createBatteryIndicator } from './batteryIndicator.js';
 import { createGpsIndicator } from './gpsIndicator.js';
 import { createHeartRateIndicator } from './heartRateIndicator.js';
+import { createHoldHint } from './holdHint.js';
 import { createSosButton } from './sosButton.js';
 import { createSosScreen } from './sosScreen.js';
 import { createStatusAnnouncer } from './statusAnnouncer.js';
@@ -22,7 +23,13 @@ export function createWatchface({ store, sos }) {
   const centerZone = createZone('center');
   const bottomZone = createZone('bottom');
 
-  const sosButton = createSosButton({ onActivate: sos.trigger });
+  const announcer = createStatusAnnouncer(store);
+  const holdHint = createHoldHint({ announce: announcer.announce });
+  const sosButton = createSosButton({
+    onActivate: sos.trigger,
+    onHoldStart: holdHint.hide,
+    onShortPress: holdHint.show,
+  });
   statusZone.append(createBatteryIndicator(store), createGpsIndicator(store));
   centerZone.append(createWatchClock(), createHeartRateIndicator(store));
   bottomZone.append(sosButton);
@@ -33,7 +40,7 @@ export function createWatchface({ store, sos }) {
     background: [statusZone, centerZone, bottomZone],
     returnFocusTo: sosButton,
   });
-  root.append(statusZone, centerZone, bottomZone, sosScreen, createStatusAnnouncer(store));
+  root.append(statusZone, centerZone, bottomZone, holdHint.root, sosScreen, announcer.root);
 
   const renderLabel = () => root.setAttribute('aria-label', t('watch.face'));
   onLanguageChange(renderLabel);

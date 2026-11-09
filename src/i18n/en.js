@@ -43,6 +43,7 @@ export const en = {
     title: 'SOS',
     label: 'HELP',
     hint: 'SOS, help. Press and hold for {seconds} seconds to call for help',
+    holdHint: 'Hold to call for help',
     active: 'Calling for help…',
     cancel: 'Cancel',
   },

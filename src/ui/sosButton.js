@@ -32,7 +32,11 @@ function ignoreKeyUntilReleased(key) {
   window.addEventListener('keyup', ignore, true);
 }
 
-export function createSosButton({ onActivate = () => {} } = {}) {
+export function createSosButton({
+  onActivate = () => {},
+  onHoldStart = () => {},
+  onShortPress = () => {},
+} = {}) {
   const button = document.createElement('button');
   button.type = 'button';
   button.className = 'sos-button';
@@ -69,12 +73,22 @@ export function createSosButton({ onActivate = () => {} } = {}) {
     press.start();
     button.classList.add('sos-button--holding');
     vibrate(VIBRATION_HOLD_START);
+    onHoldStart();
+  };
+
+  const releaseHold = () => {
+    if (press.isActive()) onShortPress();
+    endHold();
   };
 
   button.addEventListener('pointerdown', (event) => {
     if (event.button === 0) startHold();
   });
-  for (const type of ['pointerup', 'pointerleave', 'pointercancel', 'blur']) {
+  for (const type of ['pointerup', 'pointerleave']) {
+    button.addEventListener(type, releaseHold);
+  }
+  // These end the hold without the user letting go, so they do not show the hint.
+  for (const type of ['pointercancel', 'blur']) {
     button.addEventListener(type, endHold);
   }
   // A long touch would otherwise open the browser's context menu and interrupt the hold.
@@ -90,7 +104,7 @@ export function createSosButton({ onActivate = () => {} } = {}) {
   button.addEventListener('keyup', (event) => {
     if (!ACTIVATION_KEYS.includes(event.key)) return;
     event.preventDefault();
-    if (event.key === heldKey) endHold();
+    if (event.key === heldKey) releaseHold();
   });
 
   const render = () => {
