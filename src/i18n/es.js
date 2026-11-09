@@ -76,6 +76,9 @@ export const es = {
       fall: 'Simular caída',
       stumble: 'Tropiezo (falsa alarma)',
       highHeartRate: 'Ritmo cardíaco alto (140)',
+      lowBattery: 'Batería baja (15 %)',
+      criticalBattery: 'Batería crítica (5 %)',
+      restoreBattery: 'Restaurar batería (100 %)',
     },
     fallState: {
       label: 'Detector de caídas',

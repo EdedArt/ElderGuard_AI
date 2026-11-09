@@ -58,6 +58,13 @@ export function createSimulatorPanel({ device }) {
     action('highHeartRate', 'simulator.actions.highHeartRate', () =>
       controller.runScenario('highHeartRate'),
     ),
+    action('lowBattery', 'simulator.actions.lowBattery', () =>
+      controller.runScenario('lowBattery'),
+    ),
+    action('criticalBattery', 'simulator.actions.criticalBattery', () =>
+      controller.runScenario('criticalBattery'),
+    ),
+    action('restoreBattery', 'simulator.actions.restoreBattery', controller.restoreBattery),
   );
 
   const status = createPanelSection('simulator.sections.status');
