@@ -75,6 +75,7 @@ export const en = {
     actions: {
       fall: 'Simulate fall',
       stumble: 'Stumble (false alarm)',
+      highHeartRate: 'High heart rate (140)',
     },
     fallState: {
       label: 'Fall detector',

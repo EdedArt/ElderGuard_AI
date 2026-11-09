@@ -75,6 +75,7 @@ export const es = {
     actions: {
       fall: 'Simular caída',
       stumble: 'Tropiezo (falsa alarma)',
+      highHeartRate: 'Ritmo cardíaco alto (140)',
     },
     fallState: {
       label: 'Detector de caídas',

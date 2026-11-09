@@ -55,6 +55,9 @@ export function createSimulatorPanel({ device }) {
   scenarioControls.content.append(
     action('fall', 'simulator.actions.fall', () => controller.runScenario('fall')),
     action('stumble', 'simulator.actions.stumble', () => controller.runScenario('stumble')),
+    action('highHeartRate', 'simulator.actions.highHeartRate', () =>
+      controller.runScenario('highHeartRate'),
+    ),
   );
 
   const status = createPanelSection('simulator.sections.status');
