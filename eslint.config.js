@@ -13,5 +13,9 @@ export default [
     files: ['*.config.js', 'tests/**/*.js'],
     languageOptions: { globals: globals.node },
   },
+  {
+    files: ['tests/**/*.dom.test.js'],
+    languageOptions: { globals: globals.browser },
+  },
   prettier,
 ];
