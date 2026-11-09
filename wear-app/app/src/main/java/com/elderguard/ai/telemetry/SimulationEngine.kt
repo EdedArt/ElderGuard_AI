@@ -61,9 +61,10 @@ class SimulationEngine(
 
     /**
      * Overrides [sensor] with a change to its current value, the equivalent of a partial override
-     * in the web version: `setOverride(Sensor.GPS) { it.copy(signal = false) }`.
+     * in the web version: `setPartialOverride(Sensor.GPS) { it.copy(signal = false) }`.
+     * (A different name from setOverride: with the same name, a lambda would match both.)
      */
-    fun <T : Any> setOverride(sensor: Sensor<T>, transform: (T) -> T) {
+    fun <T : Any> setPartialOverride(sensor: Sensor<T>, transform: (T) -> T) {
         setOverride(sensor, transform(sensor.read(store.state.value)))
     }
 
