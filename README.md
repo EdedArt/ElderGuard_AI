@@ -10,7 +10,7 @@ Simulador web de un smartwatch para la seguridad de personas mayores. Es un proy
 - Panel externo para simular los datos de los sensores.
 - Interfaz de alto contraste (WCAG AAA) con botones muy grandes y poco texto, pensada para personas mayores.
 
-Estado actual: estructura base del proyecto, pantalla circular del reloj, panel del simulador (por ahora vacío), cambio de tema claro/oscuro, interfaz en español e inglés, motor de telemetría simulada, pantalla del reloj con datos en vivo y botón SOS.
+Estado actual: estructura base del proyecto, pantalla circular del reloj, panel del simulador (por ahora vacío), cambio de tema claro/oscuro, interfaz en español e inglés, motor de telemetría simulada, pantalla del reloj con datos en vivo, botón SOS y detección de caídas con cuenta regresiva.
 
 ## Tema e idioma
 
@@ -18,6 +18,10 @@ La aplicación abre en tema claro y en español, sin importar la configuración 
 
 - **Idioma:** pulsa `ES` para español o `EN` para inglés. El botón resaltado indica el idioma actual.
 - **Tema:** pulsa `Tema oscuro` o `Tema claro` (`Dark theme` o `Light theme` en inglés). El botón muestra el tema al que se va a cambiar.
+
+## Pantalla de inicio
+
+Al abrir la página, el reloj muestra el botón `Toca para iniciar`. Los navegadores no permiten reproducir sonido hasta que la persona interactúa con la página, y la alerta de caída necesita el suyo, así que ese primer toque desbloquea el audio. También es lo que pone en marcha la telemetría: antes de tocarlo no se generan lecturas. Los botones de tema e idioma están fuera del reloj y se pueden usar en todo momento.
 
 ## Pantalla del reloj
 
@@ -37,12 +41,104 @@ Para evitar activaciones accidentales, un toque simple no hace nada:
 
 1. Mantén pulsado el botón durante 2 segundos con el dedo, el ratón o las teclas `Enter` o `Espacio`. Un anillo se va llenando alrededor del botón y, si el dispositivo lo permite, este vibra.
 2. Si sueltas antes de tiempo, se cancela y el reloj muestra durante 2 segundos el recordatorio `Mantén presionado`.
-3. Al completar los 2 segundos aparece la pantalla roja `Pidiendo ayuda…`. El estado `deviceStatus.mode` cambia a `sos` y se emite el evento `sos:triggered` con la hora y la ubicación.
+3. Al completar los 2 segundos aparece la pantalla roja `Pidiendo ayuda…`. El estado `deviceStatus.mode` cambia a `sos` y se emite el evento `sos:triggered` con el motivo (`reason`, que es `manual` en este caso y `fall` si viene de una caída), la hora y la ubicación.
 4. El botón `Cancelar` cierra esa pantalla y devuelve el reloj al modo `monitoring`.
 
 Mantener pulsado es difícil con un lector de pantalla, así que existe una alternativa: un botón `Pedir ayuda` que solo se ve al recibir el foco y abre una confirmación dentro del reloj (`Sí, pedir ayuda` o `No`). Al confirmar se activa el mismo flujo de SOS.
 
 Por ahora no se envía ninguna alerta: el envío real se agregará en una fase posterior, escuchando ese evento.
+
+## Detección de caídas
+
+El reloj analiza el acelerómetro para reconocer una caída. La lógica está en `src/core`: es JavaScript puro, no usa el DOM y recibe el tiempo dentro de cada muestra, de modo que cualquier escenario se puede reproducir en una prueba.
+
+### Magnitud de la aceleración
+
+El reloj puede estar en cualquier posición, así que no se analiza cada eje por separado, sino la aceleración total:
+
+```text
+magnitud = √(x² + y² + z²)
+```
+
+En reposo, la magnitud es de aproximadamente 1 g (la gravedad), sea cual sea la orientación del reloj.
+
+### Umbrales
+
+Están en `src/config/fallDetection.config.js`:
+
+| Parámetro                 | Valor  | Significado                                                        |
+| ------------------------- | ------ | ------------------------------------------------------------------ |
+| `impactThresholdG`        | 2,5 g  | Magnitud mínima que se considera un impacto.                       |
+| `immobilityToleranceG`    | 0,15 g | Distancia máxima a 1 g que aún se considera quietud (0,85 a 1,15). |
+| `immobilityDurationMs`    | 5000   | Tiempo que debe durar la quietud para confirmar la caída.          |
+| `immobilityStartWindowMs` | 3000   | Tiempo máximo tras el impacto para que empiece la quietud.         |
+| `countdownSeconds`        | 10     | Tiempo que tiene la persona para cancelar la alerta.               |
+| `urgentSeconds`           | 3      | Últimos segundos, en los que la alerta se vuelve más insistente.   |
+
+### Máquina de estados
+
+```text
+                     magnitud ≥ 2,5 g
+        ┌────────┐ ─────────────────────> ┌──────────┐
+   ┌──> │  idle  │                        │  impact  │ <──┐
+   │    └────────┘ <───────────────────── └──────────┘    │
+   │         ^      pasan más de 3 s          │           │ nuevo impacto
+   │         │      sin quietud               │ quietud   │ (≥ 2,5 g)
+   │         │                                │ a tiempo  │
+   │         │ movimiento                     v           │
+   │         │ (fuera de 1 g ± 0,15)   ┌──────────────┐   │
+   │         └──────────────────────── │  immobility  │ ──┘
+   │                                   └──────────────┘
+   │ reset()                                  │
+   │                                          │ quietud durante 5 s
+   │                                          v
+   │                                   ┌─────────────┐
+   └────────────────────────────────── │  confirmed  │
+                                       └─────────────┘
+```
+
+- **`idle`:** vigilancia normal. Solo un impacto hace avanzar al detector; la quietud por sí sola no significa nada.
+- **`impact`:** hubo un golpe. La quietud debe empezar en los siguientes 3 segundos; si no, se descarta y se vuelve a `idle`.
+- **`immobility`:** la persona está quieta. Cualquier movimiento devuelve a `idle`; un nuevo impacto reinicia la secuencia desde ese momento, para no perder una caída real después de un tropiezo.
+- **`confirmed`:** la quietud duró 5 segundos. El detector ignora las muestras hasta que se llama a `reset()`.
+
+La API es `process(muestra)`, `getState()`, `reset()` y `onConfirmed(función)`. Cada muestra tiene la forma `{ accelerometer, timestamp }`.
+
+### Por qué se exigen el impacto y la inmovilidad
+
+Cada señal por separado aparece muchas veces al día en una vida normal, y una falsa alarma constante haría que la persona dejara de confiar en el reloj o de usarlo. Solo la combinación de ambas describe una caída: un golpe fuerte seguido de una persona que ya no se mueve.
+
+| Situación                                   | Impacto | Inmovilidad | ¿Alerta? |
+| ------------------------------------------- | ------- | ----------- | -------- |
+| Caída real                                  | Sí      | Sí          | Sí       |
+| Golpear la mano con la mesa y seguir        | Sí      | No          | No       |
+| Dormir, ver televisión, descansar           | No      | Sí          | No       |
+| Sentarse despacio                           | No      | Sí          | No       |
+| Golpe, varios segundos de actividad y calma | Sí      | Tarde       | No       |
+
+### Ventana de 10 segundos para cancelar
+
+Aun con ambas condiciones puede haber falsos positivos, por ejemplo si el reloj cae sobre una mesa mientras nadie lo lleva puesto. Por eso, una caída confirmada no pide ayuda de inmediato:
+
+1. `deviceStatus.mode` cambia a `fall-countdown` y se emite el evento `fall:detected`.
+2. El reloj muestra `¿Te caíste?`, los segundos restantes, un anillo que se vacía y el botón `ESTOY BIEN`. Suena un pitido cada segundo y, si el dispositivo lo permite, vibra.
+3. En los últimos 3 segundos, la pantalla pasa a rojo y los pitidos son más agudos y más rápidos.
+4. Si la persona pulsa `ESTOY BIEN`, se emite `fall:cancelled`, el detector se reinicia y el reloj vuelve a `monitoring`.
+5. Si llega a cero, se abre la pantalla de SOS y se emite `sos:triggered` con `reason: 'fall'`. Esta espera protege también a quien no puede responder, porque la alerta sale sola.
+
+Mientras hay una cuenta regresiva o un SOS activo, el detector no procesa muestras, de modo que no puede iniciarse una segunda alerta encima de la primera.
+
+Para los lectores de pantalla, el foco pasa al botón `ESTOY BIEN`, que también responde a `Enter` y `Espacio`. Se anuncia solo una vez al inicio y en cada uno de los últimos 3 segundos, para no tapar lo demás con un número cada segundo.
+
+### Probar una caída en desarrollo
+
+Con `npm run dev`, después de tocar `Toca para iniciar`, se puede ejecutar esto en la consola del navegador:
+
+```js
+window.elderguard.simulateFall();
+```
+
+La función inyecta un impacto y luego quietud mediante las anulaciones del motor, por lo que se ejecuta el detector real de principio a fin: la cuenta regresiva aparece unos 5 segundos después. Solo existe en desarrollo y no se incluye en la versión de producción. El panel del simulador la reemplazará en la demostración.
 
 ## Arquitectura de telemetría
 
