@@ -23,7 +23,7 @@ watchArea.append(
 simulatorArea.append(createSimulatorPanel({ device }));
 document.querySelector('#app').append(root);
 
-// Removed from production builds. The simulator panel will take over this job for the demo.
+// A console helper for development, left out of production builds. The demo uses the panel.
 if (import.meta.env.DEV) {
   window.elderguard = createFallSimulation({
     engine: device.engine,
