@@ -4,6 +4,7 @@ import './styles/layout.css';
 import './styles/watch.css';
 import './styles/watchface.css';
 import { createDevice } from './core/device.js';
+import { createFallSimulation } from './simulator/fallSimulation.js';
 import { createSimulatorPanel } from './simulator/simulatorPanel.js';
 import { createLanguageToggle } from './ui/languageToggle.js';
 import { createPageLayout } from './ui/pageLayout.js';
@@ -20,3 +21,8 @@ watchArea.append(
 );
 simulatorArea.append(createSimulatorPanel());
 document.querySelector('#app').append(root);
+
+// Removed from production builds. The simulator panel will take over this job for the demo.
+if (import.meta.env.DEV) {
+  window.elderguard = createFallSimulation({ engine: device.engine });
+}
