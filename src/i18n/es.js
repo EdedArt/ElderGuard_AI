@@ -164,6 +164,13 @@ export const es = {
       sos: 'SOS',
     },
   },
+  contacts: {
+    relationship: {
+      daughter: 'Hija',
+      son: 'Hijo',
+      doctor: 'Médica',
+    },
+  },
   theme: {
     toDark: 'Tema oscuro',
     toLight: 'Tema claro',
