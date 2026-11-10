@@ -24,5 +24,6 @@
     <string name="sos_title">SOS</string>
     <string name="sos_label">AUXILIO</string>
     <string name="sos_hint">SOS, auxilio. Mantén pulsado %1$d segundos para pedir ayuda</string>
+    <string name="sos_hold_hint">Mantén presionado</string>
 </resources>
 

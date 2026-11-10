@@ -41,6 +41,7 @@ private const val CLOCK_ITEM = 1
 fun Watchface(
     state: TelemetryState,
     modifier: Modifier = Modifier,
+    onSosActivate: () -> Unit = {},
 ) {
     val listState = rememberScalingLazyListState()
     // The large clock already shows the time; the small curved one appears once it scrolls away.
@@ -68,7 +69,7 @@ fun Watchface(
             }
             item { WatchClock(Modifier.testTag(WatchfaceTags.CLOCK)) }
             item { HeartRateIndicator(state.heartRate, Modifier.testTag(WatchfaceTags.HEART_RATE)) }
-            item { SosButton(Modifier.testTag(WatchfaceTags.SOS)) }
+            item { SosButton(onActivate = onSosActivate, modifier = Modifier.testTag(WatchfaceTags.SOS)) }
         }
     }
 }

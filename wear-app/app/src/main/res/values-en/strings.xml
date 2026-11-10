@@ -23,5 +23,6 @@
     <string name="sos_title">SOS</string>
     <string name="sos_label">HELP</string>
     <string name="sos_hint">SOS, help. Press and hold for %1$d seconds to call for help</string>
+    <string name="sos_hold_hint">Hold to call for help</string>
 </resources>
 
