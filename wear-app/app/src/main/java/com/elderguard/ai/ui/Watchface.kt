@@ -23,6 +23,7 @@ object WatchfaceTags {
     const val BATTERY = "battery"
     const val GPS = "gps"
     const val HEART_RATE = "heartRate"
+    const val SOS = "sos"
     const val LIST = "watchfaceList"
 }
 
@@ -40,7 +41,6 @@ private const val CLOCK_ITEM = 1
 fun Watchface(
     state: TelemetryState,
     modifier: Modifier = Modifier,
-    sosArea: @Composable () -> Unit = {},
 ) {
     val listState = rememberScalingLazyListState()
     // The large clock already shows the time; the small curved one appears once it scrolls away.
@@ -68,7 +68,7 @@ fun Watchface(
             }
             item { WatchClock(Modifier.testTag(WatchfaceTags.CLOCK)) }
             item { HeartRateIndicator(state.heartRate, Modifier.testTag(WatchfaceTags.HEART_RATE)) }
-            item { sosArea() }
+            item { SosButton(Modifier.testTag(WatchfaceTags.SOS)) }
         }
     }
 }

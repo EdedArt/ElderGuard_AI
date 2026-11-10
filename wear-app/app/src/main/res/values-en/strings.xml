@@ -19,5 +19,9 @@
     <string name="gps_lost">No GPS</string>
     <string name="gps_ok_label">GPS connected</string>
     <string name="gps_lost_label">No GPS signal</string>
+    <!-- SOS button. -->
+    <string name="sos_title">SOS</string>
+    <string name="sos_label">HELP</string>
+    <string name="sos_hint">SOS, help. Press and hold for %1$d seconds to call for help</string>
 </resources>
 
