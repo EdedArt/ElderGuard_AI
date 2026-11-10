@@ -25,13 +25,15 @@ import androidx.wear.compose.material.Text
 import com.elderguard.ai.R
 import com.elderguard.ai.telemetry.Battery
 import com.elderguard.ai.telemetry.Gps
+import com.elderguard.ai.telemetry.GpsState
 import com.elderguard.ai.telemetry.HeartRate
-import kotlin.math.roundToInt
+import com.elderguard.ai.telemetry.batteryPercent
+import com.elderguard.ai.telemetry.gpsState
 
 /** Battery icon and percentage. */
 @Composable
 fun BatteryIndicator(battery: Battery, modifier: Modifier = Modifier) {
-    val percent = battery.level.roundToInt()
+    val percent = batteryPercent(battery.level)
     val description = stringResource(R.string.battery_label, percent)
     val color = MaterialTheme.colors.onBackground
     Row(
@@ -47,7 +49,8 @@ fun BatteryIndicator(battery: Battery, modifier: Modifier = Modifier) {
 /** GPS icon with "GPS" or "Sin GPS". */
 @Composable
 fun GpsIndicator(gps: Gps, modifier: Modifier = Modifier) {
-    val description = stringResource(if (gps.signal) R.string.gps_ok_label else R.string.gps_lost_label)
+    val ok = gpsState(gps) == GpsState.Ok
+    val description = stringResource(if (ok) R.string.gps_ok_label else R.string.gps_lost_label)
     val color = MaterialTheme.colors.onBackground
     Row(
         modifier = modifier.semantics(mergeDescendants = true) { contentDescription = description },
@@ -56,7 +59,7 @@ fun GpsIndicator(gps: Gps, modifier: Modifier = Modifier) {
     ) {
         Icon(imageVector = Icons.Filled.LocationOn, contentDescription = null, tint = color, modifier = Modifier.size(18.dp))
         Text(
-            text = stringResource(if (gps.signal) R.string.gps_ok else R.string.gps_lost),
+            text = stringResource(if (ok) R.string.gps_ok else R.string.gps_lost),
             color = color,
             style = MaterialTheme.typography.title3,
         )
