@@ -28,5 +28,12 @@
     <!-- SOS active screen. -->
     <string name="sos_active">Pidiendo ayuda…</string>
     <string name="sos_cancel">Cancelar</string>
+    <!-- Language screen. -->
+    <string name="language_title">Idioma</string>
+    <string name="language_es_code">ES</string>
+    <string name="language_en_code">EN</string>
+    <!-- Each language is named in itself, so someone who switched by mistake still finds theirs. -->
+    <string name="language_es_name">Español</string>
+    <string name="language_en_name">English</string>
 </resources>
 
