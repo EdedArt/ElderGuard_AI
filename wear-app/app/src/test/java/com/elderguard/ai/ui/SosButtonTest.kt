@@ -1,10 +1,8 @@
 package com.elderguard.ai.ui
 
 import androidx.compose.ui.semantics.SemanticsProperties
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
 import androidx.wear.compose.material.MaterialTheme
 import com.elderguard.ai.config.SosConfig
@@ -33,6 +31,8 @@ class SosButtonTest {
     val compose = createComposeRule()
 
     private var activations = 0
+    private var holdStarts = 0
+    private var shortPresses = 0
 
     private val button get() = compose.onNodeWithTag(SosButtonTags.BUTTON)
 
@@ -40,7 +40,13 @@ class SosButtonTest {
     fun setUp() {
         compose.setContent {
             ProvideAppLanguage(AppLanguage.Es) {
-                MaterialTheme { SosButton(onActivate = { activations++ }) }
+                MaterialTheme {
+                    SosButton(
+                        onActivate = { activations++ },
+                        onHoldStart = { holdStarts++ },
+                        onShortPress = { shortPresses++ },
+                    )
+                }
             }
         }
         compose.mainClock.autoAdvance = false
@@ -70,7 +76,7 @@ class SosButtonTest {
 
         release()
         assertEquals(1, activations)
-        compose.onNodeWithTag(SosButtonTags.HINT).assertDoesNotExist()
+        assertEquals(0, shortPresses)
     }
 
     @Test
@@ -78,6 +84,7 @@ class SosButtonTest {
         holdFor(HOLD - MARGIN)
 
         assertEquals(0, activations)
+        assertEquals(1, holdStarts)
     }
 
     @Test
@@ -90,36 +97,34 @@ class SosButtonTest {
     }
 
     @Test
-    fun earlyReleaseCancelsAndShowsTheHint() {
+    fun earlyReleaseCancelsAndReportsAShortPress() {
         holdFor(HOLD / 2)
         release()
 
+        assertEquals(1, shortPresses)
         compose.onNodeWithTag(SosButtonTags.PROGRESS).assertDoesNotExist()
-        compose.onNodeWithText("Mantén presionado").assertIsDisplayed()
         // The hold would have finished by now if it were still running.
         compose.mainClock.advanceTimeBy(HOLD)
         assertEquals(0, activations)
     }
 
     @Test
-    fun hidesTheHintAfterTwoSeconds() {
+    fun aQuickTapIsAShortPressToo() {
         holdFor(MARGIN)
         release()
-        compose.onNodeWithTag(SosButtonTags.HINT).assertIsDisplayed()
 
-        compose.mainClock.advanceTimeBy(SosConfig.HOLD_HINT_DURATION_MS + MARGIN)
-
-        compose.onNodeWithTag(SosButtonTags.HINT).assertDoesNotExist()
+        assertEquals(1, shortPresses)
+        assertEquals(0, activations)
     }
 
     @Test
-    fun aNewHoldHidesTheHintAndStartsFromZero() {
+    fun aNewHoldStartsFromZero() {
         holdFor(HOLD / 2)
         release()
 
         holdFor(MARGIN)
 
-        compose.onNodeWithTag(SosButtonTags.HINT).assertDoesNotExist()
+        assertEquals(2, holdStarts)
         assertTrue("progress was ${progress()}", progress() < 0.2f)
         compose.mainClock.advanceTimeBy(HOLD)
         assertEquals(1, activations)

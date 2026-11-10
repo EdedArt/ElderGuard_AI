@@ -1,12 +1,15 @@
 package com.elderguard.ai.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
@@ -30,6 +33,9 @@ object WatchfaceTags {
 // Item positions in the list. The clock is the item centered on the screen at start.
 private const val CLOCK_ITEM = 1
 
+// Low enough to clear the curved edge of a round screen at its widest text.
+private val HINT_TOP_PADDING = 28.dp
+
 /**
  * The main screen, mirroring the three zones of the web watchface from top to bottom: status
  * (battery and GPS), data (clock and heart rate) and the SOS area.
@@ -44,6 +50,7 @@ fun Watchface(
     onSosActivate: () -> Unit = {},
 ) {
     val listState = rememberScalingLazyListState()
+    val holdHint = rememberHoldHintState()
     // The large clock already shows the time; the small curved one appears once it scrolls away.
     val clockVisible by remember {
         derivedStateOf { listState.layoutInfo.visibleItemsInfo.any { it.index == CLOCK_ITEM } }
@@ -56,20 +63,32 @@ fun Watchface(
         timeText = { if (!clockVisible) TimeText(timeSource = AppTimeSource) },
         positionIndicator = { PositionIndicator(scalingLazyListState = listState) },
     ) {
-        ScalingLazyColumn(
-            state = listState,
-            modifier = Modifier.fillMaxSize().testTag(WatchfaceTags.LIST),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-        ) {
-            item {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    BatteryIndicator(state.battery, Modifier.testTag(WatchfaceTags.BATTERY))
-                    GpsIndicator(state.gps, Modifier.testTag(WatchfaceTags.GPS))
+        Box(modifier = Modifier.fillMaxSize()) {
+            ScalingLazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize().testTag(WatchfaceTags.LIST),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                item {
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        BatteryIndicator(state.battery, Modifier.testTag(WatchfaceTags.BATTERY))
+                        GpsIndicator(state.gps, Modifier.testTag(WatchfaceTags.GPS))
+                    }
+                }
+                item { WatchClock(Modifier.testTag(WatchfaceTags.CLOCK)) }
+                item { HeartRateIndicator(state.heartRate, Modifier.testTag(WatchfaceTags.HEART_RATE)) }
+                item {
+                    SosButton(
+                        onActivate = onSosActivate,
+                        onHoldStart = holdHint::hide,
+                        onShortPress = holdHint::show,
+                        modifier = Modifier.testTag(WatchfaceTags.SOS),
+                    )
                 }
             }
-            item { WatchClock(Modifier.testTag(WatchfaceTags.CLOCK)) }
-            item { HeartRateIndicator(state.heartRate, Modifier.testTag(WatchfaceTags.HEART_RATE)) }
-            item { SosButton(onActivate = onSosActivate, modifier = Modifier.testTag(WatchfaceTags.SOS)) }
+            // Outside the list, at a fixed spot inside the round safe area: visible however far
+            // the list is scrolled, and away from the finger on the SOS button.
+            HoldHint(state = holdHint, modifier = Modifier.align(Alignment.TopCenter).padding(top = HINT_TOP_PADDING))
         }
     }
 }

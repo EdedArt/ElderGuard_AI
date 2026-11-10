@@ -15,16 +15,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,15 +30,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.role
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.CircularProgressIndicator
 import androidx.wear.compose.material.Icon
@@ -51,7 +43,6 @@ import androidx.wear.compose.material.Text
 import com.elderguard.ai.R
 import com.elderguard.ai.config.SosConfig
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /** Share of the list width the button takes; about 140 dp across on a small round watch. */
@@ -62,7 +53,6 @@ private val RING_GAP = 2.dp
 object SosButtonTags {
     const val BUTTON = "sosButton"
     const val PROGRESS = "sosProgress"
-    const val HINT = "sosHint"
 }
 
 /**
@@ -70,28 +60,27 @@ object SosButtonTags {
  *
  * A tap does nothing. Holding it for [SosConfig.HOLD_DURATION_MS] fills a ring around it and then
  * calls [onActivate], without waiting for the finger to lift. Letting go earlier cancels and
- * shows "Mantén presionado" for a moment. A touch that turns into a scroll cancels silently.
+ * calls [onShortPress], so the caller can show the hold hint; [onHoldStart] lets it hide the hint
+ * again. A touch that turns into a scroll cancels silently, without onShortPress.
  *
  * Built on a Box with button semantics rather than Material's Button, because Button's own click
  * handling would compete with this long-press gesture.
  */
 @Composable
-fun SosButton(onActivate: () -> Unit, modifier: Modifier = Modifier) {
+fun SosButton(
+    onActivate: () -> Unit,
+    modifier: Modifier = Modifier,
+    onHoldStart: () -> Unit = {},
+    onShortPress: () -> Unit = {},
+) {
     val description = stringResource(R.string.sos_hint, SosConfig.HOLD_DURATION_MS / 1000)
     val haptics = LocalHapticFeedback.current
-    // The latest callback, even though the gesture below is set up only once.
+    // The latest callbacks, even though the gesture below is set up only once.
     val currentOnActivate by rememberUpdatedState(onActivate)
+    val currentOnHoldStart by rememberUpdatedState(onHoldStart)
+    val currentOnShortPress by rememberUpdatedState(onShortPress)
     // From 0 to 1 while held. Animatable runs on the frame clock, which UI tests control.
     val progress = remember { Animatable(0f) }
-    // 0 hides the hint; each short press increases it, restarting the timer that hides it.
-    var hintRequest by remember { mutableIntStateOf(0) }
-
-    LaunchedEffect(hintRequest) {
-        if (hintRequest > 0) {
-            delay(SosConfig.HOLD_HINT_DURATION_MS)
-            hintRequest = 0
-        }
-    }
 
     Box(
         modifier = modifier.fillMaxWidth(SOS_WIDTH_FRACTION).aspectRatio(1f),
@@ -118,7 +107,7 @@ fun SosButton(onActivate: () -> Unit, modifier: Modifier = Modifier) {
                 .pointerInput(Unit) {
                     detectTapGestures(
                         onPress = {
-                            hintRequest = 0
+                            currentOnHoldStart()
                             haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             var activated = false
                             coroutineScope {
@@ -137,7 +126,7 @@ fun SosButton(onActivate: () -> Unit, modifier: Modifier = Modifier) {
                                 if (!activated) {
                                     hold.cancel()
                                     progress.snapTo(0f)
-                                    if (released) hintRequest++
+                                    if (released) currentOnShortPress()
                                 }
                             }
                         },
@@ -175,21 +164,6 @@ fun SosButton(onActivate: () -> Unit, modifier: Modifier = Modifier) {
                     fontWeight = FontWeight.Bold,
                 )
             }
-        }
-        if (hintRequest > 0) {
-            Text(
-                text = stringResource(R.string.sos_hold_hint),
-                color = WatchColors.Text,
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.title3,
-                modifier = Modifier
-                    .background(WatchColors.Background, RoundedCornerShape(12.dp))
-                    .border(1.dp, WatchColors.Text, RoundedCornerShape(12.dp))
-                    .padding(horizontal = 10.dp, vertical = 6.dp)
-                    // Screen readers announce it when it appears, like the web app's announcer.
-                    .semantics { liveRegion = LiveRegionMode.Polite }
-                    .testTag(SosButtonTags.HINT),
-            )
         }
     }
 }
