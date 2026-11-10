@@ -2,18 +2,17 @@ package com.elderguard.ai.ui
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.HorizontalPageIndicator
 import androidx.wear.compose.material.PageIndicatorState
+import androidx.wear.compose.material.PageIndicatorStyle
 import com.elderguard.ai.language.AppLanguage
 import com.elderguard.ai.telemetry.DeviceMode
 import com.elderguard.ai.telemetry.TelemetryState
@@ -21,6 +20,9 @@ import com.elderguard.ai.telemetry.TelemetryState
 private const val WATCHFACE_PAGE = 0
 private const val LANGUAGE_PAGE = 1
 private const val PAGE_COUNT = 2
+
+// Larger than the 6 dp default, so the dots are easier to notice.
+private val INDICATOR_SIZE = 8.dp
 
 object WatchAppTags {
     const val PAGER = "pager"
@@ -51,9 +53,12 @@ fun WatchApp(
             }
         }
         // The dots at the bottom that show there is a second page and which one is open.
+        // Linear style: the default curved style drew nothing on the Wear OS emulator. A straight
+        // row at the bottom center still sits inside the round screen.
         HorizontalPageIndicator(
             pageIndicatorState = rememberPageIndicatorState(pagerState),
-            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 2.dp),
+            indicatorStyle = PageIndicatorStyle.Linear,
+            indicatorSize = INDICATOR_SIZE,
         )
         if (state.deviceStatus.mode == DeviceMode.Sos) {
             SosScreen(onCancel = onSosCancel)
