@@ -49,6 +49,9 @@ dependencies {
     implementation(libs.androidx.wear.compose.foundation)
     // Coroutines and StateFlow, used by the telemetry engine.
     implementation(libs.kotlinx.coroutines.android)
+    // ViewModel (keeps the engine alive across activity re-creation) and collectAsStateWithLifecycle.
+    implementation(libs.androidx.lifecycle.viewmodel.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
 
