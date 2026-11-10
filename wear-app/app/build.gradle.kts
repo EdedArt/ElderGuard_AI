@@ -43,6 +43,8 @@ dependencies {
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.tooling.preview)
+    // Basic Material icons (heart, location, phone), versioned by the BOM.
+    implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.activity.compose)
     // Wear OS versions of the Compose components, sized and styled for a round watch screen.
     implementation(libs.androidx.wear.compose.material)

@@ -21,6 +21,7 @@ import androidx.wear.compose.material.Text
 import com.elderguard.ai.language.LanguageRepository
 import com.elderguard.ai.language.SharedPreferencesLanguageStorage
 import com.elderguard.ai.ui.ProvideAppLanguage
+import com.elderguard.ai.ui.Watchface
 import com.elderguard.ai.telemetry.TelemetryState
 import com.elderguard.ai.telemetry.TelemetryViewModel
 import kotlin.math.roundToInt
@@ -63,8 +64,9 @@ class MainActivity : ComponentActivity() {
 // reads changes, so there is no manual view updating as with findViewById.
 @Composable
 fun ElderGuardApp(state: TelemetryState) {
+    // Wear OS's standard dark Material theme: a black background saves battery on OLED screens.
     MaterialTheme {
-        TelemetryReadout(state)
+        Watchface(state)
     }
 }
 
