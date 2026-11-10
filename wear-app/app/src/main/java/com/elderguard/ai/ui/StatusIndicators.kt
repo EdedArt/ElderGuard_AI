@@ -28,6 +28,7 @@ import com.elderguard.ai.telemetry.Gps
 import com.elderguard.ai.telemetry.GpsState
 import com.elderguard.ai.telemetry.HeartRate
 import com.elderguard.ai.telemetry.batteryPercent
+import com.elderguard.ai.telemetry.displayState
 import com.elderguard.ai.telemetry.gpsState
 
 /** Battery icon and percentage. */
@@ -35,9 +36,12 @@ import com.elderguard.ai.telemetry.gpsState
 fun BatteryIndicator(battery: Battery, modifier: Modifier = Modifier) {
     val percent = batteryPercent(battery.level)
     val description = stringResource(R.string.battery_label, percent)
-    val color = MaterialTheme.colors.onBackground
+    val color = battery.displayState.color()
     Row(
-        modifier = modifier.semantics(mergeDescendants = true) { contentDescription = description },
+        modifier = modifier.semantics(mergeDescendants = true) {
+            contentDescription = description
+            statusColor = color
+        },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
@@ -49,11 +53,15 @@ fun BatteryIndicator(battery: Battery, modifier: Modifier = Modifier) {
 /** GPS icon with "GPS" or "Sin GPS". */
 @Composable
 fun GpsIndicator(gps: Gps, modifier: Modifier = Modifier) {
-    val ok = gpsState(gps) == GpsState.Ok
+    val state = gpsState(gps)
+    val ok = state == GpsState.Ok
     val description = stringResource(if (ok) R.string.gps_ok_label else R.string.gps_lost_label)
-    val color = MaterialTheme.colors.onBackground
+    val color = state.color()
     Row(
-        modifier = modifier.semantics(mergeDescendants = true) { contentDescription = description },
+        modifier = modifier.semantics(mergeDescendants = true) {
+            contentDescription = description
+            statusColor = color
+        },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(2.dp),
     ) {
