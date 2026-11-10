@@ -1,3 +1,5 @@
+import com.android.build.api.variant.HasUnitTestBuilder
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -36,6 +38,19 @@ android {
     buildFeatures {
         compose = true
     }
+
+    testOptions {
+        // Robolectric reads the app's real resources (strings, themes) in local UI tests.
+        unitTests.isIncludeAndroidResources = true
+    }
+}
+
+androidComponents {
+    // Unit tests run on the debug variant only. The Compose test host activity comes from
+    // ui-test-manifest, a debug-only dependency, and a release run would repeat the same tests.
+    beforeVariants(selector().withBuildType("release")) { variant ->
+        (variant as HasUnitTestBuilder).enableUnitTest = false
+    }
 }
 
 dependencies {
@@ -56,9 +71,16 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
 
     debugImplementation(libs.androidx.compose.ui.tooling)
+    // An empty activity that Compose UI tests draw into.
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Local unit tests in src/test, run on the JVM with `gradlew.bat test` (no emulator needed).
     testImplementation(libs.junit)
     // Virtual time for coroutines, the equivalent of Vitest's fake timers.
     testImplementation(libs.kotlinx.coroutines.test)
+    // Compose UI tests (with a controllable clock) running on the JVM through Robolectric,
+    // which simulates Android so no emulator is needed.
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.compose.ui.test.junit4)
+    testImplementation(libs.robolectric)
 }
