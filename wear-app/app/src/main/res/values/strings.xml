@@ -2,10 +2,6 @@
 <!-- Spanish, the default language. English is in values-en. -->
 <resources>
     <string name="app_name">ElderGuard AI</string>
-    <!-- Temporary live readout, replaced by the watchface in N3. -->
-    <string name="readout_heart_rate">%1$d LPM</string>
-    <string name="readout_battery">Batería %1$d %%</string>
-    <string name="readout_movement">Movimiento %1$.2f g</string>
     <!-- Clock: 12-hour period labels. -->
     <string name="clock_am">a. m.</string>
     <string name="clock_pm">p. m.</string>

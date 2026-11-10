@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">ElderGuard AI</string>
-    <!-- Temporary live readout, replaced by the watchface in N3. -->
-    <string name="readout_heart_rate">%1$d BPM</string>
-    <string name="readout_battery">Battery %1$d%%</string>
-    <string name="readout_movement">Movement %1$.2f g</string>
     <!-- Clock: 12-hour period labels. -->
     <string name="clock_am">AM</string>
     <string name="clock_pm">PM</string>

@@ -4,28 +4,19 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Text
 import com.elderguard.ai.language.AppLanguage
 import com.elderguard.ai.language.LanguageRepository
 import com.elderguard.ai.language.SharedPreferencesLanguageStorage
-import com.elderguard.ai.ui.ProvideAppLanguage
-import com.elderguard.ai.ui.WatchApp
 import com.elderguard.ai.telemetry.TelemetryState
 import com.elderguard.ai.telemetry.TelemetryViewModel
-import kotlin.math.roundToInt
+import com.elderguard.ai.ui.ProvideAppLanguage
+import com.elderguard.ai.ui.WatchApp
 
 // Kotlin notes for Java developers:
 // - `class MainActivity : ComponentActivity()` is `class MainActivity extends ComponentActivity`.
@@ -50,7 +41,7 @@ class MainActivity : ComponentActivity() {
         // setContent replaces setContentView with an XML layout: the screen is described in code.
         // The braces are a lambda passed as the last argument, like `setContent(() -> { ... })`.
         setContent {
-            // Turns the StateFlow into Compose state: every new value redraws the readout.
+            // Turns the StateFlow into Compose state: every new value redraws the screen.
             // It stops collecting while the app is in the background.
             val state by telemetryState.collectAsStateWithLifecycle()
             val language by languageState.collectAsStateWithLifecycle()
@@ -86,34 +77,6 @@ fun ElderGuardApp(
             onLanguageChange = onLanguageChange,
             onSosActivate = onSosActivate,
             onSosCancel = onSosCancel,
-        )
-    }
-}
-
-// Temporary live readout, like the one the web app had before its watchface. Replaced in N3.
-@Composable
-fun TelemetryReadout(state: TelemetryState) {
-    // Column stacks its children vertically, centered on the round screen.
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        // Strings from res/values (Spanish) and res/values-en (English), filled in like String.format.
-        Text(
-            text = stringResource(R.string.readout_heart_rate, state.heartRate.bpm),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.display3,
-        )
-        Text(
-            text = stringResource(R.string.readout_battery, state.battery.level.roundToInt()),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.title2,
-        )
-        Text(
-            text = stringResource(R.string.readout_movement, state.accelerometer.magnitude),
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.title2,
         )
     }
 }
