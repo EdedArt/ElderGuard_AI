@@ -18,6 +18,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Text
+import com.elderguard.ai.language.LanguageRepository
+import com.elderguard.ai.language.SharedPreferencesLanguageStorage
+import com.elderguard.ai.ui.ProvideAppLanguage
 import com.elderguard.ai.telemetry.TelemetryState
 import com.elderguard.ai.telemetry.TelemetryViewModel
 import kotlin.math.roundToInt
@@ -31,17 +34,27 @@ class MainActivity : ComponentActivity() {
     // after the activity is re-created.
     private val telemetry: TelemetryViewModel by viewModels()
 
+    // `by lazy` creates it on first use. The language never restarts the activity, so one per
+    // activity is enough.
+    private val languageRepository by lazy {
+        LanguageRepository(SharedPreferencesLanguageStorage(applicationContext))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Reading the ViewModel here creates it, which starts the simulation engine.
         val telemetryState = telemetry.state
+        val languageState = languageRepository.language
         // setContent replaces setContentView with an XML layout: the screen is described in code.
         // The braces are a lambda passed as the last argument, like `setContent(() -> { ... })`.
         setContent {
             // Turns the StateFlow into Compose state: every new value redraws the readout.
             // It stops collecting while the app is in the background.
             val state by telemetryState.collectAsStateWithLifecycle()
-            ElderGuardApp(state)
+            val language by languageState.collectAsStateWithLifecycle()
+            ProvideAppLanguage(language) {
+                ElderGuardApp(state)
+            }
         }
     }
 }
