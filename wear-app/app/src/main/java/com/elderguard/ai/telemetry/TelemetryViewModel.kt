@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.StateFlow
 /**
  * Owns the telemetry store and the simulation engine for the screen.
  *
- * A ViewModel survives the activity being re-created (for example when the language changes),
+ * A ViewModel survives Android re-creating the activity (for example when the system language changes),
  * so the simulation keeps its state instead of starting over. The engine runs in viewModelScope,
  * which is cancelled when the ViewModel is cleared, so the ticker stops on its own.
  */

@@ -2,7 +2,7 @@
 
 Aplicación nativa de ElderGuard AI para relojes con Wear OS, escrita en Kotlin con Jetpack Compose para Wear OS. Es un proyecto de Gradle independiente: no usa `npm` ni comparte código con el simulador web de `src/`.
 
-Estado actual: motor de telemetría. La aplicación simula los sensores y muestra una lectura temporal que se actualiza cada segundo: frecuencia cardíaca (LPM), batería y magnitud del movimiento. En la fase N3 se reemplaza por la esfera real del reloj.
+Estado actual: esfera del reloj. La aplicación simula los sensores y muestra la hora, la frecuencia cardíaca, la batería, el GPS y un botón SOS que se activa manteniéndolo pulsado. Abre en español; el inglés se elige en una segunda pantalla.
 
 ## Requisitos
 
@@ -39,7 +39,7 @@ Solo se hace una vez.
 2. En la lista de dispositivos, junto a ella, elige el emulador que creaste.
 3. Pulsa **Run** (el triángulo verde) o `Shift+F10`.
 4. Espera a que el emulador arranque, a que se compile la aplicación y a que se instale. La primera vez que arranca, el emulador pasa por pantallas como `Starting…` o la de carga de batería: espera a que terminen, porque pueden quedar delante de la aplicación.
-5. La aplicación se abre sola y muestra la lectura de telemetría, con valores que cambian cada segundo. También queda en la lista de aplicaciones del reloj.
+5. La aplicación se abre sola y muestra la esfera del reloj, con valores que cambian cada segundo. También queda en la lista de aplicaciones del reloj.
 
 ## Compilar desde la terminal (opcional)
 
@@ -48,7 +48,7 @@ Desde PowerShell, dentro de `wear-app`:
 ```powershell
 .\gradlew.bat tasks          # Comprueba que el proyecto es válido
 .\gradlew.bat assembleDebug  # Genera el APK de depuración
-.\gradlew.bat test           # Ejecuta las pruebas unitarias en la JVM, sin emulador
+.\gradlew.bat test           # Ejecuta todas las pruebas en la JVM, sin emulador
 ```
 
 El resultado de las pruebas queda en `app\build\reports\tests\testDebugUnitTest\index.html`.
@@ -56,6 +56,58 @@ El resultado de las pruebas queda en `app\build\reports\tests\testDebugUnitTest\
 Si no está definida la variable `ANDROID_HOME`, crea un archivo `local.properties` en `wear-app` con la ruta del SDK, por ejemplo `sdk.dir=D\:\\Android\\Sdk`. Android Studio lo crea solo; no se sube al repositorio.
 
 El APK queda en `app\build\outputs\apk\debug\app-debug.apk`.
+
+## Esfera del reloj
+
+Reproduce la pantalla del reloj de la aplicación web (sección _Pantalla del reloj_ del README principal) con los componentes de Compose para Wear OS. El código está en `app/src/main/java/com/elderguard/ai/ui`.
+
+Una pantalla redonda de 1,2 pulgadas no tiene espacio para todo a un tamaño legible, así que el contenido está en una `ScalingLazyColumn`: la lista de Wear OS que se desplaza con la corona o deslizando el dedo y reduce los elementos cerca del borde curvo. De arriba abajo:
+
+- **Estado:** batería con ícono y porcentaje, y GPS con ícono y `GPS` o `Sin GPS`.
+- **Hora:** en formato de 12 horas en ambos idiomas, con `a. m.`/`p. m.` en español y `AM`/`PM` en inglés, y la fecha corta (`dom, 8 nov` o `Sun, Nov 8`). Se actualiza cada segundo. Al desplazar la lista hasta que la hora grande deja de verse, aparece la hora pequeña curvada en el borde superior (`TimeText`), con el mismo formato.
+- **Frecuencia cardíaca:** corazón y pulsaciones en cifras grandes.
+- **SOS:** el botón rojo, que ocupa unas tres cuartas partes del ancho de la pantalla.
+
+Al abrir, la hora queda centrada; para llegar al botón SOS se desplaza la lista hacia arriba.
+
+### Colores
+
+La aplicación usa el tema oscuro estándar de Wear OS: el fondo negro ahorra batería en las pantallas OLED de los relojes. Por eso, a diferencia de la versión web, no hay tema claro. Los colores son los del tema oscuro de la web (`src/styles/tokens.css`), y una prueba comprueba que cada combinación de texto y fondo alcanza el contraste 7:1 de WCAG AAA.
+
+| Indicador | Normal | Aviso | Crítico |
+| --------- | ------ | ----- | ------- |
+| Batería | Verde (más de 20 %) | Ámbar (20 % o menos) | Rojo (10 % o menos) |
+| GPS | Verde (con señal) | Ámbar (`Sin GPS`) | — |
+
+Igual que en la web, el estado de la batería se calcula con el porcentaje redondeado que se muestra, para que el color siempre coincida con el número.
+
+### Botón SOS
+
+Funciona como en la web, para evitar activaciones accidentales:
+
+1. Un toque simple no hace nada.
+2. Mantén pulsado el botón durante 2 segundos. Un anillo blanco se va llenando a su alrededor y el reloj vibra levemente al empezar.
+3. Si sueltas antes de tiempo, se cancela y aparece durante 2 segundos el aviso `Mantén presionado` (`Hold to call for help`) en la parte superior de la pantalla, donde el dedo no lo tapa. Si el gesto se convierte en un desplazamiento de la lista, se cancela sin mostrar el aviso.
+4. Al completar los 2 segundos, sin necesidad de soltar, el reloj vibra y aparece la pantalla roja `Pidiendo ayuda…` (`Calling for help…`). El estado `deviceStatus.mode` del store pasa a `Sos`.
+5. El botón `Cancelar` cierra esa pantalla y devuelve el modo a `Monitoring`. Mientras la pantalla roja está abierta, no se puede tocar ni desplazar nada de lo que hay detrás.
+
+El botón no usa el `Button` de Material porque su propio manejo del toque competiría con el gesto de mantener pulsado. Es un `Box` circular con la semántica de un botón, y los lectores de pantalla lo anuncian como `SOS, auxilio. Mantén pulsado 2 segundos para pedir ayuda`.
+
+Todavía no existen la alternativa para lectores de pantalla de la versión web (el botón `Pedir ayuda` con confirmación) ni el envío simulado de alertas a los contactos.
+
+### Idioma
+
+La aplicación abre en español sin importar el idioma del reloj. Para cambiarlo:
+
+1. En la esfera, desliza el dedo de derecha a izquierda. Los puntos de la parte inferior indican que hay una segunda pantalla.
+2. Pulsa `ES` (Español) o `EN` (English). El botón resaltado en azul es el idioma actual.
+3. Todo el texto cambia al instante, sin reiniciar la aplicación. Para volver a la esfera, desliza de izquierda a derecha.
+
+Cada idioma aparece con su nombre en ese mismo idioma, para que quien lo haya cambiado por error encuentre el suyo. La elección se guarda en `SharedPreferences` y se conserva al cerrar la aplicación; si el almacenamiento falla, la aplicación sigue en español sin cerrarse.
+
+Deslizar de izquierda a derecha en la esfera es el gesto de Wear OS para cerrar una aplicación, y no se ha cambiado. Por eso la pantalla de idioma está a la derecha de la esfera y no a su izquierda.
+
+Los textos están en `res/values/strings.xml` (español, el idioma por defecto) y `res/values-en/strings.xml` (inglés). `ProvideAppLanguage` sustituye el idioma del sistema por el de la aplicación en todo lo que se dibuja debajo.
 
 ## Arquitectura de telemetría
 
@@ -101,7 +153,7 @@ Funciones puras en `telemetry/generators` que calculan la siguiente lectura de c
 
 ### Motor de simulación
 
-`SimulationEngine` ejecuta los generadores cada segundo dentro de una corrutina y escribe todas las lecturas en el store en una sola actualización. Se controla con `start()`, `stop()` e `isRunning`. Vive en un `TelemetryViewModel` que lo arranca al crearse la actividad, conserva la simulación si la actividad se vuelve a crear (por ejemplo, al cambiar el idioma) y lo detiene al cerrarse la aplicación.
+`SimulationEngine` ejecuta los generadores cada segundo dentro de una corrutina y escribe todas las lecturas en el store en una sola actualización. Se controla con `start()`, `stop()` e `isRunning`. Vive en un `TelemetryViewModel` que lo arranca al crearse la actividad, conserva la simulación si Android vuelve a crear la actividad (por ejemplo, al cambiar el idioma o el tamaño de letra del sistema) y lo detiene al cerrarse la aplicación.
 
 ### Anulaciones (overrides)
 
@@ -118,9 +170,14 @@ engine.clearAllOverrides()              // Todos vuelven a generarse
 
 A diferencia de la versión web, los sensores no son textos sino constantes de `Sensor`, de modo que el compilador rechaza un sensor desconocido o un valor del tipo equivocado.
 
-### Pruebas
+## Pruebas
 
-Están en `app/src/test` y se ejecutan con `.\gradlew.bat test`. Las del motor usan el tiempo virtual de `kotlinx-coroutines-test` (`runTest`, `advanceTimeBy`), el equivalente de los temporizadores falsos de Vitest: un segundo de simulación pasa al instante.
+Están en `app/src/test` y se ejecutan con `.\gradlew.bat test`, sin emulador.
+
+- **Lógica:** store, generadores, motor, estados de batería y GPS, formato de la hora, colores e idioma. Las del motor usan el tiempo virtual de `kotlinx-coroutines-test` (`runTest`, `advanceTimeBy`), el equivalente de los temporizadores falsos de Vitest: un segundo de simulación pasa al instante.
+- **Interfaz:** pruebas de Compose (`createComposeRule`) que se ejecutan en la JVM gracias a [Robolectric](https://robolectric.org), que simula Android en un reloj redondo de 192 dp. Con `mainClock.autoAdvance = false`, el tiempo solo avanza cuando la prueba lo pide, así que los 2 segundos del botón SOS no se esperan de verdad. Cubren la hora, los colores de batería y GPS, la activación y la cancelación del SOS, el aviso `Mantén presionado` y el cambio de idioma.
+
+La primera vez que se ejecutan, Robolectric descarga una versión de Android para la JVM (unos 100 MB). Solo se ejecutan en la variante de depuración, la única que incluye la actividad vacía donde se dibujan las pruebas de interfaz.
 
 ## Problemas conocidos
 
