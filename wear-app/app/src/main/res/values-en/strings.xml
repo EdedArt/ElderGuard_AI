@@ -24,5 +24,8 @@
     <string name="sos_label">HELP</string>
     <string name="sos_hint">SOS, help. Press and hold for %1$d seconds to call for help</string>
     <string name="sos_hold_hint">Hold to call for help</string>
+    <!-- SOS active screen. -->
+    <string name="sos_active">Calling for help…</string>
+    <string name="sos_cancel">Cancel</string>
 </resources>
 

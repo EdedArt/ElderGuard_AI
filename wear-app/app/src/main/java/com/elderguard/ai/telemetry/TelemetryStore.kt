@@ -61,6 +61,11 @@ class TelemetryStore {
         _state.update(transform)
     }
 
+    /** Changes what the watch is doing, keeping every sensor reading. */
+    fun setMode(mode: DeviceMode) {
+        update { it.copy(deviceStatus = it.deviceStatus.copy(mode = mode)) }
+    }
+
     /** Restores the initial state. */
     fun reset() {
         _state.value = TelemetryState.initial()

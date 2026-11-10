@@ -21,7 +21,7 @@ import androidx.wear.compose.material.Text
 import com.elderguard.ai.language.LanguageRepository
 import com.elderguard.ai.language.SharedPreferencesLanguageStorage
 import com.elderguard.ai.ui.ProvideAppLanguage
-import com.elderguard.ai.ui.Watchface
+import com.elderguard.ai.ui.WatchApp
 import com.elderguard.ai.telemetry.TelemetryState
 import com.elderguard.ai.telemetry.TelemetryViewModel
 import kotlin.math.roundToInt
@@ -54,7 +54,8 @@ class MainActivity : ComponentActivity() {
             val state by telemetryState.collectAsStateWithLifecycle()
             val language by languageState.collectAsStateWithLifecycle()
             ProvideAppLanguage(language) {
-                ElderGuardApp(state)
+                // `telemetry::triggerSos` is a method reference, written the same way as in Java.
+                ElderGuardApp(state, onSosActivate = telemetry::triggerSos, onSosCancel = telemetry::cancelSos)
             }
         }
     }
@@ -63,10 +64,10 @@ class MainActivity : ComponentActivity() {
 // A @Composable function describes part of the UI. Compose calls it again whenever the data it
 // reads changes, so there is no manual view updating as with findViewById.
 @Composable
-fun ElderGuardApp(state: TelemetryState) {
+fun ElderGuardApp(state: TelemetryState, onSosActivate: () -> Unit = {}, onSosCancel: () -> Unit = {}) {
     // Wear OS's standard dark Material theme: a black background saves battery on OLED screens.
     MaterialTheme {
-        Watchface(state)
+        WatchApp(state = state, onSosActivate = onSosActivate, onSosCancel = onSosCancel)
     }
 }
 

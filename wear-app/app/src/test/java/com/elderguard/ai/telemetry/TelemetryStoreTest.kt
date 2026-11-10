@@ -65,6 +65,20 @@ class TelemetryStoreTest {
     }
 
     @Test
+    fun setModeChangesOnlyTheMode() {
+        val store = TelemetryStore()
+        store.update { it.copy(deviceStatus = it.deviceStatus.copy(lastUpdate = 12345L)) }
+        val before = store.state.value
+
+        store.setMode(DeviceMode.Sos)
+
+        val expected = before.copy(deviceStatus = DeviceStatus(DeviceMode.Sos, lastUpdate = 12345L))
+        assertEquals(expected, store.state.value)
+        store.setMode(DeviceMode.Monitoring)
+        assertEquals(before, store.state.value)
+    }
+
+    @Test
     fun resetRestoresTheInitialState() {
         val store = TelemetryStore()
         store.update {

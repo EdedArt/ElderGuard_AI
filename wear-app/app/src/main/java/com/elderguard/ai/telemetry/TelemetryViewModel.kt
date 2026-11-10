@@ -19,4 +19,14 @@ class TelemetryViewModel : ViewModel() {
     init {
         engine.start()
     }
+
+    /** Called when the SOS hold completes: the watch switches to the SOS screen. */
+    fun triggerSos() {
+        store.setMode(DeviceMode.Sos)
+    }
+
+    /** Called from the SOS screen's cancel button: the watch goes back to monitoring. */
+    fun cancelSos() {
+        store.setMode(DeviceMode.Monitoring)
+    }
 }
