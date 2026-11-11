@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.HorizontalPageIndicator
 import androidx.wear.compose.material.PageIndicatorState
 import androidx.wear.compose.material.PageIndicatorStyle
+import com.elderguard.ai.alerts.AlertPayload
 import com.elderguard.ai.config.FallDetectionConfig
 import com.elderguard.ai.language.AppLanguage
 import com.elderguard.ai.telemetry.DeviceMode
@@ -48,6 +49,7 @@ fun WatchApp(
     fallCountdownSeconds: Int? = null,
     onFallCancel: () -> Unit = {},
     criticalHeartRate: Boolean = false,
+    sosAlert: AlertPayload? = null,
 ) {
     val pagerState = rememberPagerState(pageCount = { PAGE_COUNT })
     Box(modifier = modifier.fillMaxSize()) {
@@ -77,7 +79,7 @@ fun WatchApp(
                 remainingSeconds = fallCountdownSeconds ?: FallDetectionConfig.COUNTDOWN_SECONDS,
                 onCancel = onFallCancel,
             )
-            DeviceMode.Sos -> SosScreen(onCancel = onSosCancel)
+            DeviceMode.Sos -> SosScreen(alert = sosAlert, onCancel = onSosCancel)
         }
     }
 }

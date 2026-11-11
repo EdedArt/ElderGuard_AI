@@ -26,6 +26,11 @@
     <!-- SOS active screen. -->
     <string name="sos_active">Pidiendo ayuda…</string>
     <string name="sos_cancel">Cancelar</string>
+    <!-- SOS confirmation of the mock alert: the coordinates are already formatted. -->
+    <string name="sos_notified">Avisados (simulado)</string>
+    <string name="sos_notified_announce">Se avisó a %1$s. Es una simulación.</string>
+    <string name="sos_location">GPS: %1$s, %2$s</string>
+    <string name="sos_last_location">Última posición: %1$s, %2$s</string>
     <!-- Fall countdown. -->
     <string name="fall_question">¿Te caíste?</string>
     <string name="fall_cancel">ESTOY BIEN</string>

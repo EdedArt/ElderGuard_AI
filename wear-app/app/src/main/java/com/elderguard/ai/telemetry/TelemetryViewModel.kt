@@ -2,6 +2,7 @@ package com.elderguard.ai.telemetry
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.elderguard.ai.alerts.AlertPayload
 import com.elderguard.ai.alerts.SosReason
 import com.elderguard.ai.device.WatchDevice
 import kotlinx.coroutines.flow.StateFlow
@@ -23,6 +24,9 @@ class TelemetryViewModel : ViewModel() {
 
     /** True while a critical heart rate, already reported to the family, lasts. */
     val criticalHeartRate: StateFlow<Boolean> = device.alerts.criticalActive
+
+    /** The alert sent for the SOS in progress, confirmed on the SOS screen, or null. */
+    val sosAlert: StateFlow<AlertPayload?> = device.alerts.sosAlert
 
     init {
         device.start()

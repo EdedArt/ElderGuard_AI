@@ -10,6 +10,7 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.wear.compose.material.MaterialTheme
+import com.elderguard.ai.alerts.AlertPayload
 import com.elderguard.ai.language.AppLanguage
 import com.elderguard.ai.language.LanguageRepository
 import com.elderguard.ai.language.SharedPreferencesLanguageStorage
@@ -39,6 +40,7 @@ class MainActivity : ComponentActivity() {
         val telemetryState = telemetry.state
         val fallCountdownState = telemetry.fallCountdown
         val criticalHeartRateState = telemetry.criticalHeartRate
+        val sosAlertState = telemetry.sosAlert
         val languageState = languageRepository.language
         // setContent replaces setContentView with an XML layout: the screen is described in code.
         // The braces are a lambda passed as the last argument, like `setContent(() -> { ... })`.
@@ -48,6 +50,7 @@ class MainActivity : ComponentActivity() {
             val state by telemetryState.collectAsStateWithLifecycle()
             val fallCountdown by fallCountdownState.collectAsStateWithLifecycle()
             val criticalHeartRate by criticalHeartRateState.collectAsStateWithLifecycle()
+            val sosAlert by sosAlertState.collectAsStateWithLifecycle()
             val language by languageState.collectAsStateWithLifecycle()
             ProvideAppLanguage(language) {
                 // `telemetry::triggerSos` is a method reference, written the same way as in Java.
@@ -60,6 +63,7 @@ class MainActivity : ComponentActivity() {
                     fallCountdownSeconds = fallCountdown,
                     onFallCancel = telemetry::cancelFall,
                     criticalHeartRate = criticalHeartRate,
+                    sosAlert = sosAlert,
                 )
             }
         }
@@ -78,6 +82,7 @@ fun ElderGuardApp(
     fallCountdownSeconds: Int? = null,
     onFallCancel: () -> Unit = {},
     criticalHeartRate: Boolean = false,
+    sosAlert: AlertPayload? = null,
 ) {
     // Wear OS's standard dark Material theme: a black background saves battery on OLED screens.
     MaterialTheme {
@@ -90,6 +95,7 @@ fun ElderGuardApp(
             fallCountdownSeconds = fallCountdownSeconds,
             onFallCancel = onFallCancel,
             criticalHeartRate = criticalHeartRate,
+            sosAlert = sosAlert,
         )
     }
 }

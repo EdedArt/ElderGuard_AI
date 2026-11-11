@@ -3,6 +3,7 @@ package com.elderguard.ai.alerts
 import com.elderguard.ai.config.HeartRateAnomalyConfig
 import com.elderguard.ai.detection.AnomalyEvent
 import com.elderguard.ai.detection.HeartRateAnomalyDetector
+import com.elderguard.ai.telemetry.DeviceMode
 import com.elderguard.ai.telemetry.TelemetryState
 import com.elderguard.ai.telemetry.TelemetryStore
 import kotlinx.coroutines.CoroutineScope
@@ -42,10 +43,21 @@ class AlertDispatcher(
     /** True while a critical heart rate episode, already reported to the family, lasts. */
     val criticalActive: StateFlow<Boolean> = _criticalActive.asStateFlow()
 
+    private val _sosAlert = MutableStateFlow<AlertPayload?>(null)
+
+    /**
+     * The alert sent for the SOS in progress, which the SOS screen confirms; null when no SOS is
+     * in progress. A health alert sent during an SOS is not what that screen reports, so it never
+     * appears here.
+     */
+    val sosAlert: StateFlow<AlertPayload?> = _sosAlert.asStateFlow()
+
     init {
-        sos.onTriggered { trigger -> dispatch(trigger.reason.alertType, store.state.value) }
+        sos.onTriggered { trigger -> _sosAlert.value = dispatch(trigger.reason.alertType, store.state.value) }
         scope.launch {
             store.state.collect { state ->
+                // The next SOS must not show this one's details.
+                if (state.deviceStatus.mode != DeviceMode.Sos) _sosAlert.value = null
                 when (criticalDetector.process(state.heartRate.bpm, state.accelerometer, now())) {
                     AnomalyEvent.Warning -> {
                         _criticalActive.value = true
@@ -61,6 +73,7 @@ class AlertDispatcher(
     /** Forgets every alert sent and the critical time counted so far. */
     fun reset() {
         _alerts.value = emptyList()
+        _sosAlert.value = null
         criticalDetector.reset()
         _criticalActive.value = false
     }
