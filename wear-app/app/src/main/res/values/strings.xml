@@ -24,6 +24,10 @@
     <!-- SOS active screen. -->
     <string name="sos_active">Pidiendo ayuda…</string>
     <string name="sos_cancel">Cancelar</string>
+    <!-- Fall countdown. -->
+    <string name="fall_question">¿Te caíste?</string>
+    <string name="fall_cancel">ESTOY BIEN</string>
+    <string name="fall_announce_start">¿Te caíste? Se pedirá ayuda en %1$d segundos. Pulsa Estoy bien si no necesitas ayuda.</string>
     <!-- Language screen. -->
     <string name="language_title">Idioma</string>
     <string name="language_es_code">ES</string>

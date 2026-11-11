@@ -22,6 +22,9 @@ object WatchColors {
     // Danger-colored text on the black background. The fill red is too dark for text on black.
     val DangerText = Color(0xFFFF8A80)
     val Warning = Color(0xFFFFC233)
+
+    // Text on a warning (amber) fill, such as the fall countdown and the heart rate banner.
+    val OnWarning = Color(0xFF000000)
     val Success = Color(0xFF4ADE80)
 
     // Selected and interactive elements, such as the chosen language.

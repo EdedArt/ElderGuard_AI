@@ -13,6 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.wear.compose.material.HorizontalPageIndicator
 import androidx.wear.compose.material.PageIndicatorState
 import androidx.wear.compose.material.PageIndicatorStyle
+import com.elderguard.ai.config.FallDetectionConfig
 import com.elderguard.ai.language.AppLanguage
 import com.elderguard.ai.telemetry.DeviceMode
 import com.elderguard.ai.telemetry.TelemetryState
@@ -34,6 +35,7 @@ object WatchAppTags {
  *
  * Two pages side by side: the watchface, and the language screen to its right (swipe left to
  * reach it). A right swipe on the watchface is left to Wear OS, which uses it to close apps.
+ * The fall countdown and the SOS screen cover both pages while the device is in their mode.
  */
 @Composable
 fun WatchApp(
@@ -43,6 +45,8 @@ fun WatchApp(
     onSosActivate: () -> Unit,
     onSosCancel: () -> Unit,
     modifier: Modifier = Modifier,
+    fallCountdownSeconds: Int? = null,
+    onFallCancel: () -> Unit = {},
 ) {
     val pagerState = rememberPagerState(pageCount = { PAGE_COUNT })
     Box(modifier = modifier.fillMaxSize()) {
@@ -60,8 +64,15 @@ fun WatchApp(
             indicatorStyle = PageIndicatorStyle.Linear,
             indicatorSize = INDICATOR_SIZE,
         )
-        if (state.deviceStatus.mode == DeviceMode.Sos) {
-            SosScreen(onCancel = onSosCancel)
+        when (state.deviceStatus.mode) {
+            DeviceMode.Monitoring -> Unit
+            DeviceMode.FallCountdown -> FallCountdownScreen(
+                // The countdown starts in the same call that switches the mode; until the screen
+                // hears of it, it shows the full time.
+                remainingSeconds = fallCountdownSeconds ?: FallDetectionConfig.COUNTDOWN_SECONDS,
+                onCancel = onFallCancel,
+            )
+            DeviceMode.Sos -> SosScreen(onCancel = onSosCancel)
         }
     }
 }

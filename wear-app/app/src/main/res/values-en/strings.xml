@@ -23,6 +23,10 @@
     <!-- SOS active screen. -->
     <string name="sos_active">Calling for help…</string>
     <string name="sos_cancel">Cancel</string>
+    <!-- Fall countdown. -->
+    <string name="fall_question">Did you fall?</string>
+    <string name="fall_cancel">I\'M OK</string>
+    <string name="fall_announce_start">Did you fall? Help will be called in %1$d seconds. Press I\'m OK if you do not need help.</string>
     <!-- Language screen. -->
     <string name="language_title">Language</string>
     <string name="language_es_code">ES</string>

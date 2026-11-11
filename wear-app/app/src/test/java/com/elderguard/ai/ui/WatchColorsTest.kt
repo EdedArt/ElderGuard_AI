@@ -34,6 +34,7 @@ class WatchColorsTest {
         assertAaa("Text", WatchColors.Text, WatchColors.Background)
         assertAaa("Danger text", WatchColors.DangerText, WatchColors.Background)
         assertAaa("Text on danger", WatchColors.OnDanger, WatchColors.Danger)
+        assertAaa("Text on warning", WatchColors.OnWarning, WatchColors.Warning)
         assertAaa("Text on accent", WatchColors.OnAccent, WatchColors.Accent)
         assertAaa("Accent", WatchColors.Accent, WatchColors.Background)
     }
