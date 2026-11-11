@@ -7,13 +7,18 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.semantics.SemanticsNode
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTouchInput
 import androidx.wear.compose.material.MaterialTheme
+import com.elderguard.ai.alerts.SosReason
 import com.elderguard.ai.config.FallDetectionConfig.COUNTDOWN_SECONDS
 import com.elderguard.ai.config.FallDetectionConfig.IMMOBILITY_DURATION_MS
+import com.elderguard.ai.config.SosConfig
 import com.elderguard.ai.config.TelemetryConfig.TICK_INTERVAL_MS
 import com.elderguard.ai.device.WatchDevice
 import com.elderguard.ai.language.AppLanguage
@@ -69,8 +74,9 @@ class FallCountdownScreenTest {
                         state = state,
                         language = language,
                         onLanguageChange = {},
-                        onSosActivate = { watch.store.setMode(DeviceMode.Sos) },
-                        onSosCancel = { watch.store.setMode(DeviceMode.Monitoring) },
+                        // As TelemetryViewModel does.
+                        onSosActivate = { watch.sos.trigger(SosReason.Manual) },
+                        onSosCancel = watch.sos::cancel,
                         fallCountdownSeconds = countdown,
                         onFallCancel = watch.fall::cancel,
                     )
@@ -194,6 +200,37 @@ class FallCountdownScreenTest {
         compose.onNodeWithTag(FallCountdownTags.SCREEN).assertDoesNotExist()
         compose.onNodeWithTag(SosScreenTags.SCREEN).assertIsDisplayed()
         compose.onNodeWithText("Pidiendo ayuda…").assertIsDisplayed()
+        assertEquals(SosReason.Fall, device.sos.active.value?.reason)
+    }
+
+    @Test
+    fun aLongPressOnSosKeepsTheManualReason() {
+        setApp()
+        compose.onNodeWithTag(WatchfaceTags.LIST).performScrollToNode(hasTestTag(SosButtonTags.BUTTON))
+        compose.onNodeWithTag(SosButtonTags.BUTTON).performTouchInput { down(center) }
+        advance(SosConfig.HOLD_DURATION_MS + MARGIN)
+        compose.onNodeWithTag(SosButtonTags.BUTTON).performTouchInput { up() }
+        advance(MARGIN)
+
+        assertEquals(DeviceMode.Sos, mode)
+        assertEquals(SosReason.Manual, device.sos.active.value?.reason)
+    }
+
+    @Test
+    fun cancellingTheFallSosRestoresMonitoringAndDetection() {
+        setApp()
+        simulateFall()
+        advance(COUNTDOWN_SECONDS * SECOND + MARGIN)
+        assertEquals(DeviceMode.Sos, mode)
+
+        compose.onNodeWithTag(SosScreenTags.CANCEL).performClick()
+        advance(MARGIN)
+        assertEquals(DeviceMode.Monitoring, mode)
+        assertEquals(null, device.sos.active.value)
+
+        simulateFall()
+        advance(MARGIN)
+        compose.onNodeWithTag(FallCountdownTags.SCREEN).assertIsDisplayed()
     }
 
     @Test

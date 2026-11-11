@@ -2,6 +2,7 @@ package com.elderguard.ai.telemetry
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.elderguard.ai.alerts.SosReason
 import com.elderguard.ai.device.WatchDevice
 import kotlinx.coroutines.flow.StateFlow
 
@@ -24,14 +25,14 @@ class TelemetryViewModel : ViewModel() {
         device.start()
     }
 
-    /** Called when the SOS hold completes: the watch switches to the SOS screen. */
+    /** Called when the SOS hold completes: the watch switches to the SOS screen, for a manual reason. */
     fun triggerSos() {
-        device.store.setMode(DeviceMode.Sos)
+        device.sos.trigger(SosReason.Manual)
     }
 
     /** Called from the SOS screen's cancel button: the watch goes back to monitoring. */
     fun cancelSos() {
-        device.store.setMode(DeviceMode.Monitoring)
+        device.sos.cancel()
     }
 
     /** Called from the fall countdown's "I'm OK" button. */

@@ -2,7 +2,8 @@ package com.elderguard.ai.device
 
 import com.elderguard.ai.alerts.Countdown
 import com.elderguard.ai.alerts.FallMonitor
-import com.elderguard.ai.telemetry.DeviceMode
+import com.elderguard.ai.alerts.SosController
+import com.elderguard.ai.alerts.SosReason
 import com.elderguard.ai.telemetry.SimulationEngine
 import com.elderguard.ai.telemetry.TelemetryStore
 import kotlin.random.Random
@@ -22,13 +23,14 @@ class WatchDevice(
 ) {
     val store = TelemetryStore()
     val engine = SimulationEngine(store, scope, random, now)
+    val sos = SosController(store, now)
     val countdown = Countdown(scope)
     val fall = FallMonitor(
         store = store,
         countdown = countdown,
         scope = scope,
         now = now,
-        onCountdownComplete = { store.setMode(DeviceMode.Sos) },
+        onCountdownComplete = { sos.trigger(SosReason.Fall) },
     )
 
     fun start() {
