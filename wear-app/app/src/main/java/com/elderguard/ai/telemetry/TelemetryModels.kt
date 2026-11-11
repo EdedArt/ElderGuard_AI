@@ -1,7 +1,5 @@
 package com.elderguard.ai.telemetry
 
-import kotlin.math.sqrt
-
 // Kotlin notes for Java developers:
 // - A `data class` is an immutable value object: the compiler writes the constructor, getters,
 //   equals, hashCode, toString and copy(). `copy(level = 50.0)` returns a new instance with only
@@ -11,12 +9,11 @@ import kotlin.math.sqrt
 /** Heart rate in beats per minute. */
 data class HeartRate(val bpm: Int)
 
-/** Acceleration on each axis, in g. A watch at rest reads about 1 g in total (gravity). */
-data class Accelerometer(val x: Double, val y: Double, val z: Double) {
-    /** Total acceleration in g, whatever the orientation of the watch. */
-    val magnitude: Double
-        get() = sqrt(x * x + y * y + z * z)
-}
+/**
+ * Acceleration on each axis, in g. A watch at rest reads about 1 g in total (gravity).
+ * Its total, [magnitude], and [isAtRest] are in Magnitude.kt.
+ */
+data class Accelerometer(val x: Double, val y: Double, val z: Double)
 
 /** Position in degrees, with its accuracy in meters. */
 data class Gps(val lat: Double, val lng: Double, val accuracy: Double, val signal: Boolean)

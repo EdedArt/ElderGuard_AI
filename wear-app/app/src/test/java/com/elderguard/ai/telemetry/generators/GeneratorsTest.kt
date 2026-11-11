@@ -4,6 +4,7 @@ import com.elderguard.ai.config.TelemetryConfig
 import com.elderguard.ai.telemetry.Battery
 import com.elderguard.ai.telemetry.HeartRate
 import com.elderguard.ai.telemetry.TelemetryState
+import com.elderguard.ai.telemetry.magnitude
 import kotlin.math.abs
 import kotlin.random.Random
 import org.junit.Assert.assertEquals
