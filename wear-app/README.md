@@ -2,7 +2,7 @@
 
 Aplicación nativa de ElderGuard AI para relojes con Wear OS, escrita en Kotlin con Jetpack Compose para Wear OS. Es un proyecto de Gradle independiente: no usa `npm` ni comparte código con el simulador web de `src/`.
 
-Estado actual: esfera del reloj. La aplicación simula los sensores y muestra la hora, la frecuencia cardíaca, la batería, el GPS y un botón SOS que se activa manteniéndolo pulsado. Abre en español; el inglés se elige en una segunda pantalla.
+Estado actual: esfera del reloj, detección de caídas, frecuencia cardíaca anormal y alertas simuladas. La aplicación simula los sensores y muestra la hora, la frecuencia cardíaca, la batería, el GPS y un botón SOS que se activa manteniéndolo pulsado. Detecta caídas con una cuenta regresiva cancelable, avisa de un ritmo cardíaco alto en reposo y registra alertas simuladas a los contactos de emergencia, sin conexión a ninguna red. Abre en español; el inglés se elige en una segunda pantalla.
 
 ## Requisitos
 
@@ -88,12 +88,12 @@ Funciona como en la web, para evitar activaciones accidentales:
 1. Un toque simple no hace nada.
 2. Mantén pulsado el botón durante 2 segundos. Un anillo blanco se va llenando a su alrededor y el reloj vibra levemente al empezar.
 3. Si sueltas antes de tiempo, se cancela y aparece durante 2 segundos el aviso `Mantén presionado` (`Hold to call for help`) en la parte superior de la pantalla, donde el dedo no lo tapa. Si el gesto se convierte en un desplazamiento de la lista, se cancela sin mostrar el aviso.
-4. Al completar los 2 segundos, sin necesidad de soltar, el reloj vibra y aparece la pantalla roja `Pidiendo ayuda…` (`Calling for help…`). El estado `deviceStatus.mode` del store pasa a `Sos`.
+4. Al completar los 2 segundos, sin necesidad de soltar, el reloj vibra y aparece la pantalla roja `Pidiendo ayuda…` (`Calling for help…`). El estado `deviceStatus.mode` del store pasa a `Sos`, con el motivo `Manual`, y sale una alerta simulada (ver _Alertas a la familia_).
 5. El botón `Cancelar` cierra esa pantalla y devuelve el modo a `Monitoring`. Mientras la pantalla roja está abierta, no se puede tocar ni desplazar nada de lo que hay detrás.
 
 El botón no usa el `Button` de Material porque su propio manejo del toque competiría con el gesto de mantener pulsado. Es un `Box` circular con la semántica de un botón, y los lectores de pantalla lo anuncian como `SOS, auxilio. Mantén pulsado 2 segundos para pedir ayuda`.
 
-Todavía no existen la alternativa para lectores de pantalla de la versión web (el botón `Pedir ayuda` con confirmación) ni el envío simulado de alertas a los contactos.
+Todavía no existe la alternativa para lectores de pantalla de la versión web (el botón `Pedir ayuda` con confirmación).
 
 ### Idioma
 
@@ -109,15 +109,90 @@ Deslizar de izquierda a derecha en la esfera es el gesto de Wear OS para cerrar 
 
 Los textos están en `res/values/strings.xml` (español, el idioma por defecto) y `res/values-en/strings.xml` (inglés). `ProvideAppLanguage` sustituye el idioma del sistema por el de la aplicación en todo lo que se dibuja debajo.
 
+## Detección de caídas
+
+Es una traducción a Kotlin de `src/core/fallDetector.js`, `src/core/countdown.js` y `src/core/fallMonitor.js`, con los mismos umbrales descritos en la sección _Detección de caídas_ del README principal. Los valores están en `config/FallDetectionConfig.kt`, que refleja `src/config/fallDetection.config.js`:
+
+| Constante | Valor | Significado |
+| --------- | ----- | ----------- |
+| `IMPACT_THRESHOLD_G` | 2,5 g | Magnitud mínima que se considera un impacto. |
+| `IMMOBILITY_TOLERANCE_G` | 0,15 g | Distancia máxima a 1 g que aún cuenta como quietud. |
+| `IMMOBILITY_DURATION_MS` | 5000 | Tiempo de quietud que confirma la caída. |
+| `IMMOBILITY_START_WINDOW_MS` | 3000 | Tiempo máximo entre el impacto y el inicio de la quietud. |
+| `COUNTDOWN_SECONDS` | 10 | Tiempo que tiene la persona para cancelar. |
+| `URGENT_SECONDS` | 3 | Últimos segundos, en los que la pantalla pasa a rojo. |
+
+La magnitud del acelerómetro (`telemetry/Magnitude.kt`) es la raíz de la suma de los cuadrados de los tres ejes, como `Math.hypot` en la web, así que no depende de la orientación del reloj. `isAtRest(tolerancia)` indica si está a 1 g (solo la gravedad) dentro de la tolerancia.
+
+### Máquina de estados
+
+`detection/FallDetector.kt` pasa por `Idle → Impact → Immobility → Confirmed`, igual que la web:
+
+- Un impacto (2,5 g o más) lleva a `Impact` desde cualquier estado. Un segundo impacto durante la quietud reinicia la secuencia desde ese momento, en lugar de volver a `Idle` (la desviación aprobada en la fase 4 de la web), para detectar a quien tropieza y luego cae de verdad.
+- Si la quietud empieza dentro de los 3 s siguientes, pasa a `Immobility`; si no, vuelve a `Idle`.
+- Cualquier movimiento durante la quietud vuelve a `Idle`. Tras 5 s quieto, pasa a `Confirmed` una sola vez, hasta que se reinicia.
+
+El tiempo sale de las lecturas, no de un reloj, así que las pruebas reproducen cada escenario al instante. `feedFrom` alimenta el detector con una corrutina que recoge el `StateFlow` del store: cada estado nuevo es una lectura (el `lastUpdate` de cada ciclo lo hace distinto aunque el acelerómetro no cambie), solo mientras el modo es `Monitoring`, y el detector se reinicia en cualquier otro modo. Como un `StateFlow` solo conserva el último valor, un impacto simulado debe durar al menos un ciclo.
+
+### Cuenta regresiva
+
+Al confirmarse una caída, `alerts/FallMonitor.kt` pasa el modo a `FallCountdown` y arranca la cuenta regresiva (`alerts/Countdown.kt`, una corrutina que publica los segundos restantes en un `StateFlow` y se puede cancelar). Sobre todo el reloj aparece la pantalla de la caída:
+
+- `¿Te caíste?` (`Did you fall?`), los segundos restantes en cifras grandes y un anillo que se vacía con ellos.
+- Fondo ámbar con texto negro, que pasa a rojo con texto blanco en los últimos 3 segundos.
+- Un botón enorme `ESTOY BIEN` (`I'M OK`), negro con borde blanco. Detiene la cuenta y devuelve el modo a `Monitoring`; la detección sigue activa.
+- El reloj vibra 200 ms cada segundo con la API `Vibrator` de Android (permiso `VIBRATE`). Si el reloj no tiene vibrador o la vibración falla, se ignora sin cerrar la aplicación.
+- Los lectores de pantalla anuncian una vez la pregunta y qué hacer. La pantalla bloquea todo lo que hay detrás.
+
+Si nadie la cancela, al llegar a cero `SosController` activa el SOS con el motivo `Fall` y aparece la pantalla roja, igual que con el botón SOS (motivo `Manual`).
+
+## Ritmo cardíaco anormal
+
+Traducción de `src/core/heartRateAnomalyDetector.js` y `src/core/heartRateMonitor.js`. Los valores están en `config/HeartRateAnomalyConfig.kt`, que refleja `src/config/heartRateAnomaly.config.js`: más de **120 LPM** en reposo durante **8 segundos**, con la misma tolerancia de quietud que las caídas (0,15 g).
+
+`detection/HeartRateAnomalyDetector.kt` pasa por `Normal → Elevated → Warning`. Un pulso alto en movimiento o un pico breve no cuentan. El aviso se resuelve en cuanto el pulso baja o vuelve el movimiento, y puede repetirse después de otros 8 segundos.
+
+Mientras dura, `HeartRateMonitor` guarda `HealthAlert.HighHeartRate` en `deviceStatus.healthAlert` y la esfera muestra bajo la hora un aviso ámbar con texto negro: `Ritmo cardíaco alto en reposo` (`High heart rate at rest`). Es un aviso, no una alerta: no cambia el modo del reloj, no pregunta nada ni envía nada, y funciona a la vez que una cuenta regresiva de caída, sin que una afecte a la otra.
+
+## Alertas a la familia (simuladas)
+
+Traducción de `src/core/alertPayload.js`, `src/core/alertDispatcher.js` y `src/config/contacts.config.js`. Como en la web, es una simulación: **no hay ninguna llamada de red** (la aplicación ni siquiera pide el permiso `INTERNET`). Enviar una alerta es construir su contenido y guardarlo en `AlertDispatcher.alerts`, que es donde iría la integración con un servicio de mensajería real.
+
+Los contactos de `config/ContactsConfig.kt` son los mismos personajes ficticios de la web, con números 555-01xx reservados para la ficción: Ana Ejemplo (hija), Luis Ejemplo (hijo) y Dra. Prueba (médica).
+
+| Origen | Tipo (`AlertType.id`) | ¿Activa el SOS? |
+| ------ | --------------------- | --------------- |
+| Cuenta regresiva de caída que llega a cero | `fall` | Sí, motivo `Fall` |
+| Botón SOS mantenido 2 s | `manual-sos` | Sí, motivo `Manual` |
+| Más de 160 LPM en reposo durante 8 s | `high-heart-rate` | No: es de salud, no de caída |
+
+Cada alerta (`AlertPayload`) lleva el tipo, la hora, el GPS, la frecuencia cardíaca, la batería redondeada y los contactos, tal como estaban en ese momento: el SOS avisa al despachador dentro de la misma llamada, y los datos son inmutables. El ritmo crítico se avisa una sola vez por episodio. No generan alerta: un tropiezo, una caída cancelada a tiempo, un pico breve de pulso, un pulso alto en movimiento ni un aviso de 120 a 160 LPM que se resuelve.
+
+Mientras dura un episodio crítico, el aviso de la esfera pasa a rojo con borde blanco y dice `Ritmo crítico: familia avisada` (`Critical heart rate: family notified`), porque es el único lugar donde la persona se entera de que salió esa alerta.
+
+### Confirmación en la pantalla SOS
+
+Al salir la alerta de un SOS, la pantalla roja muestra debajo de `Pidiendo ayuda…`:
+
+- `Avisados (simulado)` (`Notified (mock)`) y el nombre de cada contacto en su propia línea.
+- `GPS: 4.60970, -74.08170`, con 5 decimales (alrededor de 1 m) y siempre con punto. Sin señal de GPS dice `Última posición: …` (`Last position: …`).
+
+No cabe todo en la pantalla redonda a un tamaño legible, así que es una lista desplazable que abre centrada en la confirmación, con el botón `Cancelar` asomando debajo. Al cancelar se olvida esa confirmación, para que el siguiente SOS no muestre datos viejos.
+
 ## Arquitectura de telemetría
 
 Es una traducción a Kotlin del motor de la aplicación web (`src/core/telemetryStore.js`, `src/core/generators` y `src/core/simulationEngine.js`), con los mismos umbrales y el mismo comportamiento descritos en la sección _Arquitectura de telemetría_ del README principal. El código está en `app/src/main/java/com/elderguard/ai/telemetry` y los valores en `config/TelemetryConfig.kt`, que refleja `src/config/telemetry.config.js`. Si se cambia un valor en un lado, hay que cambiarlo también en el otro.
 
 ```text
 Generadores ──> SimulationEngine ──> TelemetryStore (StateFlow) ──> Interfaz Compose
-                       ^
+                       ^                     │
+                       │                     ├──> FallMonitor ──> Countdown ──> SosController
+                       │                     ├──> HeartRateMonitor (deviceStatus.healthAlert)
+                       │                     └──> AlertDispatcher <── SosController
                        └── Anulaciones (escenarios de demostración, fase N5)
 ```
+
+`device/WatchDevice.kt` (traducción de `src/core/device.js`) crea y conecta todas estas piezas en un mismo `CoroutineScope`. `TelemetryViewModel` usa uno en `viewModelScope`, y las pruebas de interfaz uno en el ámbito de la composición, de modo que el reloj de prueba mueve a la vez los ciclos, la detección y la cuenta regresiva.
 
 ### Modelo de estado
 
@@ -129,11 +204,11 @@ TelemetryState(
     accelerometer = Accelerometer(x = 0.0, y = 0.0, z = 1.0), // g; .magnitude da el total
     gps = Gps(lat, lng, accuracy = 3.0, signal = true),        // accuracy en metros
     battery = Battery(level = 100.0, charging = false),        // level de 0 a 100
-    deviceStatus = DeviceStatus(mode = DeviceMode.Monitoring, lastUpdate = null),
+    deviceStatus = DeviceStatus(mode = DeviceMode.Monitoring, lastUpdate = null, healthAlert = null),
 )
 ```
 
-`DeviceMode` puede ser `Monitoring`, `FallCountdown` o `Sos`. `lastUpdate` es la hora del último ciclo en milisegundos, o `null` antes del primero.
+`DeviceMode` puede ser `Monitoring`, `FallCountdown` o `Sos`. `lastUpdate` es la hora del último ciclo en milisegundos, o `null` antes del primero. `healthAlert` es `HealthAlert.HighHeartRate` mientras dura un aviso de ritmo cardíaco, o `null`; no depende del modo.
 
 ### Store
 
@@ -174,8 +249,8 @@ A diferencia de la versión web, los sensores no son textos sino constantes de `
 
 Están en `app/src/test` y se ejecutan con `.\gradlew.bat test`, sin emulador.
 
-- **Lógica:** store, generadores, motor, estados de batería y GPS, formato de la hora, colores e idioma. Las del motor usan el tiempo virtual de `kotlinx-coroutines-test` (`runTest`, `advanceTimeBy`), el equivalente de los temporizadores falsos de Vitest: un segundo de simulación pasa al instante.
-- **Interfaz:** pruebas de Compose (`createComposeRule`) que se ejecutan en la JVM gracias a [Robolectric](https://robolectric.org), que simula Android en un reloj redondo de 192 dp. Con `mainClock.autoAdvance = false`, el tiempo solo avanza cuando la prueba lo pide, así que los 2 segundos del botón SOS no se esperan de verdad. Cubren la hora, los colores de batería y GPS, la activación y la cancelación del SOS, el aviso `Mantén presionado` y el cambio de idioma.
+- **Lógica:** store, generadores, motor, estados de batería y GPS, formato de la hora, colores e idioma. También la magnitud, el detector de caídas, la cuenta regresiva, el SOS, el detector y el monitor de ritmo cardíaco, el contenido de las alertas y el despachador, con los mismos casos que las pruebas de la web (`tests/fallDetector.test.js`, `tests/heartRateAnomalyDetector.test.js`, `tests/alertDispatcher.test.js`, entre otras). Las del motor y las alertas usan el tiempo virtual de `kotlinx-coroutines-test` (`runTest`, `advanceTimeBy`), el equivalente de los temporizadores falsos de Vitest: un segundo de simulación pasa al instante.
+- **Interfaz:** pruebas de Compose (`createComposeRule`) que se ejecutan en la JVM gracias a [Robolectric](https://robolectric.org), que simula Android en un reloj redondo de 192 dp. Con `mainClock.autoAdvance = false`, el tiempo solo avanza cuando la prueba lo pide, así que los 2 segundos del botón SOS no se esperan de verdad. Cubren la hora, los colores de batería y GPS, la activación y la cancelación del SOS, el aviso `Mantén presionado`, el cambio de idioma, la cuenta regresiva de caída (aparece al detectarla, baja cada segundo, `ESTOY BIEN` vuelve a la vigilancia y al llegar a cero se abre el SOS con motivo `Fall`), el aviso de ritmo cardíaco y la confirmación de la alerta en la pantalla SOS.
 
 La primera vez que se ejecutan, Robolectric descarga una versión de Android para la JVM (unos 100 MB). Solo se ejecutan en la variante de depuración, la única que incluye la actividad vacía donde se dibujan las pruebas de interfaz.
 
