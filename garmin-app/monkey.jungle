@@ -1,0 +1,4 @@
+# Build configuration read by the Monkey C compiler.
+# The default source path (source/) and resource paths (resources/ plus the language-qualified
+# resources-eng/) are used, so only the manifest needs to be named.
+project.manifest = manifest.xml

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Spanish, the default language. English is in resources-eng. -->
+<strings>
+    <!-- Name in the watch's app list. -->
+    <string id="AppName">ElderGuard AI</string>
+    <!-- Text on the first screen. -->
+    <string id="AppTitle">ElderGuard AI</string>
+</strings>

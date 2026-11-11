@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<drawables>
+    <!-- Icon in the watch's app list, referenced by launcherIcon in manifest.xml. -->
+    <bitmap id="LauncherIcon" filename="launcher_icon.png"/>
+</drawables>

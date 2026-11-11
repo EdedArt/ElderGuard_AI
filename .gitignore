@@ -13,6 +13,14 @@ wear-app/**/*.apk
 wear-app/**/*.aab
 wear-app/**/*.iml
 
+# Garmin Connect IQ app (compiler output and the private developer signing key)
+garmin-app/bin/
+garmin-app/**/*.prg
+garmin-app/**/*.iq
+garmin-app/**/*.der
+garmin-app/**/*.pem
+garmin-app/**/developer_key*
+
 # Environment files
 .env
 .env.*
