@@ -28,5 +28,14 @@ enum class DeviceMode {
     Sos,
 }
 
-/** [lastUpdate] is the time of the last simulation tick in epoch milliseconds, or null before the first. */
-data class DeviceStatus(val mode: DeviceMode, val lastUpdate: Long?)
+/** A health warning the watch is showing. Equivalent to the 'high-heart-rate' string in JS. */
+enum class HealthAlert {
+    HighHeartRate,
+}
+
+/**
+ * [lastUpdate] is the time of the last simulation tick in epoch milliseconds, or null before the first.
+ * [healthAlert] is the health warning in progress, or null. It is independent of [mode]: a warning
+ * can show during a fall countdown or an SOS.
+ */
+data class DeviceStatus(val mode: DeviceMode, val lastUpdate: Long?, val healthAlert: HealthAlert? = null)

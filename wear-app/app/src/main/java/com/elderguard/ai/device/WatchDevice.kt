@@ -2,6 +2,7 @@ package com.elderguard.ai.device
 
 import com.elderguard.ai.alerts.Countdown
 import com.elderguard.ai.alerts.FallMonitor
+import com.elderguard.ai.alerts.HeartRateMonitor
 import com.elderguard.ai.alerts.SosController
 import com.elderguard.ai.alerts.SosReason
 import com.elderguard.ai.telemetry.SimulationEngine
@@ -32,6 +33,7 @@ class WatchDevice(
         now = now,
         onCountdownComplete = { sos.trigger(SosReason.Fall) },
     )
+    val heartRate = HeartRateMonitor(store, scope, now)
 
     fun start() {
         engine.start()
