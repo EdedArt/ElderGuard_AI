@@ -2,16 +2,19 @@
 
 Simulador web de un smartwatch para la seguridad de personas mayores. Es un proyecto universitario que se puede demostrar por completo en el navegador, sin necesidad de un reloj físico.
 
-## Dos implementaciones
+## Tres implementaciones
 
-El repositorio contiene dos versiones independientes de la aplicación:
+El repositorio contiene tres versiones independientes de la aplicación:
 
-| Carpeta     | Qué es                                                                   | Tecnología                                 | Uso                                                                                   |
-| ----------- | ------------------------------------------------------------------------ | ------------------------------------------ | ------------------------------------------------------------------------------------- |
-| `src/`      | Simulador web original, con todas las pruebas y el panel de demostración | Vite y JavaScript, se abre en el navegador | Desarrollo y demostración de respaldo                                                 |
-| `wear-app/` | Aplicación nativa para Wear OS                                           | Kotlin y Jetpack Compose para Wear OS      | Entrega final para el smartwatch, en el emulador de Android Studio o en un reloj real |
+| Carpeta       | Qué es                                                                   | Tecnología                                 | Estado y uso                                                                                                                       |
+| ------------- | ------------------------------------------------------------------------ | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `src/`        | Simulador web original, con todas las pruebas y el panel de demostración | Vite y JavaScript, se abre en el navegador | Terminada. Especificación de referencia y demostración de respaldo en el navegador                                                 |
+| `wear-app/`   | Aplicación nativa para Wear OS                                           | Kotlin y Jetpack Compose para Wear OS      | Probada y funcional en el emulador de Android Studio. Se conserva como referencia y como alternativa si falla la versión de Garmin |
+| `garmin-app/` | Aplicación para relojes Garmin                                           | Monkey C y SDK de Connect IQ               | En desarrollo. Es la que se instala en el Garmin Forerunner 165 prestado para la sustentación                                      |
 
-Cada una se compila por separado: `npm` solo trabaja con la versión web y Gradle solo con `wear-app/`. Las instrucciones de la aplicación nativa están en [`wear-app/README.md`](wear-app/README.md). El resto de este documento describe la versión web.
+Las tres siguen la misma lógica: los mismos umbrales de caída y de ritmo cardíaco, la misma cuenta regresiva y las mismas alertas simuladas, descritos en este documento. La versión web es la especificación; las otras dos la traducen a su plataforma en lugar de copiar el código, porque el modelo de objetos y la forma de dibujar la interfaz son distintos en cada una.
+
+Cada una se compila por separado: `npm` solo trabaja con la versión web, Gradle solo con `wear-app/` y el SDK de Connect IQ solo con `garmin-app/`. Las instrucciones de cada aplicación nativa están en [`wear-app/README.md`](wear-app/README.md) y [`garmin-app/README.md`](garmin-app/README.md). El resto de este documento describe la versión web.
 
 ## Funcionalidades
 
