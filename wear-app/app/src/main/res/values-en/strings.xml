@@ -16,6 +16,7 @@
     <string name="gps_ok_label">GPS connected</string>
     <string name="gps_lost_label">No GPS signal</string>
     <string name="heart_rate_alert_high">High heart rate at rest</string>
+    <string name="heart_rate_alert_critical">Critical heart rate: family notified</string>
     <!-- SOS button. -->
     <string name="sos_title">SOS</string>
     <string name="sos_label">HELP</string>

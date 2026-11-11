@@ -49,6 +49,7 @@ fun Watchface(
     state: TelemetryState,
     modifier: Modifier = Modifier,
     onSosActivate: () -> Unit = {},
+    criticalHeartRate: Boolean = false,
 ) {
     val listState = rememberScalingLazyListState()
     val holdHint = rememberHoldHintState()
@@ -82,6 +83,7 @@ fun Watchface(
                 item {
                     HeartRateBanner(
                         healthAlert = state.deviceStatus.healthAlert,
+                        critical = criticalHeartRate,
                         modifier = Modifier.testTag(WatchfaceTags.HEART_RATE_BANNER),
                     )
                 }

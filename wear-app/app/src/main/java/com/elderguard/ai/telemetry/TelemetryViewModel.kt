@@ -21,6 +21,9 @@ class TelemetryViewModel : ViewModel() {
     /** Seconds left before a detected fall calls for help, or null when no countdown is running. */
     val fallCountdown: StateFlow<Int?> = device.countdown.remaining
 
+    /** True while a critical heart rate, already reported to the family, lasts. */
+    val criticalHeartRate: StateFlow<Boolean> = device.alerts.criticalActive
+
     init {
         device.start()
     }

@@ -1,6 +1,7 @@
 package com.elderguard.ai.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
@@ -31,23 +32,31 @@ private val BANNER_MAX_WIDTH = 160.dp
 /**
  * Port of src/ui/heartRateBanner.js: an amber banner while a health warning is in progress. A
  * warning, not an alert: the wearer can read it and go on, and everything else keeps working.
+ *
+ * When the rate is [critical], the banner turns red and says the family was told: a critical
+ * alert has no screen of its own, so this is the only place where the wearer learns it went out.
  * Draws nothing when there is no warning.
  */
 @Composable
-fun HeartRateBanner(healthAlert: HealthAlert?, modifier: Modifier = Modifier) {
-    if (healthAlert == null) return
-    val text = when (healthAlert) {
-        HealthAlert.HighHeartRate -> stringResource(R.string.heart_rate_alert_high)
+fun HeartRateBanner(healthAlert: HealthAlert?, modifier: Modifier = Modifier, critical: Boolean = false) {
+    val text = when {
+        critical -> stringResource(R.string.heart_rate_alert_critical)
+        healthAlert == HealthAlert.HighHeartRate -> stringResource(R.string.heart_rate_alert_high)
+        else -> return
     }
+    val fill = if (critical) WatchColors.Danger else WatchColors.Warning
+    val content = if (critical) WatchColors.OnDanger else WatchColors.OnWarning
     Row(
         modifier = modifier
             .widthIn(max = BANNER_MAX_WIDTH)
-            .background(WatchColors.Warning, BANNER_SHAPE)
+            .background(fill, BANNER_SHAPE)
+            // The dark red alone is hard to tell apart from black, as on the SOS button.
+            .then(if (critical) Modifier.border(2.dp, WatchColors.DangerBorder, BANNER_SHAPE) else Modifier)
             .padding(horizontal = 10.dp, vertical = 6.dp)
             // Read as one message, announced when it appears.
             .semantics(mergeDescendants = true) {
                 liveRegion = LiveRegionMode.Polite
-                statusColor = WatchColors.Warning
+                statusColor = fill
             },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp),
@@ -55,12 +64,12 @@ fun HeartRateBanner(healthAlert: HealthAlert?, modifier: Modifier = Modifier) {
         Icon(
             imageVector = Icons.Filled.Warning,
             contentDescription = null,
-            tint = WatchColors.OnWarning,
+            tint = content,
             modifier = Modifier.size(20.dp),
         )
         Text(
             text = text,
-            color = WatchColors.OnWarning,
+            color = content,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.caption1,
             fontWeight = FontWeight.Bold,

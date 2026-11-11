@@ -3,6 +3,8 @@ package com.elderguard.ai.ui
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -74,6 +76,7 @@ class WatchAppTest {
     private val storage = InMemoryStorage()
     private val languages = LanguageRepository(storage)
     private val clock = MutableClock()
+    private var criticalHeartRate by mutableStateOf(false)
 
     private fun setApp() {
         compose.setContent {
@@ -88,6 +91,7 @@ class WatchAppTest {
                             onLanguageChange = languages::setLanguage,
                             onSosActivate = { store.setMode(DeviceMode.Sos) },
                             onSosCancel = { store.setMode(DeviceMode.Monitoring) },
+                            criticalHeartRate = criticalHeartRate,
                         )
                     }
                 }
@@ -179,6 +183,22 @@ class WatchAppTest {
         setApp()
 
         compose.onNodeWithTag(WatchfaceTags.HEART_RATE_BANNER).assert(hasText("High heart rate at rest"))
+    }
+
+    @Test
+    fun aCriticalHeartRateTurnsTheBannerRedAndSaysTheFamilyWasTold() {
+        setApp()
+        setHealthAlert(HealthAlert.HighHeartRate)
+        criticalHeartRate = true
+
+        compose.onNodeWithTag(WatchfaceTags.HEART_RATE_BANNER)
+            .assert(hasText("Ritmo crítico: familia avisada"))
+            .assert(hasStatusColor(WatchColors.Danger))
+
+        criticalHeartRate = false
+        compose.onNodeWithTag(WatchfaceTags.HEART_RATE_BANNER)
+            .assert(hasText("Ritmo cardíaco alto en reposo"))
+            .assert(hasStatusColor(WatchColors.Warning))
     }
 
     // --- SOS ---

@@ -47,12 +47,17 @@ fun WatchApp(
     modifier: Modifier = Modifier,
     fallCountdownSeconds: Int? = null,
     onFallCancel: () -> Unit = {},
+    criticalHeartRate: Boolean = false,
 ) {
     val pagerState = rememberPagerState(pageCount = { PAGE_COUNT })
     Box(modifier = modifier.fillMaxSize()) {
         HorizontalPager(state = pagerState, modifier = Modifier.fillMaxSize().testTag(WatchAppTags.PAGER)) { page ->
             when (page) {
-                WATCHFACE_PAGE -> Watchface(state = state, onSosActivate = onSosActivate)
+                WATCHFACE_PAGE -> Watchface(
+                    state = state,
+                    onSosActivate = onSosActivate,
+                    criticalHeartRate = criticalHeartRate,
+                )
                 LANGUAGE_PAGE -> LanguageScreen(current = language, onSelect = onLanguageChange)
             }
         }

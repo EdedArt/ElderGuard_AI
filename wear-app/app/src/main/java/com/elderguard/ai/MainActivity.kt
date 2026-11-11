@@ -38,6 +38,7 @@ class MainActivity : ComponentActivity() {
         // Reading the ViewModel here creates it, which starts the simulation engine.
         val telemetryState = telemetry.state
         val fallCountdownState = telemetry.fallCountdown
+        val criticalHeartRateState = telemetry.criticalHeartRate
         val languageState = languageRepository.language
         // setContent replaces setContentView with an XML layout: the screen is described in code.
         // The braces are a lambda passed as the last argument, like `setContent(() -> { ... })`.
@@ -46,6 +47,7 @@ class MainActivity : ComponentActivity() {
             // It stops collecting while the app is in the background.
             val state by telemetryState.collectAsStateWithLifecycle()
             val fallCountdown by fallCountdownState.collectAsStateWithLifecycle()
+            val criticalHeartRate by criticalHeartRateState.collectAsStateWithLifecycle()
             val language by languageState.collectAsStateWithLifecycle()
             ProvideAppLanguage(language) {
                 // `telemetry::triggerSos` is a method reference, written the same way as in Java.
@@ -57,6 +59,7 @@ class MainActivity : ComponentActivity() {
                     onSosCancel = telemetry::cancelSos,
                     fallCountdownSeconds = fallCountdown,
                     onFallCancel = telemetry::cancelFall,
+                    criticalHeartRate = criticalHeartRate,
                 )
             }
         }
@@ -74,6 +77,7 @@ fun ElderGuardApp(
     onSosCancel: () -> Unit = {},
     fallCountdownSeconds: Int? = null,
     onFallCancel: () -> Unit = {},
+    criticalHeartRate: Boolean = false,
 ) {
     // Wear OS's standard dark Material theme: a black background saves battery on OLED screens.
     MaterialTheme {
@@ -85,6 +89,7 @@ fun ElderGuardApp(
             onSosCancel = onSosCancel,
             fallCountdownSeconds = fallCountdownSeconds,
             onFallCancel = onFallCancel,
+            criticalHeartRate = criticalHeartRate,
         )
     }
 }
