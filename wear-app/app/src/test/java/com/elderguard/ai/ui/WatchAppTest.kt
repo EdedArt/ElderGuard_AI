@@ -25,6 +25,7 @@ import com.elderguard.ai.language.AppLanguage
 import com.elderguard.ai.language.LanguageRepository
 import com.elderguard.ai.language.LanguageStorage
 import com.elderguard.ai.telemetry.DeviceMode
+import com.elderguard.ai.telemetry.HealthAlert
 import com.elderguard.ai.telemetry.TelemetryStore
 import java.time.Clock
 import java.time.Instant
@@ -146,6 +147,38 @@ class WatchAppTest {
         store.update { it.copy(gps = it.gps.copy(signal = false)) }
 
         gps.assert(hasStatusColor(WatchColors.Warning)).assert(hasText("Sin GPS"))
+    }
+
+    // --- Heart rate banner ---
+
+    private fun setHealthAlert(healthAlert: HealthAlert?) {
+        store.update { it.copy(deviceStatus = it.deviceStatus.copy(healthAlert = healthAlert)) }
+    }
+
+    @Test
+    fun showsTheHeartRateBannerOnlyWhileTheWarningLasts() {
+        setApp()
+        compose.onNodeWithTag(WatchfaceTags.HEART_RATE_BANNER).assertDoesNotExist()
+
+        setHealthAlert(HealthAlert.HighHeartRate)
+        compose.onNodeWithTag(WatchfaceTags.HEART_RATE_BANNER)
+            .assertIsDisplayed()
+            .assert(hasText("Ritmo cardíaco alto en reposo"))
+            .assert(hasStatusColor(WatchColors.Warning))
+        // A warning, not an alert: the watchface stays usable.
+        compose.onNodeWithTag(WatchfaceTags.CLOCK).assertIsDisplayed()
+
+        setHealthAlert(null)
+        compose.onNodeWithTag(WatchfaceTags.HEART_RATE_BANNER).assertDoesNotExist()
+    }
+
+    @Test
+    fun theHeartRateBannerFollowsTheLanguage() {
+        languages.setLanguage(AppLanguage.En)
+        setHealthAlert(HealthAlert.HighHeartRate)
+        setApp()
+
+        compose.onNodeWithTag(WatchfaceTags.HEART_RATE_BANNER).assert(hasText("High heart rate at rest"))
     }
 
     // --- SOS ---

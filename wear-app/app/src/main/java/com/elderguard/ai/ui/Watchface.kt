@@ -26,6 +26,7 @@ object WatchfaceTags {
     const val BATTERY = "battery"
     const val GPS = "gps"
     const val HEART_RATE = "heartRate"
+    const val HEART_RATE_BANNER = "heartRateBanner"
     const val SOS = "sos"
     const val LIST = "watchfaceList"
 }
@@ -76,6 +77,14 @@ fun Watchface(
                     }
                 }
                 item { WatchClock(Modifier.testTag(WatchfaceTags.CLOCK)) }
+                // Right under the clock, like the web app, so it shows on the opening screen.
+                // Always an item, even when empty, so the item positions above never shift.
+                item {
+                    HeartRateBanner(
+                        healthAlert = state.deviceStatus.healthAlert,
+                        modifier = Modifier.testTag(WatchfaceTags.HEART_RATE_BANNER),
+                    )
+                }
                 item { HeartRateIndicator(state.heartRate, Modifier.testTag(WatchfaceTags.HEART_RATE)) }
                 item {
                     SosButton(
