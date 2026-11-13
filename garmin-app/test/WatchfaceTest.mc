@@ -308,7 +308,7 @@ function interaction_theSosScreenCancelsWithBackOrTheCancelButton(logger as Logg
     var delegate = new SosDelegate(view, fixture.sos);
     var layout = new WatchfaceLayout(390, 390);
 
-    fixture.sos.activate();
+    fixture.sos.activate(SOS_REASON_MANUAL);
     // START (still held from the activation) and taps outside the button change nothing.
     Test.assert(delegate.swallows(WatchUi.KEY_ENTER));
     delegate.tapped([layout.centerX, layout.sosTitleY] as [Number, Number]);
@@ -317,7 +317,7 @@ function interaction_theSosScreenCancelsWithBackOrTheCancelButton(logger as Logg
     delegate.tapped([layout.centerX, layout.cancelY] as [Number, Number]);
     Test.assert(!fixture.sos.isActive());
 
-    fixture.sos.activate();
+    fixture.sos.activate(SOS_REASON_MANUAL);
     Test.assert(delegate.onBack());
     Test.assert(!fixture.sos.isActive());
     fixture.finish();

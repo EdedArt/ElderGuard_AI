@@ -96,7 +96,7 @@ function sos_controllerSwitchesTheDeviceMode(logger as Logger) as Boolean {
     var store = new TelemetryStore();
     var sos = new SosController(store);
     Test.assert(!sos.isActive());
-    sos.activate();
+    sos.activate(SOS_REASON_MANUAL);
     Test.assert(store.getState().deviceStatus.mode == MODE_SOS);
     Test.assert(sos.isActive());
     sos.cancel();
@@ -110,7 +110,7 @@ function sos_controllerKeepsTheRestOfTheDeviceStatus(logger as Logger) as Boolea
     var next = store.getState();
     next.deviceStatus = new DeviceStatus(MODE_MONITORING, 1234l, HEALTH_ALERT_HIGH_HEART_RATE);
     store.update(next);
-    new SosController(store).activate();
+    new SosController(store).activate(SOS_REASON_MANUAL);
     var status = store.getState().deviceStatus;
     Test.assert(status.lastUpdate == 1234l);
     return status.healthAlert == HEALTH_ALERT_HIGH_HEART_RATE;
@@ -122,7 +122,7 @@ function sos_activatingTwiceNotifiesOnce(logger as Logger) as Boolean {
     var recorder = new ListenerRecorder("a", [] as Array<String>);
     store.register(recorder.listener());
     var sos = new SosController(store);
-    sos.activate();
-    sos.activate();
+    sos.activate(SOS_REASON_MANUAL);
+    sos.activate(SOS_REASON_MANUAL);
     return recorder.states.size() == 1;
 }

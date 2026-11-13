@@ -24,7 +24,7 @@ class FallCountdownFixture {
     function initialize(languageTag as String or Null) {
         language = new LanguagePreference(new MemoryLanguageStorage(languageTag));
         sos = new SosController(store);
-        fall = new FallMonitor(store, FallDetector.standard(), clock);
+        fall = new FallMonitor(store, sos, FallDetector.standard(), clock);
         view = new FallCountdownView(fall, language);
         delegate = new FallCountdownDelegate(view, fall);
         var bitmap = Graphics.createBufferedBitmap({:width => 390, :height => 390}).get() as Graphics.BufferedBitmap;
@@ -156,6 +156,7 @@ function fallScreen_drawsEverySecondInBothLanguagesWithoutErrors(logger as Logge
         f.render();
         Test.assertEqual(f.view.seconds, 0);
         Test.assertEqual(f.view.ringDegrees, 0);
+        Test.assertEqual(f.mode(), MODE_SOS);
         f.finish();
     }
     return true;
@@ -272,7 +273,7 @@ function fallScreen_otherInputNeverCancels(logger as Logger) as Boolean {
 (:test)
 function fallScreen_cancelOnlyActsDuringACountdown(logger as Logger) as Boolean {
     var f = new FallCountdownFixture(null);
-    f.sos.activate();
+    f.sos.activate(SOS_REASON_MANUAL);
     f.fall.cancel();
     Test.assertEqual(f.mode(), MODE_SOS);
     return true;
@@ -297,6 +298,54 @@ function fallScreen_leavingTheCountdownModeAnyOtherWayStopsTheCountdown(logger a
     f.simulateFall();
     f.store.setMode(MODE_MONITORING);
     Test.assert(!f.fall.countdown().isRunning());
+    return true;
+}
+
+// --- Reaching zero ---
+
+(:test)
+function fallScreen_reachingZeroCallsForHelpWithTheFallReason(logger as Logger) as Boolean {
+    var f = new FallCountdownFixture(null);
+    f.simulateFall();
+    f.seconds(FallDetectionConfig.COUNTDOWN_SECONDS - 1);
+    Test.assertEqual(f.mode(), MODE_FALL_COUNTDOWN);
+    Test.assert(!f.sos.isActive());
+    f.seconds(1);
+    Test.assertEqual(f.mode(), MODE_SOS);
+    Test.assert(f.sos.activeReason() == SOS_REASON_FALL);
+    Test.assert(!f.fall.countdown().isRunning());
+    return true;
+}
+
+(:test)
+function fallScreen_aManualSosKeepsTheManualReason(logger as Logger) as Boolean {
+    var f = new FallCountdownFixture(null);
+    var controller = new FakeClockController(f.sos);
+    controller.time = 0;
+    controller.sosPress();
+    controller.time = SosConfig.HOLD_DURATION_MS;
+    controller.onFrame();
+    controller.stop();
+    Test.assertEqual(f.mode(), MODE_SOS);
+    Test.assert(f.sos.activeReason() == SOS_REASON_MANUAL);
+    // A second activation, even with another reason, changes nothing.
+    f.sos.activate(SOS_REASON_FALL);
+    Test.assert(f.sos.activeReason() == SOS_REASON_MANUAL);
+    return true;
+}
+
+(:test)
+function fallScreen_cancellingTheFallSosRestoresMonitoringAndDetection(logger as Logger) as Boolean {
+    var f = new FallCountdownFixture(null);
+    f.simulateFall();
+    f.seconds(FallDetectionConfig.COUNTDOWN_SECONDS);
+    Test.assert(f.sos.activeReason() == SOS_REASON_FALL);
+    f.sos.cancel();
+    Test.assertEqual(f.mode(), MODE_MONITORING);
+    Test.assert(f.sos.activeReason() == null);
+    f.simulateFall();
+    Test.assertEqual(f.mode(), MODE_FALL_COUNTDOWN);
+    f.finish();
     return true;
 }
 

@@ -14,9 +14,11 @@ import Toybox.Lang;
 //
 // A confirmed fall switches the watch to MODE_FALL_COUNTDOWN and starts a countdown of
 // FallDetectionConfig.COUNTDOWN_SECONDS. cancel() ("Estoy bien") stops it and goes back to
-// monitoring. Leaving the countdown mode any other way stops the countdown too.
+// monitoring. If nobody cancels it, reaching zero calls for help: an SOS with SOS_REASON_FALL.
+// Leaving the countdown mode any other way stops the countdown too.
 class FallMonitor {
     private var _store as TelemetryStore;
+    private var _sos as SosController;
     private var _detector as FallDetector;
     private var _clock as Clock;
     private var _listener as TelemetryListener;
@@ -24,8 +26,9 @@ class FallMonitor {
     private var _countdown as Countdown;
     private var _tickListener as CountdownTickListener or Null = null;
 
-    function initialize(store as TelemetryStore, detector as FallDetector, clock as Clock) {
+    function initialize(store as TelemetryStore, sos as SosController, detector as FallDetector, clock as Clock) {
         _store = store;
+        _sos = sos;
         _detector = detector;
         _clock = clock;
         _previousMode = store.getState().deviceStatus.mode;
@@ -85,9 +88,9 @@ class FallMonitor {
         }
     }
 
-    // Reaching zero calls for help once the SOS screen is connected; until then the countdown
-    // screen stays at 0 and "Estoy bien" still returns to monitoring.
+    // Nobody answered: call for help. The SOS screen replaces the countdown.
     function onCountdownComplete() as Void {
+        _sos.activate(SOS_REASON_FALL);
     }
 
     private function onFallConfirmed() as Void {

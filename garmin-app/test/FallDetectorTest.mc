@@ -277,7 +277,7 @@ function fall_takesEveryThresholdFromItsParameters(logger as Logger) as Boolean 
 function fallFeed_confirmsAFallFedThroughTheStore(logger as Logger) as Boolean {
     var store = new TelemetryStore();
     var clock = new FakeClock();
-    var monitor = new FallMonitor(store, FallDetector.standard(), clock);
+    var monitor = new FallMonitor(store, new SosController(store), FallDetector.standard(), clock);
     TestReadings.write(store, clock, TestReadings.spike(), 1000);
     Test.assertEqual(monitor.getDetectorState(), FALL_IMPACT);
     TestReadings.write(store, clock, TestReadings.still(), 2000);
@@ -298,12 +298,12 @@ function fallFeed_ignoresReadingsAndForgetsTheSequenceWhileNotMonitoring(logger 
     var store = new TelemetryStore();
     var clock = new FakeClock();
     var sos = new SosController(store);
-    var monitor = new FallMonitor(store, FallDetector.standard(), clock);
+    var monitor = new FallMonitor(store, sos, FallDetector.standard(), clock);
     TestReadings.write(store, clock, TestReadings.spike(), 0);
     TestReadings.write(store, clock, TestReadings.still(), 1000);
     Test.assertEqual(monitor.getDetectorState(), FALL_IMMOBILITY);
 
-    sos.activate();
+    sos.activate(SOS_REASON_MANUAL);
     Test.assertEqual(monitor.getDetectorState(), FALL_IDLE);
     TestReadings.write(store, clock, TestReadings.spike(), 2000);
     Test.assertEqual(monitor.getDetectorState(), FALL_IDLE);

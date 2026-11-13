@@ -22,7 +22,7 @@ class ElderGuardApp extends Application.AppBase {
         _engine = new SimulationEngine(_store, new RandomSource());
         _language = new LanguagePreference(new LanguageStorage());
         _sos = new SosController(_store);
-        _fallMonitor = new FallMonitor(_store, FallDetector.standard(), new Clock());
+        _fallMonitor = new FallMonitor(_store, _sos, FallDetector.standard(), new Clock());
         _alertScreens = new AlertScreens(_store, _language, _sos, _fallMonitor);
     }
 

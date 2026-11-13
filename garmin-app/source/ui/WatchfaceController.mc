@@ -69,7 +69,7 @@ class WatchfaceController {
 
     private function activate() as Void {
         Vibration.pulse(Vibration.ALERT_MS);
-        _sos.activate();
+        _sos.activate(SOS_REASON_MANUAL);
     }
 
     private function changed() as Void {
