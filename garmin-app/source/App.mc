@@ -34,6 +34,6 @@ class ElderGuardApp extends Application.AppBase {
         var sos = new SosController(_store);
         var controller = new WatchfaceController(sos);
         var view = new WatchfaceView(_store, _language, controller, sos);
-        return [view, new WatchfaceDelegate(view, controller)];
+        return [view, new WatchfaceDelegate(view, controller, _language)];
     }
 }

@@ -27,4 +27,9 @@
     <!-- SOS active screen. -->
     <string id="SosActiveEn">Calling for help…</string>
     <string id="SosCancelEn">Cancel</string>
+    <!-- Language screen. -->
+    <string id="LanguageTitleEn">Language</string>
+    <string id="LanguageCurrentEn">Current</string>
+    <string id="LanguageEsNameEn">Español</string>
+    <string id="LanguageEnNameEn">English</string>
 </strings>
