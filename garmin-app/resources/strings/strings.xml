@@ -7,13 +7,6 @@
 <strings>
     <!-- Name in the watch's app list, shown by the system. The same in both languages. -->
     <string id="AppName">ElderGuard AI</string>
-    <!-- Temporary live readout, replaced by the watchface in a later phase.
-         $1$ is replaced by the value (Lang.format). -->
-    <string id="ReadoutHeartRate">$1$ LPM</string>
-    <string id="ReadoutBattery">Batería $1$ %</string>
-    <string id="ReadoutMovement">Movimiento $1$ g</string>
-    <!-- Decimal separator for numbers shown on screen. -->
-    <string id="DecimalSeparator">,</string>
     <!-- Clock: 12-hour period labels, as in the web and Wear OS apps. -->
     <string id="ClockAm">a. m.</string>
     <string id="ClockPm">p. m.</string>

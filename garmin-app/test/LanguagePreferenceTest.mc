@@ -92,9 +92,9 @@ function language_mapsTagsToLanguages(logger as Logger) as Boolean {
 (:test)
 function language_loadsTheStringOfTheCurrentLanguage(logger as Logger) as Boolean {
     var preference = new LanguagePreference(new MemoryLanguageStorage(null));
-    Test.assertEqual(preference.text(Rez.Strings.DecimalSeparator, Rez.Strings.DecimalSeparatorEn), ",");
+    Test.assertEqual(preference.text(Rez.Strings.GpsLost, Rez.Strings.GpsLostEn), "Sin GPS");
     preference.setLanguage(LANGUAGE_EN);
-    Test.assertEqual(preference.text(Rez.Strings.DecimalSeparator, Rez.Strings.DecimalSeparatorEn), ".");
+    Test.assertEqual(preference.text(Rez.Strings.GpsLost, Rez.Strings.GpsLostEn), "No GPS");
     return true;
 }
 
