@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
     Connect IQ manifest for ElderGuard AI on the Garmin Forerunner 165.
+    Verified against Connect IQ SDK 9.3.0 (bin/templates/watch-app and bin/projectInfo.xml).
 
-    PLACEHOLDERS to replace once the Connect IQ SDK and a Garmin developer account are set up:
-    - id: a fake application ID. Generate the real one in VS Code with
-      "Monkey C: Regenerate UUID" (or let the new-project wizard create it). It must be a unique
-      32-character hexadecimal UUID without dashes.
-    - minApiLevel: a conservative guess. Check the API level the fr165 supports in the SDK
-      Manager's device list and adjust.
+    - id: a locally generated UUID (32 hex characters, no dashes), the same format that
+      "Monkey C: Regenerate UUID" produces. Sideloading does not need a store-issued ID, but
+      the ID must never change, or the watch treats a new build as a different app.
+    - minApiLevel: 5.2.0, the API level the SDK lists for the fr165
+      (Devices/fr165/compiler.json: "deviceGroup": "API level 5.2").
 -->
 <iq:manifest version="3" xmlns:iq="http://www.garmin.com/xml/connectiq">
     <iq:application
-        id="00000000000000000000000000000000"
+        id="317979134c5a4f49a94bb7f7ee876bcd"
         type="watch-app"
         name="@Strings.AppName"
         entry="ElderGuardApp"
         launcherIcon="@Drawables.LauncherIcon"
-        minApiLevel="3.2.0">
+        minApiLevel="5.2.0">
 
         <!-- Forerunner 165: 390x390 round AMOLED touchscreen. -->
         <iq:products>

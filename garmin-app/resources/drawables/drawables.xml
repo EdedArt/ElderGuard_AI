@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <drawables>
-    <!-- Icon in the watch's app list, referenced by launcherIcon in manifest.xml. -->
-    <bitmap id="LauncherIcon" filename="launcher_icon.png"/>
+    <!-- Icon in the watch's app list, referenced by launcherIcon in manifest.xml.
+         54x54 px: the launcher icon size of the fr165 (Devices/fr165/compiler.json). -->
+    <bitmap id="LauncherIcon" filename="launcher_icon.png" dithering="none"/>
 </drawables>
