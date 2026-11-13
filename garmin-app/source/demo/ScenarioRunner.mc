@@ -131,9 +131,10 @@ class ScenarioRunner {
         _overridden = [] as Array<StateKey>;
     }
 
-    // Called by the timer when the next step is due. Public so tests can fire it at once.
+    // Called by the timer when the next step is due. Public so tests can fire it at once; the
+    // timer is stopped either way, since apps may only have a few at a time.
     function onStepDue() as Void {
-        _timer = null;
+        cancelTimer();
         if (_current != null && _next < _steps.size()) {
             _elapsedMs = _steps[_next].atMs;
             advance();
