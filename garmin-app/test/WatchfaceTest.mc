@@ -33,6 +33,7 @@ class WatchfaceFixture {
     var sos as SosController;
     var controller as FakeClockController;
     var view as WatchfaceView;
+    var alerts as AlertDispatcher;
     var delegate as WatchfaceDelegate;
     var dc as Graphics.Dc;
 
@@ -40,7 +41,8 @@ class WatchfaceFixture {
         language = new LanguagePreference(new MemoryLanguageStorage(languageTag));
         sos = new SosController(store);
         controller = new FakeClockController(sos);
-        view = new WatchfaceView(store, language, controller);
+        alerts = new AlertDispatcher(store, sos, HeartRateAnomalyDetector.critical(), new FakeClock());
+        view = new WatchfaceView(store, language, controller, alerts);
         delegate = new WatchfaceDelegate(view, controller, language);
         var bitmap = Graphics.createBufferedBitmap({:width => 390, :height => 390}).get() as Graphics.BufferedBitmap;
         dc = bitmap.getDc();

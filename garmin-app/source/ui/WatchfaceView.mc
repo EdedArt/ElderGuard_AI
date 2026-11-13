@@ -13,6 +13,7 @@ class WatchfaceView extends WatchUi.View {
     private var _language as LanguagePreference;
     private var _listener as TelemetryListener;
     private var _controller as WatchfaceController;
+    private var _alerts as AlertDispatcher;
 
     // Created in onLayout(), when the screen size is known.
     private var _layout as WatchfaceLayout or Null;
@@ -28,12 +29,14 @@ class WatchfaceView extends WatchUi.View {
     function initialize(
         store as TelemetryStore,
         language as LanguagePreference,
-        controller as WatchfaceController
+        controller as WatchfaceController,
+        alerts as AlertDispatcher
     ) {
         View.initialize();
         _store = store;
         _language = language;
         _controller = controller;
+        _alerts = alerts;
         _listener = method(:onTelemetryChanged) as TelemetryListener;
     }
 
@@ -126,8 +129,14 @@ class WatchfaceView extends WatchUi.View {
         clock.period = TimeFormat.periodLabel(now, _language);
         clock.date = TimeFormat.today(_language);
 
-        banner.visible = state.deviceStatus.healthAlert == HEALTH_ALERT_HIGH_HEART_RATE;
-        banner.text = _language.text(Rez.Strings.HeartRateAlertHigh, Rez.Strings.HeartRateAlertHighEn);
+        // Critical first, as in the other apps: a critical alert has no screen of its own, so the
+        // banner is where the wearer learns that the family was told.
+        var critical = _alerts.isCriticalActive();
+        banner.visible = critical || state.deviceStatus.healthAlert == HEALTH_ALERT_HIGH_HEART_RATE;
+        banner.setCritical(critical);
+        banner.text = critical
+            ? _language.text(Rez.Strings.HeartRateAlertCritical, Rez.Strings.HeartRateAlertCriticalEn)
+            : _language.text(Rez.Strings.HeartRateAlertHigh, Rez.Strings.HeartRateAlertHighEn);
         clock.showDate = !banner.visible;
 
         heartRate.bpm = state.heartRate.bpm;

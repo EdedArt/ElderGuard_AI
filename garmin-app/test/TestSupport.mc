@@ -14,6 +14,10 @@ class FakeClock extends Clock {
     function now() as Number {
         return time;
     }
+
+    function epochMs() as Long {
+        return time.toLong();
+    }
 }
 
 // Readings and store writes the detector and alert tests share. A class with static functions,

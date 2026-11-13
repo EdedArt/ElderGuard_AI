@@ -267,6 +267,8 @@ class HoldHint extends WatchUi.Drawable {
 class HeartRateBanner extends WatchUi.Drawable {
     var text as String = "";
     var visible as Boolean = false;
+    // Red with white text and a white outline when the rate is critical and the family was told.
+    var critical as Boolean = false;
     var fill as Number = WatchColors.WARNING;
     var content as Number = WatchColors.ON_WARNING;
     private var _layout as WatchfaceLayout;
@@ -276,9 +278,25 @@ class HeartRateBanner extends WatchUi.Drawable {
         _layout = layout;
     }
 
+    function setCritical(isCritical as Boolean) as Void {
+        critical = isCritical;
+        fill = isCritical ? WatchColors.DANGER : WatchColors.WARNING;
+        content = isCritical ? WatchColors.ON_DANGER : WatchColors.ON_WARNING;
+    }
+
+    // The triangle goes before the text when both fit; the critical text is too long for it, and
+    // the red fill already says enough.
+    function showsIcon(dc as Graphics.Dc) as Boolean {
+        return widthWith(dc, true) <= _layout.bannerMaxWidth;
+    }
+
     function width(dc as Graphics.Dc) as Number {
-        return 2 * _layout.bannerPadding + _layout.bannerIconSize + _layout.iconGap
-            + dc.getTextWidthInPixels(text, _layout.bannerFont);
+        return widthWith(dc, showsIcon(dc));
+    }
+
+    private function widthWith(dc as Graphics.Dc, icon as Boolean) as Number {
+        var iconWidth = icon ? _layout.bannerIconSize + _layout.iconGap : 0;
+        return 2 * _layout.bannerPadding + iconWidth + dc.getTextWidthInPixels(text, _layout.bannerFont);
     }
 
     function draw(dc as Graphics.Dc) as Void {
@@ -291,12 +309,20 @@ class HeartRateBanner extends WatchUi.Drawable {
         var y = _layout.bannerY;
         dc.setColor(fill, Graphics.COLOR_TRANSPARENT);
         dc.fillRoundedRectangle(left, y - height / 2, width, height, height / 2);
+        if (critical) {
+            // The dark red alone is hard to tell apart from black, as on the SOS button.
+            dc.setColor(WatchColors.DANGER_BORDER, Graphics.COLOR_TRANSPARENT);
+            dc.setPenWidth(_layout.scale(2));
+            dc.drawRoundedRectangle(left, y - height / 2, width, height, height / 2);
+        }
 
-        var iconX = left + _layout.bannerPadding;
-        drawWarningIcon(dc, iconX, y, _layout.bannerIconSize);
+        var x = left + _layout.bannerPadding;
+        if (showsIcon(dc)) {
+            drawWarningIcon(dc, x, y, _layout.bannerIconSize);
+            x += _layout.bannerIconSize + _layout.iconGap;
+        }
         dc.setColor(content, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(iconX + _layout.bannerIconSize + _layout.iconGap, y, _layout.bannerFont, text,
-            Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(x, y, _layout.bannerFont, text, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 
     // A triangle with an exclamation mark cut out of it, size pixels wide, from the left edge x.

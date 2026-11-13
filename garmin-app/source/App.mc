@@ -15,6 +15,7 @@ class ElderGuardApp extends Application.AppBase {
     private var _sos as SosController;
     private var _fallMonitor as FallMonitor;
     private var _alertScreens as AlertScreens;
+    private var _alerts as AlertDispatcher;
 
     function initialize() {
         AppBase.initialize();
@@ -25,6 +26,7 @@ class ElderGuardApp extends Application.AppBase {
         _fallMonitor = new FallMonitor(_store, _sos, FallDetector.standard(), new Clock());
         // Registered on the store, which keeps it alive for as long as the app runs.
         new HeartRateMonitor(_store, HeartRateAnomalyDetector.warning(), new Clock());
+        _alerts = new AlertDispatcher(_store, _sos, HeartRateAnomalyDetector.critical(), new Clock());
         _alertScreens = new AlertScreens(_store, _language, _sos, _fallMonitor);
     }
 
@@ -43,7 +45,7 @@ class ElderGuardApp extends Application.AppBase {
     // it, or of whatever is showing, while an alert lasts.
     function getInitialView() as [Views] or [Views, InputDelegates] {
         var controller = new WatchfaceController(_sos);
-        var view = new WatchfaceView(_store, _language, controller);
+        var view = new WatchfaceView(_store, _language, controller, _alerts);
         _alertScreens.start();
         return [view, new WatchfaceDelegate(view, controller, _language)];
     }

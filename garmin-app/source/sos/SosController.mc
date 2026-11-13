@@ -11,9 +11,16 @@ enum SosReason {
 // Port of src/core/sosController.js: starts and ends an SOS. Activating switches
 // deviceStatus.mode to MODE_SOS in the store and remembers why; cancelling switches it back to
 // MODE_MONITORING. The screens react to that mode, like the web app's SOS screen.
+//
+// Trigger listeners hear every new SOS with its reason, synchronously inside activate(), like the
+// web app's 'sos:triggered' event: whoever reacts (the alert dispatcher) sees the state of that
+// very moment.
+typedef SosTriggerListener as Method(reason as SosReason) as Void;
+
 class SosController {
     private var _store as TelemetryStore;
     private var _reason as SosReason = SOS_REASON_MANUAL;
+    private var _triggerListeners as Array<SosTriggerListener> = [] as Array<SosTriggerListener>;
 
     function initialize(store as TelemetryStore) {
         _store = store;
@@ -36,6 +43,13 @@ class SosController {
         }
         _reason = reason;
         _store.setMode(MODE_SOS);
+        for (var i = 0; i < _triggerListeners.size(); i++) {
+            _triggerListeners[i].invoke(reason);
+        }
+    }
+
+    function addTriggerListener(listener as SosTriggerListener) as Void {
+        _triggerListeners.add(listener);
     }
 
     function cancel() as Void {
