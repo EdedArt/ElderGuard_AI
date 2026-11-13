@@ -3,6 +3,11 @@
 <strings>
     <!-- Name in the watch's app list. -->
     <string id="AppName">ElderGuard AI</string>
-    <!-- Text on the first screen. -->
-    <string id="AppTitle">ElderGuard AI</string>
+    <!-- Temporary live readout, replaced by the watchface in a later phase.
+         $1$ is replaced by the value (Lang.format). -->
+    <string id="ReadoutHeartRate">$1$ LPM</string>
+    <string id="ReadoutBattery">Batería $1$ %</string>
+    <string id="ReadoutMovement">Movimiento $1$ g</string>
+    <!-- Decimal separator for numbers shown on screen. -->
+    <string id="DecimalSeparator">,</string>
 </strings>
