@@ -15,6 +15,8 @@
     <string id="BatteryValueEn">$1$%</string>
     <string id="GpsOkEn">GPS</string>
     <string id="GpsLostEn">No GPS</string>
+    <!-- Heart rate warning banner. -->
+    <string id="HeartRateAlertHighEn">High heart rate at rest</string>
     <!-- SOS button. -->
     <string id="SosTitleEn">SOS</string>
     <string id="SosLabelEn">HELP</string>

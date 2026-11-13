@@ -23,6 +23,7 @@ class WatchfaceView extends WatchUi.View {
     private var _sosButton as SosButton or Null;
     private var _startHint as ButtonHintArc or Null;
     private var _holdHint as HoldHint or Null;
+    private var _banner as HeartRateBanner or Null;
 
     function initialize(
         store as TelemetryStore,
@@ -46,6 +47,7 @@ class WatchfaceView extends WatchUi.View {
         _sosButton = new SosButton(layout);
         _startHint = new ButtonHintArc(layout, layout.startKeyAngle, WatchColors.DANGER_TEXT);
         _holdHint = new HoldHint(layout);
+        _banner = new HeartRateBanner(layout);
     }
 
     // The drawables, as last filled by onUpdate(), for the watchface tests.
@@ -67,6 +69,10 @@ class WatchfaceView extends WatchUi.View {
 
     function sosButton() as SosButton or Null {
         return _sosButton;
+    }
+
+    function heartRateBanner() as HeartRateBanner or Null {
+        return _banner;
     }
 
     // True if a touch at these screen coordinates is on the SOS button.
@@ -97,8 +103,9 @@ class WatchfaceView extends WatchUi.View {
         var sosButton = _sosButton;
         var startHint = _startHint;
         var holdHint = _holdHint;
+        var banner = _banner;
         if (layout == null || battery == null || gps == null || clock == null || heartRate == null
-            || sosButton == null || startHint == null || holdHint == null) {
+            || sosButton == null || startHint == null || holdHint == null || banner == null) {
             return;
         }
         var state = _store.getState();
@@ -119,6 +126,10 @@ class WatchfaceView extends WatchUi.View {
         clock.period = TimeFormat.periodLabel(now, _language);
         clock.date = TimeFormat.today(_language);
 
+        banner.visible = state.deviceStatus.healthAlert == HEALTH_ALERT_HIGH_HEART_RATE;
+        banner.text = _language.text(Rez.Strings.HeartRateAlertHigh, Rez.Strings.HeartRateAlertHighEn);
+        clock.showDate = !banner.visible;
+
         heartRate.bpm = state.heartRate.bpm;
         heartRate.unit = _language.text(Rez.Strings.HeartRateUnit, Rez.Strings.HeartRateUnitEn);
 
@@ -133,6 +144,7 @@ class WatchfaceView extends WatchUi.View {
         battery.draw(dc);
         gps.draw(dc);
         clock.draw(dc);
+        banner.draw(dc);
         heartRate.draw(dc);
 
         sosButton.title = _language.text(Rez.Strings.SosTitle, Rez.Strings.SosTitleEn);

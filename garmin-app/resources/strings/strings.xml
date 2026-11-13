@@ -20,6 +20,9 @@
     <string id="BatteryValue">$1$ %</string>
     <string id="GpsOk">GPS</string>
     <string id="GpsLost">Sin GPS</string>
+    <!-- Heart rate warning banner. Shorter than in the other apps ("Ritmo cardíaco alto en
+         reposo"), which does not fit the width of the round screen at its row. -->
+    <string id="HeartRateAlertHigh">Pulso alto en reposo</string>
     <!-- SOS button. -->
     <string id="SosTitle">SOS</string>
     <string id="SosLabel">AUXILIO</string>

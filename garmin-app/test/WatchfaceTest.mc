@@ -323,3 +323,73 @@ function interaction_theSosScreenCancelsWithBackOrTheCancelButton(logger as Logg
     fixture.finish();
     return true;
 }
+
+// --- Heart rate banner ---
+
+(:test)
+function banner_showsWhileAHeartRateWarningLastsInPlaceOfTheDate(logger as Logger) as Boolean {
+    var fixture = new WatchfaceFixture(null);
+    fixture.render();
+    var banner = fixture.view.heartRateBanner() as HeartRateBanner;
+    var clock = fixture.view.clockDisplay() as ClockDisplay;
+    Test.assert(!banner.visible);
+    Test.assert(clock.showDate);
+
+    fixture.store.setHealthAlert(HEALTH_ALERT_HIGH_HEART_RATE);
+    fixture.render();
+    Test.assert(banner.visible);
+    Test.assertEqual(banner.text, "Pulso alto en reposo");
+    Test.assertEqual(banner.fill, WatchColors.WARNING);
+    Test.assertEqual(banner.content, WatchColors.ON_WARNING);
+    Test.assert(!clock.showDate);
+    // The rest of the watchface keeps working.
+    Test.assertEqual((fixture.view.heartRateIndicator() as HeartRateIndicator).bpm, 70);
+
+    fixture.store.setHealthAlert(null);
+    fixture.render();
+    Test.assert(!banner.visible);
+    Test.assert(clock.showDate);
+    fixture.finish();
+    return true;
+}
+
+(:test)
+function banner_speaksEnglishWhenChosen(logger as Logger) as Boolean {
+    var fixture = new WatchfaceFixture("en");
+    fixture.store.setHealthAlert(HEALTH_ALERT_HIGH_HEART_RATE);
+    fixture.render();
+    Test.assertEqual((fixture.view.heartRateBanner() as HeartRateBanner).text, "High heart rate at rest");
+    fixture.finish();
+    return true;
+}
+
+(:test)
+function banner_fitsTheRoundScreenBetweenTheTimeAndTheHeartRate(logger as Logger) as Boolean {
+    var fixture = new WatchfaceFixture(null);
+    var layout = new WatchfaceLayout(390, 390);
+    var dc = fixture.dc;
+    var banner = new HeartRateBanner(layout);
+    var texts = ["Pulso alto en reposo", "High heart rate at rest"];
+    for (var i = 0; i < texts.size(); i++) {
+        banner.text = texts[i] as String;
+        var width = banner.width(dc);
+        logger.debug(banner.text + ": banner " + width + " px, at most " + layout.bannerMaxWidth);
+        Test.assert(width <= layout.bannerMaxWidth);
+        Test.assert(layout.fitsInCircle(layout.centerX - width / 2, layout.bannerY - layout.bannerHeight / 2,
+            layout.centerX + width / 2, layout.bannerY + layout.bannerHeight / 2));
+    }
+    Test.assert(Graphics.getFontAscent(layout.bannerFont) <= layout.bannerHeight);
+    // A VCENTER row centers the whole font height, so its digits end at the baseline (top plus
+    // ascent) and the descent below them stays empty.
+    var timeBaseline = layout.timeY - dc.getFontHeight(layout.timeFont) / 2 + Graphics.getFontAscent(layout.timeFont);
+    // Digits rise about two thirds of the ascent above the baseline.
+    var heartRateBaseline = layout.heartRateY - dc.getFontHeight(layout.heartRateFont) / 2
+        + Graphics.getFontAscent(layout.heartRateFont);
+    var heartRateTop = heartRateBaseline - Graphics.getFontAscent(layout.heartRateFont) * 2 / 3;
+    logger.debug("banner " + (layout.bannerY - layout.bannerHeight / 2) + "-" + (layout.bannerY + layout.bannerHeight / 2)
+        + ", time digits end at " + timeBaseline + ", heart rate digits start at " + heartRateTop);
+    Test.assert(layout.bannerY - layout.bannerHeight / 2 > timeBaseline);
+    Test.assert(layout.bannerY + layout.bannerHeight / 2 < heartRateTop);
+    fixture.finish();
+    return true;
+}

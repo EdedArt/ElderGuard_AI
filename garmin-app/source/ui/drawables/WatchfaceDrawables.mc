@@ -93,6 +93,8 @@ class ClockDisplay extends WatchUi.Drawable {
     var time as String = "";
     var period as String = "";
     var date as String = "";
+    // False while the heart rate banner takes the place of the date.
+    var showDate as Boolean = true;
     private var _layout as WatchfaceLayout;
 
     function initialize(layout as WatchfaceLayout) {
@@ -110,8 +112,10 @@ class ClockDisplay extends WatchUi.Drawable {
         dc.drawText(left, _layout.timeY, _layout.timeFont, time, Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.drawText(left + timeWidth + gap, _layout.timeY - _layout.scale(16), _layout.periodFont, period,
             Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
-        dc.drawText(_layout.centerX, _layout.dateY, _layout.dateFont, date,
-            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        if (showDate) {
+            dc.drawText(_layout.centerX, _layout.dateY, _layout.dateFont, date,
+                Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        }
     }
 }
 
@@ -253,5 +257,56 @@ class HoldHint extends WatchUi.Drawable {
         dc.setPenWidth(_layout.scale(2));
         dc.drawRoundedRectangle(left, top, width, height, _layout.scale(12));
         dc.drawText(_layout.centerX, _layout.hintY, font, text, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+    }
+}
+
+// Port of the heart rate banner of the web and Wear OS apps: an amber pill with a warning
+// triangle and black text, "Pulso alto en reposo", while a heart rate warning lasts. A warning,
+// not an alert: everything else keeps working. It takes the place of the date, the least urgent
+// row, so the time, the heart rate and the SOS button stay where they are.
+class HeartRateBanner extends WatchUi.Drawable {
+    var text as String = "";
+    var visible as Boolean = false;
+    var fill as Number = WatchColors.WARNING;
+    var content as Number = WatchColors.ON_WARNING;
+    private var _layout as WatchfaceLayout;
+
+    function initialize(layout as WatchfaceLayout) {
+        Drawable.initialize({});
+        _layout = layout;
+    }
+
+    function width(dc as Graphics.Dc) as Number {
+        return 2 * _layout.bannerPadding + _layout.bannerIconSize + _layout.iconGap
+            + dc.getTextWidthInPixels(text, _layout.bannerFont);
+    }
+
+    function draw(dc as Graphics.Dc) as Void {
+        if (!visible) {
+            return;
+        }
+        var width = width(dc);
+        var height = _layout.bannerHeight;
+        var left = _layout.centerX - width / 2;
+        var y = _layout.bannerY;
+        dc.setColor(fill, Graphics.COLOR_TRANSPARENT);
+        dc.fillRoundedRectangle(left, y - height / 2, width, height, height / 2);
+
+        var iconX = left + _layout.bannerPadding;
+        drawWarningIcon(dc, iconX, y, _layout.bannerIconSize);
+        dc.setColor(content, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(iconX + _layout.bannerIconSize + _layout.iconGap, y, _layout.bannerFont, text,
+            Graphics.TEXT_JUSTIFY_LEFT | Graphics.TEXT_JUSTIFY_VCENTER);
+    }
+
+    // A triangle with an exclamation mark cut out of it, size pixels wide, from the left edge x.
+    private function drawWarningIcon(dc as Graphics.Dc, x as Number, cy as Number, size as Number) as Void {
+        var top = cy - size / 2;
+        dc.setColor(content, Graphics.COLOR_TRANSPARENT);
+        dc.fillPolygon([[x + size / 2, top], [x + size, top + size], [x, top + size]]);
+        var bar = _layout.scale(3);
+        dc.setColor(fill, Graphics.COLOR_TRANSPARENT);
+        dc.fillRectangle(x + size / 2 - bar / 2, top + size * 2 / 5, bar, size * 3 / 10);
+        dc.fillRectangle(x + size / 2 - bar / 2, top + size * 4 / 5, bar, bar);
     }
 }

@@ -35,6 +35,17 @@ class WatchfaceLayout {
     var sosRingRadius as Number;
     var sosRingWidth as Number;
 
+    // The heart rate warning banner, which takes the place of the date while it shows. It fits
+    // between the bottom of the time digits (their baseline: a VCENTER row centers the whole
+    // font height, whose descent sits below the digits) and the top of the heart rate digits.
+    var bannerY as Number;
+    var bannerHeight as Number;
+    var bannerIconSize as Number;
+    var bannerPadding as Number;
+    var bannerFont as Graphics.FontType = Graphics.FONT_XTINY;
+    // The widest the banner may be: the width of the screen at its row, minus a margin.
+    var bannerMaxWidth as Number;
+
     // The "Mantén presionado" hint, over the middle of the screen.
     var hintY as Number;
 
@@ -92,6 +103,11 @@ class WatchfaceLayout {
         sosRingRadius = sosRadius + scale(7);
         sosRingWidth = scale(7);
         hintY = height / 2;
+        bannerY = scale(191);
+        bannerHeight = scale(34);
+        bannerIconSize = scale(22);
+        bannerPadding = scale(12);
+        bannerMaxWidth = widthInCircle(bannerY, bannerHeight / 2, width / 2 - scale(16));
         sosTitleY = scale(150);
         sosTitleMaxWidth = scale(330);
         cancelY = scale(265);
