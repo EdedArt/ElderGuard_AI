@@ -14,4 +14,25 @@ module WatchColors {
 
     // Danger-colored text and icons on black. The fill red is too dark for text on black.
     const DANGER_TEXT = 0xFF8A80;
+    const WARNING = 0xFFC233;
+    // Text on a warning (amber) fill.
+    const ON_WARNING = 0x000000;
+    const SUCCESS = 0x4ADE80;
+
+    // Selected and interactive elements, such as the chosen language.
+    const ACCENT = 0x7CC4FF;
+    const ON_ACCENT = 0x000000;
+
+    // Same semantics as the other apps: green when fine, amber when low, red when critical.
+    function batteryColor(state as BatteryState) as Number {
+        if (state == BATTERY_CRITICAL) {
+            return DANGER_TEXT;
+        }
+        return state == BATTERY_LOW ? WARNING : SUCCESS;
+    }
+
+    // Green with signal, amber without it.
+    function gpsColor(state as GpsState) as Number {
+        return state == GPS_OK ? SUCCESS : WARNING;
+    }
 }

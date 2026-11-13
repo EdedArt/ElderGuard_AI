@@ -63,9 +63,12 @@ class WatchfaceView extends WatchUi.View {
         var percent = WatchStatus.batteryPercent(state.battery.level);
         battery.percent = percent;
         battery.text = Lang.format(_language.text(Rez.Strings.BatteryValue, Rez.Strings.BatteryValueEn), [percent]);
-        gps.text = WatchStatus.gpsState(state.gps) == GPS_OK
+        battery.color = WatchColors.batteryColor(WatchStatus.displayedBatteryState(state.battery));
+        var gpsState = WatchStatus.gpsState(state.gps);
+        gps.text = gpsState == GPS_OK
             ? _language.text(Rez.Strings.GpsOk, Rez.Strings.GpsOkEn)
             : _language.text(Rez.Strings.GpsLost, Rez.Strings.GpsLostEn);
+        gps.color = WatchColors.gpsColor(gpsState);
 
         var now = TimeFormat.now();
         clock.time = now.time;
