@@ -1,5 +1,4 @@
 import Toybox.Lang;
-import Toybox.Math;
 
 // Port of the state shape in src/core/telemetryStore.js (and TelemetryModels.kt in wear-app).
 //
@@ -51,9 +50,14 @@ class Accelerometer {
         self.z = z;
     }
 
-    // Total acceleration in g, whatever the orientation of the watch (Math.hypot in the web app).
+    // Total acceleration in g, whatever the orientation of the watch (see Magnitude).
     function magnitude() as Double {
-        return Math.sqrt(x * x + y * y + z * z) as Double;
+        return Magnitude.of(self);
+    }
+
+    // True when the reading is within toleranceG of 1 g: the watch is not moving.
+    function isAtRest(toleranceG as Double) as Boolean {
+        return Magnitude.isAtRest(self, toleranceG);
     }
 
     function equals(other as Object or Null) as Boolean {
