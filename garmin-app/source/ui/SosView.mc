@@ -3,16 +3,29 @@ import Toybox.Lang;
 import Toybox.WatchUi;
 
 // Full-screen red screen shown while SOS is active, like the web and Wear OS SOS screens:
-// "Pidiendo ayuda…" and a large "Cancelar" button. AlertScreens opens it while
+// "Pidiendo ayuda…", the confirmation of the alert sent (who was notified, as a mock, and the
+// GPS coordinates) and a large "Cancelar" button. AlertScreens opens it while
 // deviceStatus.mode is MODE_SOS and closes it when the mode leaves MODE_SOS.
+//
+// Wear OS scrolls the three parts; here they fit on one screen, each line in the largest font
+// that fits the round screen at its row (WatchfaceLayout.fittingFont), so nothing needs scrolling.
 class SosView extends WatchUi.View {
     private var _language as LanguagePreference;
+    private var _alerts as AlertDispatcher;
     private var _layout as WatchfaceLayout or Null;
     private var _backHint as ButtonHintArc or Null;
 
-    function initialize(language as LanguagePreference) {
+    // What the last onUpdate() drew, for the tests (Run No Evil cannot read pixels).
+    var confirming as Boolean = false;
+    var notified as String = "";
+    var contactNames as Array<String> = [] as Array<String>;
+    var locationLabel as String = "";
+    var coordinates as String = "";
+
+    function initialize(language as LanguagePreference, alerts as AlertDispatcher) {
         View.initialize();
         _language = language;
+        _alerts = alerts;
     }
 
     function onLayout(dc as Graphics.Dc) as Void {
@@ -22,7 +35,12 @@ class SosView extends WatchUi.View {
         _backHint = new ButtonHintArc(layout, layout.backKeyAngle, WatchColors.ON_DANGER);
     }
 
-    // True if a touch at these screen coordinates is on the cancel button.
+    // A coordinate with 5 decimals (about 1 m), like toFixed(5) in the web app; always with a dot.
+    static function formatCoordinate(degrees as Double) as String {
+        return degrees.format("%.5f");
+    }
+
+    // True if a touch at these screen coordinates is on the cancel button, wherever it is drawn.
     function isOnCancelButton(coordinates as [Number, Number]) as Boolean {
         var layout = _layout;
         if (layout == null) {
@@ -30,10 +48,9 @@ class SosView extends WatchUi.View {
         }
         var x = coordinates[0];
         var y = coordinates[1];
-        // The button plus a margin, for unsteady hands.
-        var margin = layout.scale(12);
-        return x >= layout.centerX - layout.cancelWidth / 2 - margin && x <= layout.centerX + layout.cancelWidth / 2 + margin
-            && y >= layout.cancelY - layout.cancelHeight / 2 - margin && y <= layout.cancelY + layout.cancelHeight / 2 + margin;
+        return confirming
+            ? layout.isOnButton(x, y, layout.confirmCancelY, layout.confirmCancelWidth, layout.confirmCancelHeight)
+            : layout.isOnButton(x, y, layout.cancelY, layout.cancelWidth, layout.cancelHeight);
     }
 
     function onUpdate(dc as Graphics.Dc) as Void {
@@ -46,28 +63,58 @@ class SosView extends WatchUi.View {
         dc.clear();
         dc.setAntiAlias(true);
 
-        // The largest font in which the title fits the width of the screen at its row.
+        var alert = _alerts.sosAlert();
+        confirming = alert != null;
         var title = _language.text(Rez.Strings.SosActive, Rez.Strings.SosActiveEn);
-        var fonts = [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL] as Array<Graphics.FontType>;
-        var font = fonts[fonts.size() - 1];
-        for (var i = 0; i < fonts.size(); i++) {
-            if (dc.getTextWidthInPixels(title, fonts[i]) <= layout.sosTitleMaxWidth) {
-                font = fonts[i];
-                break;
-            }
+        var titleY = confirming ? layout.confirmTitleY : layout.sosTitleY;
+        drawLine(dc, layout, title, layout.sosTitleFonts, titleY);
+
+        if (alert != null) {
+            drawConfirmation(dc, layout, alert);
+            drawCancel(dc, layout, layout.confirmCancelY, layout.confirmCancelWidth, layout.confirmCancelHeight);
+        } else {
+            drawCancel(dc, layout, layout.cancelY, layout.cancelWidth, layout.cancelHeight);
         }
-        dc.drawText(layout.centerX, layout.sosTitleY, font, title, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
-        // Cancel: white pill with red text, inverted from the screen so the only action stands out.
-        var left = layout.centerX - layout.cancelWidth / 2;
-        var top = layout.cancelY - layout.cancelHeight / 2;
-        dc.setColor(WatchColors.ON_DANGER, Graphics.COLOR_TRANSPARENT);
-        dc.fillRoundedRectangle(left, top, layout.cancelWidth, layout.cancelHeight, layout.cancelHeight / 2);
-        dc.setColor(WatchColors.DANGER, Graphics.COLOR_TRANSPARENT);
-        dc.drawText(layout.centerX, layout.cancelY, Graphics.FONT_MEDIUM,
-            _language.text(Rez.Strings.SosCancel, Rez.Strings.SosCancelEn), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
-
         backHint.draw(dc);
+    }
+
+    // "Avisados (simulado)", one contact name per line, so a name never breaks in the middle, and
+    // where the alert says the person is: the GPS position, or the last one known without signal.
+    private function drawConfirmation(dc as Graphics.Dc, layout as WatchfaceLayout, alert as AlertPayload) as Void {
+        notified = _language.text(Rez.Strings.SosNotified, Rez.Strings.SosNotifiedEn);
+        drawLine(dc, layout, notified, [layout.detailFont] as Array<Graphics.FontType>, layout.notifiedY);
+
+        contactNames = [] as Array<String>;
+        for (var i = 0; i < alert.contacts.size(); i++) {
+            var name = alert.contacts[i].name;
+            contactNames.add(name);
+            drawLine(dc, layout, name, layout.contactFonts, layout.contactsY + i * layout.contactStep);
+        }
+
+        locationLabel = alert.gps.signal
+            ? _language.text(Rez.Strings.SosLocation, Rez.Strings.SosLocationEn)
+            : _language.text(Rez.Strings.SosLastLocation, Rez.Strings.SosLastLocationEn);
+        coordinates = Lang.format(_language.text(Rez.Strings.SosCoordinates, Rez.Strings.SosCoordinatesEn),
+            [formatCoordinate(alert.gps.lat), formatCoordinate(alert.gps.lng)]);
+        drawLine(dc, layout, locationLabel, [layout.detailFont] as Array<Graphics.FontType>, layout.locationLabelY);
+        drawLine(dc, layout, coordinates, layout.contactFonts, layout.coordinatesY);
+    }
+
+    // A centered line in white, in the largest of fonts that fits the round screen at row y.
+    private function drawLine(dc as Graphics.Dc, layout as WatchfaceLayout, text as String, fonts as Array<Graphics.FontType>, y as Number) as Void {
+        dc.setColor(WatchColors.ON_DANGER, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(layout.centerX, y, layout.fittingFont(dc, text, fonts, y, layout.sosSafeRadius), text,
+            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+    }
+
+    // Cancel: white pill with red text, inverted from the screen so the only action stands out.
+    private function drawCancel(dc as Graphics.Dc, layout as WatchfaceLayout, y as Number, width as Number, height as Number) as Void {
+        var label = _language.text(Rez.Strings.SosCancel, Rez.Strings.SosCancelEn);
+        dc.setColor(WatchColors.ON_DANGER, Graphics.COLOR_TRANSPARENT);
+        dc.fillRoundedRectangle(layout.centerX - width / 2, y - height / 2, width, height, height / 2);
+        dc.setColor(WatchColors.DANGER, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(layout.centerX, y, layout.fontForWidth(dc, label, layout.titleFonts, width - height / 2), label,
+            Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
     }
 }
 

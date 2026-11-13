@@ -55,12 +55,30 @@ class WatchfaceLayout {
     // And BACK, about 29 degrees below 3 o'clock.
     var backKeyAngle as Number = -29;
 
-    // The SOS screen: the title, the widest it may be, and the cancel button below it.
+    // The SOS screen: the title and the cancel button below it, and the radius everything on the
+    // SOS screen keeps inside, away from the curved edge.
     var sosTitleY as Number;
-    var sosTitleMaxWidth as Number;
     var cancelY as Number;
     var cancelWidth as Number;
     var cancelHeight as Number;
+    var sosSafeRadius as Number;
+
+    // The SOS screen once the alert has gone out, which also confirms it: the title, "Avisados
+    // (simulado)", one contact per line, where the alert says the person is (a label and the
+    // coordinates) and a smaller cancel button, all on one screen.
+    var confirmTitleY as Number;
+    var notifiedY as Number;
+    var contactsY as Number;
+    var contactStep as Number;
+    var locationLabelY as Number;
+    var coordinatesY as Number;
+    var confirmCancelY as Number;
+    var confirmCancelWidth as Number;
+    var confirmCancelHeight as Number;
+    var sosTitleFonts as Array<Graphics.FontType> =
+        [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL, Graphics.FONT_TINY] as Array<Graphics.FontType>;
+    var contactFonts as Array<Graphics.FontType> = [Graphics.FONT_TINY, Graphics.FONT_XTINY] as Array<Graphics.FontType>;
+    var detailFont as Graphics.FontType = Graphics.FONT_XTINY;
 
     // The fall countdown screen. The draining ring is inset from the edge, which keeps the edge
     // free for the BACK button hint; everything else stays inside fallContentRadius, within the
@@ -109,7 +127,16 @@ class WatchfaceLayout {
         bannerPadding = scale(12);
         bannerMaxWidth = widthInCircle(bannerY, bannerHeight / 2, width / 2 - scale(16));
         sosTitleY = scale(150);
-        sosTitleMaxWidth = scale(330);
+        sosSafeRadius = width / 2 - scale(10);
+        confirmTitleY = scale(96);
+        notifiedY = scale(132);
+        contactsY = scale(160);
+        contactStep = scale(28);
+        locationLabelY = scale(246);
+        coordinatesY = scale(272);
+        confirmCancelY = scale(322);
+        confirmCancelWidth = scale(200);
+        confirmCancelHeight = scale(56);
         cancelY = scale(265);
         cancelWidth = scale(240);
         cancelHeight = scale(84);

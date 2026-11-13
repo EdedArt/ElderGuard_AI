@@ -24,12 +24,20 @@ class AlertScreens {
     private var _language as LanguagePreference;
     private var _sos as SosController;
     private var _fall as FallMonitor;
+    private var _alerts as AlertDispatcher;
     private var _listener as TelemetryListener;
     // The mode whose screen is on top; MODE_MONITORING when none is.
     private var _shown as DeviceMode = MODE_MONITORING;
 
-    function initialize(store as TelemetryStore, language as LanguagePreference, sos as SosController, fall as FallMonitor) {
+    function initialize(
+        store as TelemetryStore,
+        language as LanguagePreference,
+        sos as SosController,
+        fall as FallMonitor,
+        alerts as AlertDispatcher
+    ) {
         _store = store;
+        _alerts = alerts;
         _language = language;
         _sos = sos;
         _fall = fall;
@@ -87,7 +95,7 @@ class AlertScreens {
             view = countdownView;
             delegate = new FallCountdownDelegate(countdownView, _fall);
         } else {
-            var sosView = new SosView(_language);
+            var sosView = new SosView(_language, _alerts);
             view = sosView;
             delegate = new SosDelegate(sosView, _sos);
         }

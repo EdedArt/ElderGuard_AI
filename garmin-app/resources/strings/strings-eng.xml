@@ -25,6 +25,10 @@
     <!-- SOS active screen. -->
     <string id="SosActiveEn">Calling for help…</string>
     <string id="SosCancelEn">Cancel</string>
+    <string id="SosNotifiedEn">Notified (mock)</string>
+    <string id="SosLocationEn">GPS</string>
+    <string id="SosLastLocationEn">Last position</string>
+    <string id="SosCoordinatesEn">$1$, $2$</string>
     <!-- Fall countdown screen. -->
     <string id="FallQuestionEn">Did you fall?</string>
     <string id="FallCancelEn">I'M OK</string>

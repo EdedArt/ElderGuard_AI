@@ -32,6 +32,13 @@
     <!-- SOS active screen. -->
     <string id="SosActive">Pidiendo ayuda…</string>
     <string id="SosCancel">Cancelar</string>
+    <!-- Confirmation of the (mock) alert on the SOS screen: who was told and where the alert
+         says the person is. The coordinates go on a line of their own: with the label they do
+         not fit the round screen. -->
+    <string id="SosNotified">Avisados (simulado)</string>
+    <string id="SosLocation">GPS</string>
+    <string id="SosLastLocation">Última posición</string>
+    <string id="SosCoordinates">$1$, $2$</string>
     <!-- Fall countdown screen. -->
     <string id="FallQuestion">¿Te caíste?</string>
     <string id="FallCancel">ESTOY BIEN</string>

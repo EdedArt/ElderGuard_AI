@@ -27,7 +27,7 @@ class ElderGuardApp extends Application.AppBase {
         // Registered on the store, which keeps it alive for as long as the app runs.
         new HeartRateMonitor(_store, HeartRateAnomalyDetector.warning(), new Clock());
         _alerts = new AlertDispatcher(_store, _sos, HeartRateAnomalyDetector.critical(), new Clock());
-        _alertScreens = new AlertScreens(_store, _language, _sos, _fallMonitor);
+        _alertScreens = new AlertScreens(_store, _language, _sos, _fallMonitor, _alerts);
     }
 
     // Called when the app starts, before getInitialView().
