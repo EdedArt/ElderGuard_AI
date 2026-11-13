@@ -20,6 +20,11 @@ class DemoController {
     function run(scenario as DemoScenario) as Void {
         if (_runner.current() == SCENARIO_FALL) {
             _runner.stop();
+            // The store still holds the impact until the next tick, and any update before then
+            // would count it again: a resting reading replaces it at once, like applyOnce in the
+            // web app, before the detector forgets the sequence.
+            _engine.setOverride(KEY_ACCELEROMETER, Scenarios.still());
+            _engine.clearOverride(KEY_ACCELEROMETER);
             _fall.resetDetector();
         }
         _runner.run(scenario);
