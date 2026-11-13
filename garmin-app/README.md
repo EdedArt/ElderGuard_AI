@@ -2,7 +2,7 @@
 
 Aplicación de ElderGuard AI para relojes Garmin, escrita en Monkey C con el SDK de Connect IQ. Es la versión que se instala en el **Garmin Forerunner 165** prestado para la sustentación. Es un proyecto independiente: no usa `npm` ni Gradle y no comparte código con la versión web (`src/`) ni con la de Wear OS (`wear-app/`), que sirven como especificación de lo que hay que portar.
 
-Estado actual: esfera del reloj, detección de caídas, frecuencia cardíaca anormal y alertas simuladas. La aplicación muestra la batería y el GPS, la hora en formato de 12 horas, la fecha, la frecuencia cardíaca y un botón SOS que se activa manteniéndolo pulsado 2 segundos, con la telemetría simulada. Detecta caídas con una cuenta regresiva cancelable, avisa de un ritmo cardíaco alto en reposo y registra alertas simuladas a los contactos de emergencia, sin conexión a ninguna red. Está en español por defecto y se puede cambiar a inglés desde el reloj.
+Estado actual: esfera del reloj, detección de caídas, frecuencia cardíaca anormal y alertas simuladas. La aplicación muestra la batería y el GPS, la hora en formato de 12 horas, la fecha, la frecuencia cardíaca y un botón SOS que se activa manteniéndolo pulsado 2 segundos, con la telemetría simulada. Detecta caídas con una cuenta regresiva cancelable, avisa de un ritmo cardíaco alto en reposo y registra alertas simuladas a los contactos de emergencia, sin conexión a ninguna red. Un menú de demostración en el propio reloj simula una caída, un pulso alto o crítico, la batería baja o la pérdida del GPS, y lo restablece todo, para presentarla sin computador. Está en español por defecto y se puede cambiar a inglés desde el reloj.
 
 Compilado y probado en el simulador con el **SDK de Connect IQ 9.3.0** para el Forerunner 165 (`fr165`, nivel de API 5.2). Aún no se ha instalado en el reloj real.
 
@@ -39,6 +39,9 @@ garmin-app/
 │   │   ├── HeartRateMonitor.mc   # Alimenta el detector y marca healthAlert (heartRateMonitor.js)
 │   │   ├── AlertPayload.mc       # Contenido de una alerta (alertPayload.js)
 │   │   └── AlertDispatcher.mc    # Registra las alertas simuladas (alertDispatcher.js)
+│   ├── demo/
+│   │   ├── ScenarioRunner.mc     # Escenarios de demostración con anulaciones del motor (scenarioRunner.js)
+│   │   └── DemoController.mc     # Ejecuta escenarios y restablece todo (demoController.js)
 │   ├── i18n/
 │   │   └── LanguagePreference.mc # Idioma elegido (es/en), guardado en Application.Storage
 │   ├── sos/
@@ -65,6 +68,7 @@ garmin-app/
 │       ├── SosView.mc            # Pantalla roja «Pidiendo ayuda…» con la confirmación, y su delegado
 │       ├── Vibration.mc          # Patrones de vibración
 │       ├── LanguageMenu.mc       # Pantalla de idioma (Menu2)
+│       ├── DemoMenu.mc           # Menú principal y pantalla de demostración (Menu2)
 │       ├── TimeFormat.mc         # Hora de 12 horas y fecha corta (timeFormat.js)
 │       └── WatchColors.mc        # Colores del tema oscuro
 ├── test/                         # Pruebas unitarias (Run No Evil)
@@ -138,7 +142,7 @@ monkeydo bin\ElderGuardAI.prg fr165
 
 La primera vez, Windows puede preguntar si `simulator` puede acceder a la red. `monkeydo` se comunica con el simulador dentro del propio equipo, así que la aplicación se abre aunque no se dé ese permiso.
 
-En el simulador, un clic en la pantalla equivale a tocarla, y los botones dibujados alrededor del reloj se pueden pulsar o mantener pulsados con el ratón (por ejemplo, mantener `START` 2 segundos activa el SOS). El menú **Simulation** permite simular los sensores (frecuencia cardíaca, acelerómetro, GPS); se usará en las fases siguientes.
+En el simulador, un clic en la pantalla equivale a tocarla, y los botones dibujados alrededor del reloj se pueden pulsar o mantener pulsados con el ratón (por ejemplo, mantener `START` 2 segundos activa el SOS). La aplicación no lee los sensores del simulador (menú **Simulation**): sus datos son simulados por ella misma, y los escenarios se lanzan desde su propio menú de demostración (ver _Menú de demostración_).
 
 ### Alternativa: VS Code
 
@@ -215,7 +219,7 @@ El Forerunner 165 tiene pantalla táctil y cinco botones. Se comprobó con los a
 | ------- | --------------------------- | -------------------- |
 | START/STOP (arriba a la derecha) | `onKeyPressed` al bajar y `onKeyReleased` al soltar (`KEY_ENTER`), así que se puede medir cuánto se mantiene | **SOS**: mantener 2 segundos |
 | BACK (abajo a la derecha) | `onBack` | «Estoy bien» en la cuenta regresiva de caída y cancelar el SOS; en la esfera, salir de la aplicación (lo normal en Garmin) |
-| UP (izquierda, centro) | Mantenerlo pulsado da `onMenu`, el menú en todos los relojes Garmin | Abrir la pantalla de idioma |
+| UP (izquierda, centro) | Mantenerlo pulsado da `onMenu`, el menú en todos los relojes Garmin | Abrir el menú: `Idioma` y `Demostración` |
 | DOWN (abajo a la izquierda) | `onNextPage` | Abrir la pantalla de idioma |
 | LIGHT (arriba a la izquierda) | Nada: lo reserva el sistema | — |
 | Dedo quieto en la pantalla | No hay eventos de arrastre: el sistema envía `onHold` alrededor de 1 segundo después del toque y `onRelease` al levantarlo | **SOS**: mantener el dedo en el círculo rojo |
@@ -318,18 +322,62 @@ Cada alerta (`AlertPayload`) lleva el tipo, la hora (milisegundos desde 1970), e
 
 La aplicación abre en español, sea cual sea el idioma del reloj. Para cambiarlo:
 
-1. En la esfera, **mantén pulsado UP** (el gesto de menú de todos los relojes Garmin), o pulsa **DOWN**, o desliza el dedo hacia arriba.
+1. En la esfera, pulsa **DOWN** o desliza el dedo hacia arriba. También se llega manteniendo pulsado **UP** (el gesto de menú de todos los relojes Garmin) y eligiendo `Idioma`.
 2. Aparece la lista `Idioma` (`Menu2`, la lista nativa de los ajustes de Garmin), con `Español` y `English`, cada uno escrito en su propio idioma para que lo encuentre quien lo cambió por error. El actual está seleccionado y marcado como `Actual` (`Current`).
 3. Elige con UP/DOWN y START, o tocando la opción. La esfera vuelve al instante en el idioma elegido. BACK cierra la lista sin cambiar nada.
 
 La elección se guarda en `Application.Storage` y se mantiene al cerrar y volver a abrir la aplicación. Si el almacenamiento falla, la aplicación no se cierra: al leer, usa el español, y al guardar, el cambio vale hasta que se cierre.
+
+## Menú de demostración
+
+Para presentar la aplicación directamente desde el reloj, sin USB ni consola, como el panel del simulador de la versión web. Cada opción pasa por las mismas anulaciones del motor (`SimulationEngine.setOverride`) que usa la web, así que lo que se ve es el reloj real reaccionando: el detector de caídas, el de ritmo cardíaco y el despachador de alertas son los de siempre.
+
+**Cómo llegar:**
+
+1. En la esfera, **mantén pulsado UP** (el gesto de menú de todos los relojes Garmin). Aparece `Menú` con `Idioma` y `Demostración`.
+2. Elige `Demostración` (UP/DOWN y START, o tocándola).
+3. Elige el escenario. El menú se cierra en el acto y se ve la esfera reaccionar. BACK cierra el menú sin hacer nada.
+
+Hacen falta tres pasos deliberados, así que nadie lanza un escenario por accidente. No se usó mantener pulsado DOWN: DOWN ya abre la pantalla de idioma al pulsarlo, como antes, y también deslizar hacia arriba.
+
+| Opción | Qué hace | Qué se ve |
+| ------ | -------- | --------- |
+| `Simular caída` (`Simulate fall`) | Impacto de 4,4 g durante 1 segundo, quietud y, a los 8 segundos, devuelve el acelerómetro a su generador | Unos 7 segundos después, `¿Te caíste?` con la cuenta de 10 segundos; si nadie cancela, unos 18 segundos después `Pidiendo ayuda…` con los contactos avisados y las coordenadas |
+| `Pulso alto` (`High heart rate`) | 130 LPM en reposo, sin límite de tiempo | Unos 10 segundos después, el aviso ámbar `Pulso alto en reposo`. No envía nada |
+| `Pulso crítico` (`Critical heart rate`) | 170 LPM en reposo, sin límite de tiempo | Unos 9 segundos después, el aviso rojo `Pulso crítico: familia avisada`: la alerta sale sola, sin cuenta regresiva |
+| `Batería baja` (`Low battery`) | Batería al 15 % | El indicador pasa a ámbar (`15 %`) |
+| `Sin GPS` (`GPS lost`) | Pierde la señal y conserva la última posición | `Sin GPS` en ámbar; una alerta posterior da `Última posición` |
+| `Restablecer` (`Reset`) | Detiene el escenario, quita todas las anulaciones y vuelve al estado inicial | Esfera normal: vigilancia, batería al 100 %, GPS con señal, sin avisos, detectores en reposo e historial de alertas vacío |
+
+Un escenario a la vez: elegir otro detiene el que esté en curso y devuelve sus sensores al generador. Los que no terminan solos (pulso, batería, GPS) se mantienen hasta `Restablecer`, y se pueden combinar (por ejemplo, pulso crítico con batería baja). Si se interrumpe una caída a medias, el detector la olvida, para que no aparezca una cuenta regresiva que nadie simuló. `Restablecer` también cierra la cuenta regresiva o la pantalla SOS si estuvieran abiertas.
+
+`ScenarioRunner` (traducción de `src/core/scenarioRunner.js`) aplica los pasos de cada escenario en su momento, con un `Timer` de un solo disparo que solo existe mientras queda un paso pendiente: los relojes solo permiten unos pocos temporizadores a la vez, y durante una caída simulada conviven el del motor, el del escenario y el de la cuenta regresiva. `DemoController` (como `src/simulator/demoController.js`) ejecuta los escenarios y restablece todo.
+
+### Guion de defensa desde el reloj (5 minutos)
+
+Antes de empezar, abre **ElderGuard AI** en el reloj y comprueba que está en español (si no, pulsa DOWN y elige `Español`). Todo se hace en el reloj: mantener UP abre el menú, y cada escenario está en `Menú` > `Demostración`.
+
+| Tiempo | Paso | Qué hacer en el reloj | Qué decir o señalar |
+| ------ | ---- | --------------------- | ------------------- |
+| 0:00 | Lecturas normales | No toques nada durante unos segundos. | Hora, fecha, batería, GPS y pulso, que cambia cada segundo. Todo es grande y de alto contraste, pensado para personas mayores. |
+| 0:20 | SOS manual | Mantén **START** 2 segundos; luego pulsa **BACK**. | El anillo se llena y vibra. Aparece `Pidiendo ayuda…` con los contactos avisados y las coordenadas. Un toque corto no hace nada, para evitar falsas alarmas. BACK cancela. |
+| 0:50 | Caída con cancelación | `Demostración` > `Simular caída`. Cuando aparezca `¿Te caíste?`, pulsa **BACK** o toca `ESTOY BIEN`. | Unos 7 segundos: impacto y luego quietud. Hay 10 segundos para cancelar, con vibración cada segundo, más insistente al final. START no cancela: es el botón de pedir ayuda. Al cancelar no sale ninguna alerta. |
+| 1:30 | Caída hasta el SOS | `Simular caída` de nuevo y no toques nada. | Unos 18 segundos en total. La pantalla se vuelve roja en los últimos 3 segundos y se abre `Pidiendo ayuda…` sola: quien no puede responder también recibe ayuda. Aclara que es una simulación, sin conexión de red. |
+| 2:10 | Cerrar el SOS | Pulsa **BACK**. | El reloj vuelve a vigilar. |
+| 2:20 | Ritmo cardíaco alto | `Pulso alto` y espera unos 10 segundos. | Aviso ámbar `Pulso alto en reposo` en lugar de la fecha. Es un aviso: el reloj sigue funcionando y no envía nada. Un pico breve o el movimiento no lo activan. |
+| 2:50 | Ritmo cardíaco crítico | `Pulso crítico` y espera unos 9 segundos. | El aviso pasa a rojo: `Pulso crítico: familia avisada`. La alerta sale sola y sin cuenta regresiva, porque es de salud y no una caída. |
+| 3:20 | Batería y GPS | `Batería baja` y luego `Sin GPS`. | El indicador de batería pasa a ámbar (`15 %`) y aparece `Sin GPS`. Los avisos se suman: el pulso crítico sigue a la vista. |
+| 3:50 | Idioma | Pulsa **DOWN** y elige `English`; luego vuelve a `Español`. | Toda la interfaz cambia al instante y la elección se guarda al cerrar la aplicación. |
+| 4:20 | Restablecer | `Demostración` > `Restablecer`. | Todo vuelve al estado inicial: sin avisos, batería al 100 %, GPS con señal y sin alertas registradas. |
+
+Consejo: haz una pasada completa con el reloj antes de la sustentación. En el simulador las vibraciones no se sienten, y el retardo del dedo quieto puede ser algo distinto en el reloj real.
 
 ## Pruebas unitarias
 
 El SDK de Connect IQ incluye **Run No Evil**, un sistema de pruebas unitarias (módulo `Toybox.Test`). Por eso esta versión tiene pruebas automáticas, como la web (Vitest) y la de Wear OS (JUnit), en lugar de comprobar los valores a mano en la consola:
 
 - Las pruebas están en `test/`. Son funciones marcadas con `(:test)` que reciben un `Logger` y devuelven `true` si pasan; usan `Test.assert` y `Test.assertEqual`.
-- Traducen los casos principales de las pruebas de la versión web y la de Wear OS: almacén, generadores, motor, idioma, formato de hora, estado de batería y GPS, colores y contraste, pulsación del SOS, la esfera con su interacción, la magnitud, el detector de caídas, la cuenta regresiva y su pantalla, el detector y el monitor de ritmo cardíaco con su aviso, el contenido de las alertas, el despachador y la confirmación en la pantalla SOS. En total, 196 pruebas.
+- Traducen los casos principales de las pruebas de la versión web y la de Wear OS: almacén, generadores, motor, idioma, formato de hora, estado de batería y GPS, colores y contraste, pulsación del SOS, la esfera con su interacción, la magnitud, el detector de caídas, la cuenta regresiva y su pantalla, el detector y el monitor de ritmo cardíaco con su aviso, el contenido de las alertas, el despachador, la confirmación en la pantalla SOS, los escenarios de demostración, su menú y el restablecimiento. En total, 219 pruebas.
 - Las de alertas montan un reloj entero (almacén, SOS, monitores y despachador) con un reloj falso, y avanzan segundo a segundo escribiendo las lecturas como un tick del motor; la cuenta regresiva avanza con `tick()`.
 - La esfera no se puede comprobar píxel a píxel, porque Run No Evil no permite leer la imagen dibujada. Se dibuja en una imagen fuera de pantalla de 390 × 390 y se comprueba que cada parte, medida con las fuentes reales y el texto más ancho de cada idioma, cabe en el círculo; que la vista pone los textos y colores correctos en cada estado, y que todos los estados se dibujan sin errores.
 - La interacción se prueba llamando a los métodos que usan los delegados para los botones y los toques, con un reloj falso, así que la pulsación de 2 segundos no hace esperar.
@@ -345,13 +393,13 @@ monkeyc -f monkey.jungle -d fr165 -o bin\ElderGuardAI-test.prg -y "$env:USERPROF
 monkeydo bin\ElderGuardAI-test.prg fr165 /t
 ```
 
-La salida muestra cada prueba con `PASS`, `FAIL` o `ERROR`, y termina con un resumen como `PASSED (passed=196, failed=0, errors=0)`. Para ejecutar una sola prueba, añade su nombre después de `/t`.
+La salida muestra cada prueba con `PASS`, `FAIL` o `ERROR`, y termina con un resumen como `PASSED (passed=219, failed=0, errors=0)`. Para ejecutar una sola prueba, añade su nombre después de `/t`.
 
 ## Pendientes
 
 - **Instalación en el reloj real**: los pasos del apartado 3 aún no se han probado con el Forerunner 165 físico. Hay que confirmar la ruta de la carpeta `Apps` y dónde aparece la aplicación en el menú del reloj.
 - **Permisos**: ninguno por ahora, porque la telemetría es simulada. Para leer los sensores reales harán falta `Sensor` (frecuencia cardíaca y acelerómetro) y `Positioning` (GPS) en `manifest.xml`.
-- **Escenarios de demostración en el reloj**: la aplicación aún no tiene forma de simular una caída o un pulso alto desde el propio reloj. En el simulador se comprobaron con un programa de prueba aparte, no incluido en el repositorio, que usa `setOverride` del motor como el botón `Simular caída` de la web.
+- **Menú de demostración en el reloj real**: comprobado en el simulador; falta recorrer el guion de defensa completo en el Forerunner 165 físico.
 - **Vibración en el reloj real**: los patrones de la cuenta regresiva solo se han probado en el simulador.
 - **Pulsación con el dedo en el reloj real**: el retardo de `onHold` (alrededor de 1 segundo en el simulador) puede ser distinto en el Forerunner 165 físico. Con START la pulsación siempre dura exactamente 2 segundos.
 - **Forerunner 165 Music**: es otro dispositivo (`fr165m`). Si hiciera falta, se añade como otro `<iq:product>` en `manifest.xml`.
