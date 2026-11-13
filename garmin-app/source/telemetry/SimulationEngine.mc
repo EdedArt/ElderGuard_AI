@@ -67,6 +67,11 @@ class SimulationEngine {
         _overrides.remove(sensor);
     }
 
+    // True while sensor uses an override instead of its generator.
+    function hasOverride(sensor as StateKey) as Boolean {
+        return _overrides.hasKey(sensor);
+    }
+
     function clearAllOverrides() as Void {
         _overrides = {} as Dictionary<StateKey, SensorReading>;
     }
