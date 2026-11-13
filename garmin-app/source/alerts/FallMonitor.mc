@@ -57,6 +57,11 @@ class FallMonitor {
         _tickListener = listener;
     }
 
+    // Forgets a sequence in progress. An alert already raised is not affected.
+    function resetDetector() as Void {
+        _detector.reset();
+    }
+
     // "Estoy bien": stops the countdown and goes back to monitoring. Only acts during a countdown.
     function cancel() as Void {
         if (_store.getState().deviceStatus.mode != MODE_FALL_COUNTDOWN) {

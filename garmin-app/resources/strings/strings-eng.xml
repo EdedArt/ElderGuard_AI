@@ -32,6 +32,18 @@
     <!-- Fall countdown screen. -->
     <string id="FallQuestionEn">Did you fall?</string>
     <string id="FallCancelEn">I'M OK</string>
+    <!-- Main menu. -->
+    <string id="MenuTitleEn">Menu</string>
+    <string id="MenuLanguageEn">Language</string>
+    <string id="MenuDemoEn">Demo</string>
+    <!-- Demo screen. -->
+    <string id="DemoTitleEn">Demo</string>
+    <string id="DemoFallEn">Simulate fall</string>
+    <string id="DemoHighHeartRateEn">High heart rate</string>
+    <string id="DemoCriticalHeartRateEn">Critical heart rate</string>
+    <string id="DemoLowBatteryEn">Low battery</string>
+    <string id="DemoGpsLostEn">GPS lost</string>
+    <string id="DemoResetEn">Reset</string>
     <!-- Language screen. -->
     <string id="LanguageTitleEn">Language</string>
     <string id="LanguageCurrentEn">Current</string>

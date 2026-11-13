@@ -9,9 +9,9 @@ import Toybox.WatchUi;
 //   or gloves.
 // - The SOS circle on screen: a still finger produces no drag events; the system sends onHold
 //   about a second after the touch, and onRelease when it lifts. A quick tap sends onTap.
-// - Holding UP opens the menu on every Garmin watch (onMenu): here it opens the language
-//   screen. DOWN, or a swipe up on the screen (onNextPage), opens it too, so it can also be
-//   reached by touch.
+// - Holding UP opens the menu on every Garmin watch (onMenu): here the main menu, with the
+//   language screen and the demo screen. DOWN, or a swipe up on the screen (onNextPage), opens
+//   the language screen directly, so it can also be reached by touch.
 // - BACK leaves the app (the system default).
 //
 // Each callback only unwraps its event and calls a method that takes the key or the touch
@@ -20,16 +20,23 @@ class WatchfaceDelegate extends WatchUi.BehaviorDelegate {
     private var _view as WatchfaceView;
     private var _controller as WatchfaceController;
     private var _language as LanguagePreference;
+    private var _demo as DemoController;
 
-    function initialize(view as WatchfaceView, controller as WatchfaceController, language as LanguagePreference) {
+    function initialize(
+        view as WatchfaceView,
+        controller as WatchfaceController,
+        language as LanguagePreference,
+        demo as DemoController
+    ) {
         BehaviorDelegate.initialize();
         _view = view;
         _controller = controller;
         _language = language;
+        _demo = demo;
     }
 
     function onMenu() as Boolean {
-        LanguageMenu.open(_language);
+        MainMenu.open(_language, _demo);
         return true;
     }
 

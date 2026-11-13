@@ -10,6 +10,10 @@ import Toybox.WatchUi;
 // and returns to the watchface, which redraws in the new language.
 module LanguageMenu {
     function open(language as LanguagePreference) as Void {
+        WatchUi.pushView(create(language), new LanguageMenuDelegate(language), WatchUi.SLIDE_UP);
+    }
+
+    function create(language as LanguagePreference) as WatchUi.Menu2 {
         var current = language.getLanguage();
         var menu = new WatchUi.Menu2({
             :title => language.text(Rez.Strings.LanguageTitle, Rez.Strings.LanguageTitleEn),
@@ -28,7 +32,7 @@ module LanguageMenu {
             :en,
             {}
         ));
-        WatchUi.pushView(menu, new LanguageMenuDelegate(language), WatchUi.SLIDE_UP);
+        return menu;
     }
 }
 

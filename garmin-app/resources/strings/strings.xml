@@ -42,6 +42,18 @@
     <!-- Fall countdown screen. -->
     <string id="FallQuestion">¿Te caíste?</string>
     <string id="FallCancel">ESTOY BIEN</string>
+    <!-- Main menu (hold UP): the language screen and the demo screen. -->
+    <string id="MenuTitle">Menú</string>
+    <string id="MenuLanguage">Idioma</string>
+    <string id="MenuDemo">Demostración</string>
+    <!-- Demo screen: each item runs a simulated scenario. -->
+    <string id="DemoTitle">Demostración</string>
+    <string id="DemoFall">Simular caída</string>
+    <string id="DemoHighHeartRate">Pulso alto</string>
+    <string id="DemoCriticalHeartRate">Pulso crítico</string>
+    <string id="DemoLowBattery">Batería baja</string>
+    <string id="DemoGpsLost">Sin GPS</string>
+    <string id="DemoReset">Restablecer</string>
     <!-- Language screen. Each language is named in itself, so someone who switched by mistake
          still finds theirs; the names are the same in both files. -->
     <string id="LanguageTitle">Idioma</string>

@@ -16,6 +16,7 @@ class ElderGuardApp extends Application.AppBase {
     private var _fallMonitor as FallMonitor;
     private var _alertScreens as AlertScreens;
     private var _alerts as AlertDispatcher;
+    private var _demo as DemoController;
 
     function initialize() {
         AppBase.initialize();
@@ -28,6 +29,7 @@ class ElderGuardApp extends Application.AppBase {
         new HeartRateMonitor(_store, HeartRateAnomalyDetector.warning(), new Clock());
         _alerts = new AlertDispatcher(_store, _sos, HeartRateAnomalyDetector.critical(), new Clock());
         _alertScreens = new AlertScreens(_store, _language, _sos, _fallMonitor, _alerts);
+        _demo = new DemoController(new ScenarioRunner(_engine, _store), _engine, _fallMonitor);
     }
 
     // Called when the app starts, before getInitialView().
@@ -47,6 +49,6 @@ class ElderGuardApp extends Application.AppBase {
         var controller = new WatchfaceController(_sos);
         var view = new WatchfaceView(_store, _language, controller, _alerts);
         _alertScreens.start();
-        return [view, new WatchfaceDelegate(view, controller, _language)];
+        return [view, new WatchfaceDelegate(view, controller, _language, _demo)];
     }
 }
