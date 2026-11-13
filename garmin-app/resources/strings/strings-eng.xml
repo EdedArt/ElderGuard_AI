@@ -9,4 +9,10 @@
     <string id="ReadoutBatteryEn">Battery $1$%</string>
     <string id="ReadoutMovementEn">Movement $1$ g</string>
     <string id="DecimalSeparatorEn">.</string>
+    <!-- Clock and short date ("Sun, Nov 8"). -->
+    <string id="ClockAmEn">AM</string>
+    <string id="ClockPmEn">PM</string>
+    <string id="DateFormatEn">$1$, $3$ $2$</string>
+    <string id="WeekdaysShortEn">Sun,Mon,Tue,Wed,Thu,Fri,Sat</string>
+    <string id="MonthsShortEn">Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec</string>
 </strings>

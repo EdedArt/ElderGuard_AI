@@ -14,4 +14,12 @@
     <string id="ReadoutMovement">Movimiento $1$ g</string>
     <!-- Decimal separator for numbers shown on screen. -->
     <string id="DecimalSeparator">,</string>
+    <!-- Clock: 12-hour period labels, as in the web and Wear OS apps. -->
+    <string id="ClockAm">a. m.</string>
+    <string id="ClockPm">p. m.</string>
+    <!-- Short date, as Intl.DateTimeFormat writes it ("dom, 8 nov"): $1$ weekday, $2$ day,
+         $3$ month. The names are comma-separated lists, Sunday and January first. -->
+    <string id="DateFormat">$1$, $2$ $3$</string>
+    <string id="WeekdaysShort">dom,lun,mar,mié,jue,vie,sáb</string>
+    <string id="MonthsShort">ene,feb,mar,abr,may,jun,jul,ago,sept,oct,nov,dic</string>
 </strings>
