@@ -1,4 +1,7 @@
 # Build configuration read by the Monkey C compiler.
-# The default source path (source/) and resource paths (resources/ plus the language-qualified
-# resources-eng/) are used, so only the manifest needs to be named.
+# The default resource paths (resources/ plus the language-qualified resources-eng/) are used.
 project.manifest = manifest.xml
+
+# App code in source/, Run No Evil unit tests in test/. Everything in test/ is annotated (:test),
+# so it is compiled only with the unit test flag (monkeyc -t) and left out of normal builds.
+base.sourcePath = source;test
