@@ -2,7 +2,7 @@
 
 Aplicación de ElderGuard AI para relojes Garmin, escrita en Monkey C con el SDK de Connect IQ. Es la versión que se instala en el **Garmin Forerunner 165** prestado para la sustentación. Es un proyecto independiente: no usa `npm` ni Gradle y no comparte código con la versión web (`src/`) ni con la de Wear OS (`wear-app/`), que sirven como especificación de lo que hay que portar.
 
-Estado actual: motor de telemetría simulada. La aplicación muestra una lectura provisional en vivo, actualizada cada segundo: frecuencia cardíaca, batería y magnitud del acelerómetro, en blanco sobre negro. La esfera definitiva la reemplazará en una fase posterior.
+Estado actual: esfera del reloj. La aplicación muestra la batería y el GPS, la hora en formato de 12 horas, la fecha, la frecuencia cardíaca y un botón SOS que se activa manteniéndolo pulsado 2 segundos, con la telemetría simulada de la fase anterior. Está en español por defecto y se puede cambiar a inglés desde el reloj.
 
 Compilado y probado en el simulador con el **SDK de Connect IQ 9.3.0** para el Forerunner 165 (`fr165`, nivel de API 5.2). Aún no se ha instalado en el reloj real.
 
@@ -11,7 +11,8 @@ Compilado y probado en el simulador con el **SDK de Connect IQ 9.3.0** para el F
 | Dato | Valor |
 | ---- | ----- |
 | Reloj | Garmin Forerunner 165 (identificador de producto `fr165`) |
-| Pantalla | Redonda, AMOLED, táctil, 390 × 390 píxeles |
+| Pantalla | Redonda, AMOLED, táctil, 390 × 390 píxeles, 16 bits de color |
+| Botones | 5: LIGHT, UP, DOWN, START/STOP y BACK (las aplicaciones reciben los cuatro últimos) |
 | Nivel de API de Connect IQ | 5.2 (`minApiLevel="5.2.0"` en `manifest.xml`) |
 | Ícono de la aplicación | 54 × 54 píxeles |
 | Sensores | Acelerómetro, frecuencia cardíaca óptica, GPS |
@@ -23,30 +24,43 @@ garmin-app/
 ├── manifest.xml                  # Tipo de aplicación, dispositivo, idiomas, permisos e ID
 ├── monkey.jungle                 # Configuración de compilación (código en source/ y test/)
 ├── source/
-│   ├── App.mc                    # ElderGuardApp: punto de entrada; crea el almacén y el motor
-│   ├── MainView.mc               # MainView: lectura provisional en vivo
+│   ├── App.mc                    # ElderGuardApp: punto de entrada; crea el almacén, el motor y el idioma
 │   ├── config/
 │   │   └── TelemetryConfig.mc    # Constantes de la simulación (telemetry.config.js)
-│   └── telemetry/
-│       ├── TelemetryModels.mc    # Lecturas: HeartRate, Accelerometer, Gps, Battery, DeviceStatus
-│       ├── TelemetryStore.mc     # TelemetryState y TelemetryStore (telemetryStore.js)
-│       ├── GeneratorMath.mc      # RandomSource y redondeo (math.js)
-│       ├── Generators.mc         # Generadores de cada sensor (generators/)
-│       └── SimulationEngine.mc   # Motor con Timer (simulationEngine.js)
+│   ├── i18n/
+│   │   └── LanguagePreference.mc # Idioma elegido (es/en), guardado en Application.Storage
+│   ├── sos/
+│   │   ├── SosHold.mc            # SosConfig y la pulsación de 2 segundos (longPress.js)
+│   │   └── SosController.mc      # Activa y cancela el SOS (sosController.js)
+│   ├── telemetry/
+│   │   ├── TelemetryModels.mc    # Lecturas: HeartRate, Accelerometer, Gps, Battery, DeviceStatus
+│   │   ├── TelemetryStore.mc     # TelemetryState y TelemetryStore (telemetryStore.js)
+│   │   ├── GeneratorMath.mc      # RandomSource y redondeo (math.js)
+│   │   ├── Generators.mc         # Generadores de cada sensor (generators/)
+│   │   ├── SimulationEngine.mc   # Motor con Timer (simulationEngine.js)
+│   │   └── WatchStatus.mc        # Estado de la batería y del GPS (watchStatus.js)
+│   └── ui/
+│       ├── WatchfaceView.mc      # La esfera: dibuja las partes con los datos del almacén
+│       ├── WatchfaceLayout.mc    # Posiciones dentro del círculo de 390 × 390
+│       ├── WatchfaceController.mc # Lógica de la pulsación del SOS y su temporizador
+│       ├── WatchfaceDelegate.mc  # Botones y toques de la esfera
+│       ├── drawables/
+│       │   └── WatchfaceDrawables.mc # Batería, GPS, reloj, pulso, botón SOS, avisos
+│       ├── SosView.mc            # Pantalla roja «Pidiendo ayuda…» y su delegado
+│       ├── LanguageMenu.mc       # Pantalla de idioma (Menu2)
+│       ├── TimeFormat.mc         # Hora de 12 horas y fecha corta (timeFormat.js)
+│       └── WatchColors.mc        # Colores del tema oscuro
 ├── test/                         # Pruebas unitarias (Run No Evil)
-│   ├── TelemetryStoreTest.mc
-│   ├── GeneratorsTest.mc
-│   └── SimulationEngineTest.mc
-├── resources/                    # Recursos por defecto, en español
+├── resources/
 │   ├── drawables/
 │   │   ├── drawables.xml
 │   │   └── launcher_icon.png     # Ícono de la lista de aplicaciones (54 × 54)
-│   └── strings/strings.xml
-└── resources-eng/                # Textos en inglés
-    └── strings/strings.xml
+│   └── strings/
+│       ├── strings.xml           # Textos en español
+│       └── strings-eng.xml       # Los mismos textos en inglés
 ```
 
-Ningún texto visible está escrito en el código: todos salen de `strings.xml`. El reloj elige `resources-eng` cuando su idioma es inglés y `resources` (español) en cualquier otro caso.
+Ningún texto visible está escrito en el código: todos salen de `strings.xml` y `strings-eng.xml`. Connect IQ solo sabe elegir los textos según el idioma del reloj (con carpetas como `resources-eng`), pero aquí el idioma lo elige la persona dentro de la aplicación. Por eso los dos idiomas son recursos por defecto: cada texto en español tiene su versión en inglés con el mismo identificador y `En` al final (`SosActive` y `SosActiveEn`), y `LanguagePreference.text(Rez.Strings.X, Rez.Strings.XEn)` carga el del idioma elegido. Como cada uso pide los dos identificadores, el compilador no deja olvidar ninguno de los dos idiomas.
 
 ## Requisitos
 
@@ -102,12 +116,12 @@ monkeydo bin\ElderGuardAI.prg fr165
 ```
 
 1. `connectiq` abre el **simulador de Connect IQ** en otra ventana y devuelve el control a la terminal. Espera unos segundos a que aparezca la ventana antes del paso siguiente.
-2. `monkeydo` envía la aplicación al simulador y la abre en el Forerunner 165. El título de la ventana muestra `Forerunner® 165 (5.2.0)`, y en la pantalla del reloj aparece la lectura en vivo (por ejemplo `68 LPM`, `Batería 100 %`, `Movimiento 0,98 g`), que cambia cada segundo. La frecuencia cardíaca varía entre 60 y 80 LPM y el movimiento ronda 1 g. La batería baja un 0,01 % por segundo, así que tarda casi un minuto en mostrar `99 %`.
+2. `monkeydo` envía la aplicación al simulador y la abre en el Forerunner 165. El título de la ventana muestra `Forerunner® 165 (5.2.0)`, y en la pantalla del reloj aparece la esfera en español: `100 %` y `GPS` en verde, la hora (por ejemplo `11:43 p. m.`), la fecha (`jue, 12 nov`), el pulso (`68 LPM`), que cambia cada segundo, y el botón rojo `SOS` / `AUXILIO`.
 3. `monkeydo` se queda abierto mostrando la salida de la aplicación (`System.println`). Pulsa `Ctrl+C` para cerrarlo. El simulador sigue abierto y se puede reutilizar: después de recompilar basta con volver a ejecutar `monkeydo`.
 
 La primera vez, Windows puede preguntar si `simulator` puede acceder a la red. `monkeydo` se comunica con el simulador dentro del propio equipo, así que la aplicación se abre aunque no se dé ese permiso.
 
-En el simulador, un clic en la pantalla equivale a tocarla, y los botones dibujados alrededor del reloj se pueden pulsar. El menú **Simulation** permite simular los sensores (frecuencia cardíaca, acelerómetro, GPS); se usará en las fases siguientes.
+En el simulador, un clic en la pantalla equivale a tocarla, y los botones dibujados alrededor del reloj se pueden pulsar o mantener pulsados con el ratón (por ejemplo, mantener `START` 2 segundos activa el SOS). El menú **Simulation** permite simular los sensores (frecuencia cardíaca, acelerómetro, GPS); se usará en las fases siguientes.
 
 ### Alternativa: VS Code
 
@@ -130,7 +144,7 @@ Antes de la sustentación conviene hacer una prueba completa en el reloj real, p
 Es la misma que en la versión web (`src/core`) y en la de Wear OS (`wear-app`), con los mismos valores de `telemetry.config.js`: frecuencia cardíaca en reposo entre 60 y 80 LPM, acelerómetro en reposo de 1 g, posición de ejemplo en Bogotá y batería que baja un 0,01 % por segundo. Por ahora los sensores son simulados; los del reloj se conectarán en fases posteriores.
 
 ```text
-SimulationEngine ──tick cada segundo──▶ TelemetryStore ──avisa a los oyentes──▶ MainView
+SimulationEngine ──tick cada segundo──▶ TelemetryStore ──avisa a los oyentes──▶ WatchfaceView / SosView
   (Timer + generadores)                  (estado actual)                         (requestUpdate)
 ```
 
@@ -173,17 +187,73 @@ El azar llega como parámetro, un `RandomSource`, que usa `Math.rand()`. `Math.s
 
 ### Pantalla y consumo de batería
 
-`MainView` no tiene un temporizador propio. Mientras está visible (`onShow()`), escucha al almacén, y cada aviso solo llama a `WatchUi.requestUpdate()`: el sistema junta las peticiones y llama a `onUpdate()` una vez. Como el almacén solo avisa si algo cambió, la pantalla se dibuja como mucho una vez por tick, y deja de escuchar en `onHide()`. El fondo es negro porque en la pantalla AMOLED los píxeles negros están apagados.
+La esfera no tiene un temporizador para redibujarse. Mientras está visible (`onShow()`), escucha al almacén, y cada aviso solo llama a `WatchUi.requestUpdate()`: el sistema junta las peticiones y llama a `onUpdate()` una vez. Como el almacén solo avisa si algo cambió, la pantalla se dibuja como mucho una vez por tick, lo que también mantiene la hora al día, y deja de escuchar en `onHide()`. El único temporizador extra es el de la pulsación del SOS (ver más abajo), que solo funciona mientras se mantiene pulsado o se ve el aviso. El fondo es negro porque en la pantalla AMOLED los píxeles negros están apagados.
+
+## Botones y pantalla táctil del Forerunner 165
+
+El Forerunner 165 tiene pantalla táctil y cinco botones. Se comprobó con los archivos del dispositivo en el SDK y en el simulador qué recibe la aplicación de cada uno:
+
+| Entrada | Lo que recibe la aplicación | Uso en ElderGuard AI |
+| ------- | --------------------------- | -------------------- |
+| START/STOP (arriba a la derecha) | `onKeyPressed` al bajar y `onKeyReleased` al soltar (`KEY_ENTER`), así que se puede medir cuánto se mantiene | **SOS**: mantener 2 segundos |
+| BACK (abajo a la derecha) | `onBack` | Cancelar el SOS; en la esfera, salir de la aplicación (lo normal en Garmin) |
+| UP (izquierda, centro) | Mantenerlo pulsado da `onMenu`, el menú en todos los relojes Garmin | Abrir la pantalla de idioma |
+| DOWN (abajo a la izquierda) | `onNextPage` | Abrir la pantalla de idioma |
+| LIGHT (arriba a la izquierda) | Nada: lo reserva el sistema | — |
+| Dedo quieto en la pantalla | No hay eventos de arrastre: el sistema envía `onHold` alrededor de 1 segundo después del toque y `onRelease` al levantarlo | **SOS**: mantener el dedo en el círculo rojo |
+| Toque corto | `onSelect` y luego `onTap` | En el círculo rojo, muestra el aviso «Mantén presionado» |
+| Deslizar hacia arriba | `onNextPage` | Abrir la pantalla de idioma |
+
+Por eso **el botón START es la forma principal de pedir ayuda**: en todos los relojes Garmin es el que inicia y confirma, se encuentra sin mirar y funciona con las manos mojadas o con guantes, y la aplicación sabe exactamente cuándo baja y cuándo sube. Mantener el dedo en el botón SOS de la pantalla también funciona, como en las otras versiones.
+
+## Esfera del reloj
+
+Reproduce las tres zonas de la esfera web y la de Wear OS, dentro del círculo de 390 × 390 (`WatchfaceLayout`):
+
+- **Arriba, estado:** batería con ícono y porcentaje, y GPS con ícono y etiqueta.
+  - Batería: verde por encima de 20 %, ámbar con 20 % o menos y rojo con 10 % o menos, calculado sobre el porcentaje redondeado que se muestra.
+  - GPS: `GPS` en verde con señal y `Sin GPS` en ámbar sin ella.
+- **Centro, datos:** la hora en formato de 12 horas en los dos idiomas, con `a. m.`/`p. m.` en español y `AM`/`PM` en inglés; la fecha corta (`jue, 12 nov` / `Thu, Nov 12`), y la frecuencia cardíaca con un corazón (`68 LPM` / `68 BPM`). El corazón no late como en la web: una animación continua obligaría a redibujar la pantalla muchas veces por segundo.
+- **Abajo, SOS:** círculo rojo grande con `SOS` y `AUXILIO` (`HELP`), y un arco rojo en el borde de la pantalla junto al botón START, la señal que usan las aplicaciones de Garmin para indicar qué botón hace algo.
+
+Cada parte es un `WatchUi.Drawable` (`BatteryIndicator`, `GpsIndicator`, `ClockDisplay`, `HeartRateIndicator`, `SosButton`, `ButtonHintArc`, `HoldHint`) que la vista llena con los datos del almacén y dibuja. Los íconos se dibujan con primitivas (`fillCircle`, `fillPolygon`…), sin imágenes.
+
+Los colores son los del tema oscuro de las otras versiones (`WatchColors`). Todos los pares de texto y fondo alcanzan el contraste AAA de 7:1, también después de reducirlos a los 16 bits de color de la pantalla; el más ajustado es el blanco sobre el rojo del SOS (7,38:1, y 7,08:1 en pantalla).
+
+## Botón SOS
+
+Un toque o una pulsación corta no hacen nada, para evitar activaciones accidentales:
+
+1. Mantén pulsado **START** durante 2 segundos, o mantén el dedo sobre el círculo rojo. El círculo se vuelve blanco con letras rojas al instante, un anillo blanco se va llenando a su alrededor en el sentido de las agujas del reloj, y el reloj vibra brevemente.
+2. Si sueltas antes de tiempo, o solo tocas el círculo, se cancela y aparece durante 2 segundos el aviso `Mantén presionado` (`Hold to call for help`) en el centro de la pantalla, donde el dedo no lo tapa.
+3. Al completar los 2 segundos, sin esperar a soltar, el reloj vibra y aparece la pantalla roja `Pidiendo ayuda…` (`Calling for help…`). El estado `deviceStatus.mode` cambia a `MODE_SOS`.
+4. El botón `Cancelar` de esa pantalla, o el botón **BACK** (señalado con un arco blanco en el borde), la cierra y devuelve el reloj al modo `MODE_MONITORING`. START no hace nada en esa pantalla, para que soltarlo después de activar el SOS no la cierre.
+
+Con el dedo, el sistema solo avisa de que hay un dedo quieto alrededor de 1 segundo después del toque (`onHold`), así que el anillo empieza a llenarse a partir de ese momento: en la pantalla hacen falta unos 3 segundos en total. Con START son exactamente 2.
+
+La pantalla SOS reacciona al estado, como en la versión web: la esfera la abre cuando el modo pasa a `MODE_SOS` y ella se cierra cuando deja de serlo. `SosHold` guarda la pulsación (con tiempos que recibe como parámetro, para las pruebas), `WatchfaceController` tiene el temporizador de 100 ms que mueve el anillo y comprueba si se completó, y solo funciona mientras hay algo que animar, y `SosController` cambia el modo en el almacén.
+
+## Idioma
+
+La aplicación abre en español, sea cual sea el idioma del reloj. Para cambiarlo:
+
+1. En la esfera, **mantén pulsado UP** (el gesto de menú de todos los relojes Garmin), o pulsa **DOWN**, o desliza el dedo hacia arriba.
+2. Aparece la lista `Idioma` (`Menu2`, la lista nativa de los ajustes de Garmin), con `Español` y `English`, cada uno escrito en su propio idioma para que lo encuentre quien lo cambió por error. El actual está seleccionado y marcado como `Actual` (`Current`).
+3. Elige con UP/DOWN y START, o tocando la opción. La esfera vuelve al instante en el idioma elegido. BACK cierra la lista sin cambiar nada.
+
+La elección se guarda en `Application.Storage` y se mantiene al cerrar y volver a abrir la aplicación. Si el almacenamiento falla, la aplicación no se cierra: al leer, usa el español, y al guardar, el cambio vale hasta que se cierre.
 
 ## Pruebas unitarias
 
 El SDK de Connect IQ incluye **Run No Evil**, un sistema de pruebas unitarias (módulo `Toybox.Test`). Por eso esta versión tiene pruebas automáticas, como la web (Vitest) y la de Wear OS (JUnit), en lugar de comprobar los valores a mano en la consola:
 
 - Las pruebas están en `test/`. Son funciones marcadas con `(:test)` que reciben un `Logger` y devuelven `true` si pasan; usan `Test.assert` y `Test.assertEqual`.
-- Traducen los casos principales de `tests/telemetryStore.test.js`, `tests/generators.test.js` y `tests/simulationEngine.test.js`: 33 pruebas.
+- Traducen los casos principales de las pruebas de la versión web y la de Wear OS: almacén, generadores, motor, idioma, formato de hora, estado de batería y GPS, colores y contraste, pulsación del SOS, y la esfera con su interacción. En total, 81 pruebas.
+- La esfera no se puede comprobar píxel a píxel, porque Run No Evil no permite leer la imagen dibujada. Se dibuja en una imagen fuera de pantalla de 390 × 390 y se comprueba que cada parte, medida con las fuentes reales y el texto más ancho de cada idioma, cabe en el círculo; que la vista pone los textos y colores correctos en cada estado, y que todos los estados se dibujan sin errores.
+- La interacción se prueba llamando a los métodos que usan los delegados para los botones y los toques, con un reloj falso, así que la pulsación de 2 segundos no hace esperar.
 - Todo lo de `test/` lleva `(:test)`, así que el compilador solo lo incluye con la opción `-t` y lo deja fuera del `.prg` normal.
 - Se ejecutan **dentro del simulador**; no hay forma de ejecutarlas sin él.
-- Las pruebas no pueden esperar al temporizador, así que llaman a `tick()` directamente. Que el temporizador funcione se comprueba viendo la lectura en vivo en el simulador.
+- Las pruebas no pueden esperar al temporizador, así que llaman a `tick()` directamente. Que el temporizador funcione se comprueba viendo cómo cambia el pulso en la esfera del simulador.
 - Recorren 1000 pasos en lugar de los 5000 de las pruebas web, porque el simulador corta el código que tarda demasiado.
 
 Desde `garmin-app`, con el simulador abierto (`connectiq`):
@@ -193,11 +263,11 @@ monkeyc -f monkey.jungle -d fr165 -o bin\ElderGuardAI-test.prg -y "$env:USERPROF
 monkeydo bin\ElderGuardAI-test.prg fr165 /t
 ```
 
-La salida muestra cada prueba con `PASS`, `FAIL` o `ERROR`, y termina con un resumen como `PASSED (passed=33, failed=0, errors=0)`. Para ejecutar una sola prueba, añade su nombre después de `/t`.
+La salida muestra cada prueba con `PASS`, `FAIL` o `ERROR`, y termina con un resumen como `PASSED (passed=81, failed=0, errors=0)`. Para ejecutar una sola prueba, añade su nombre después de `/t`.
 
 ## Pendientes
 
 - **Instalación en el reloj real**: los pasos del apartado 3 aún no se han probado con el Forerunner 165 físico. Hay que confirmar la ruta de la carpeta `Apps` y dónde aparece la aplicación en el menú del reloj.
 - **Permisos**: ninguno por ahora, porque la telemetría es simulada. Para leer los sensores reales harán falta `Sensor` (frecuencia cardíaca y acelerómetro) y `Positioning` (GPS) en `manifest.xml`.
-- **Textos en español en el simulador**: la lectura en vivo solo se ha comprobado con el simulador en inglés. Falta verla con el idioma en español (coma decimal: `0,98 g`).
+- **Pulsación con el dedo en el reloj real**: el retardo de `onHold` (alrededor de 1 segundo en el simulador) puede ser distinto en el Forerunner 165 físico. Con START la pulsación siempre dura exactamente 2 segundos.
 - **Forerunner 165 Music**: es otro dispositivo (`fr165m`). Si hiciera falta, se añade como otro `<iq:product>` en `manifest.xml`.
