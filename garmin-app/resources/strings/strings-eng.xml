@@ -15,4 +15,9 @@
     <string id="DateFormatEn">$1$, $3$ $2$</string>
     <string id="WeekdaysShortEn">Sun,Mon,Tue,Wed,Thu,Fri,Sat</string>
     <string id="MonthsShortEn">Jan,Feb,Mar,Apr,May,Jun,Jul,Aug,Sep,Oct,Nov,Dec</string>
+    <!-- Watchface status and data. -->
+    <string id="HeartRateUnitEn">BPM</string>
+    <string id="BatteryValueEn">$1$%</string>
+    <string id="GpsOkEn">GPS</string>
+    <string id="GpsLostEn">No GPS</string>
 </strings>
