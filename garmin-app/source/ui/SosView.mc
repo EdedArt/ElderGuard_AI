@@ -116,19 +116,29 @@ class SosDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onTap(clickEvent as WatchUi.ClickEvent) as Boolean {
-        if (_view.isOnCancelButton(clickEvent.getCoordinates())) {
+        return tapped(clickEvent.getCoordinates());
+    }
+
+    // Everything else is swallowed, so nothing leaves the SOS screen by accident. BACK goes
+    // through, so the system turns it into onBack().
+    function onKeyPressed(keyEvent as WatchUi.KeyEvent) as Boolean {
+        return swallows(keyEvent.getKey());
+    }
+
+    function onKeyReleased(keyEvent as WatchUi.KeyEvent) as Boolean {
+        return swallows(keyEvent.getKey());
+    }
+
+    // The callbacks unwrap their events and call these, which the tests call directly.
+    function tapped(coordinates as [Number, Number]) as Boolean {
+        if (_view.isOnCancelButton(coordinates)) {
             _sos.cancel();
         }
         return true;
     }
 
-    // Everything else is swallowed, so nothing leaves the SOS screen by accident.
-    function onKeyPressed(keyEvent as WatchUi.KeyEvent) as Boolean {
-        return keyEvent.getKey() != WatchUi.KEY_ESC;
-    }
-
-    function onKeyReleased(keyEvent as WatchUi.KeyEvent) as Boolean {
-        return keyEvent.getKey() != WatchUi.KEY_ESC;
+    function swallows(key as WatchUi.Key) as Boolean {
+        return key != WatchUi.KEY_ESC;
     }
 
     // A tap produces onSelect before onTap; returning true here would stop onTap.

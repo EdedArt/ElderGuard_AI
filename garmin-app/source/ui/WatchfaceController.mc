@@ -26,32 +26,37 @@ class WatchfaceController {
         if (!hold.isPressed()) {
             buzz(50);
         }
-        hold.press(System.getTimer());
+        hold.press(now());
         changed();
     }
 
     function sosRelease() as Void {
-        var now = System.getTimer();
+        var time = now();
         // A release right at the end of the hold still counts, even before the next frame.
-        if (hold.update(now)) {
+        if (hold.update(time)) {
             activate();
         } else {
-            hold.release(now);
+            hold.release(time);
         }
         changed();
     }
 
     function sosTap() as Void {
-        hold.tap(System.getTimer());
+        hold.tap(now());
         changed();
     }
 
     // Called by the timer while animating.
     function onFrame() as Void {
-        if (hold.update(System.getTimer())) {
+        if (hold.update(now())) {
             activate();
         }
         changed();
+    }
+
+    // Milliseconds from System.getTimer(). A method of its own so tests can replace the clock.
+    function now() as Number {
+        return System.getTimer();
     }
 
     // Stops the timer, for when the watchface is hidden.
@@ -76,7 +81,7 @@ class WatchfaceController {
     }
 
     private function changed() as Void {
-        if (hold.isAnimating(System.getTimer())) {
+        if (hold.isAnimating(now())) {
             if (_timer == null) {
                 var timer = new Timer.Timer();
                 timer.start(method(:onFrame), FRAME_MS, true);

@@ -193,9 +193,9 @@ class SosButton extends WatchUi.Drawable {
         if (degrees <= 0) {
             return;
         }
-        var ringRadius = _layout.sosRadius + _layout.scale(9);
+        var ringRadius = _layout.sosRingRadius;
         dc.setColor(WatchColors.TEXT, Graphics.COLOR_TRANSPARENT);
-        dc.setPenWidth(_layout.scale(7));
+        dc.setPenWidth(_layout.sosRingWidth);
         if (degrees >= 360) {
             dc.drawCircle(x, y, ringRadius);
         } else {

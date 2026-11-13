@@ -30,6 +30,9 @@ class WatchfaceLayout {
     var sosY as Number;
     var sosRadius as Number;
     var sosTouchRadius as Number;
+    // The progress ring around it while held: its radius (the middle of the stroke) and width.
+    var sosRingRadius as Number;
+    var sosRingWidth as Number;
 
     // The "Mantén presionado" hint, over the middle of the screen.
     var hintY as Number;
@@ -62,12 +65,14 @@ class WatchfaceLayout {
         statusY = scale(72);
         timeY = scale(136);
         dateY = scale(190);
-        heartRateY = scale(232);
+        heartRateY = scale(230);
         statusGap = scale(18);
         iconGap = scale(6);
         sosY = scale(322);
         sosRadius = scale(54);
         sosTouchRadius = scale(76);
+        sosRingRadius = sosRadius + scale(7);
+        sosRingWidth = scale(7);
         hintY = height / 2;
         sosTitleY = scale(150);
         sosTitleMaxWidth = scale(330);

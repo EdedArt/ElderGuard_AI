@@ -1,6 +1,5 @@
 import Toybox.Graphics;
 import Toybox.Lang;
-import Toybox.System;
 import Toybox.WatchUi;
 
 // The main screen, port of the web and Wear OS watchfaces: battery and GPS at the top, the time,
@@ -52,6 +51,27 @@ class WatchfaceView extends WatchUi.View {
         _sosButton = new SosButton(layout);
         _startHint = new ButtonHintArc(layout, layout.startKeyAngle, WatchColors.DANGER_TEXT);
         _holdHint = new HoldHint(layout);
+    }
+
+    // The drawables, as last filled by onUpdate(), for the watchface tests.
+    function batteryIndicator() as BatteryIndicator or Null {
+        return _battery;
+    }
+
+    function gpsIndicator() as GpsIndicator or Null {
+        return _gps;
+    }
+
+    function clockDisplay() as ClockDisplay or Null {
+        return _clock;
+    }
+
+    function heartRateIndicator() as HeartRateIndicator or Null {
+        return _heartRate;
+    }
+
+    function sosButton() as SosButton or Null {
+        return _sosButton;
     }
 
     // True if a touch at these screen coordinates is on the SOS button.
@@ -137,11 +157,11 @@ class WatchfaceView extends WatchUi.View {
         sosButton.title = _language.text(Rez.Strings.SosTitle, Rez.Strings.SosTitleEn);
         sosButton.label = _language.text(Rez.Strings.SosLabel, Rez.Strings.SosLabelEn);
         sosButton.pressed = _controller.hold.isPressed();
-        sosButton.progress = _controller.hold.progress(System.getTimer());
+        sosButton.progress = _controller.hold.progress(_controller.now());
         sosButton.draw(dc);
         startHint.draw(dc);
 
-        if (_controller.hold.isHintVisible(System.getTimer())) {
+        if (_controller.hold.isHintVisible(_controller.now())) {
             holdHint.text = _language.text(Rez.Strings.SosHoldHint, Rez.Strings.SosHoldHintEn);
             holdHint.draw(dc);
         }

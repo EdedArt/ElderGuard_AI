@@ -13,6 +13,9 @@ import Toybox.WatchUi;
 //   screen. DOWN, or a swipe up on the screen (onNextPage), opens it too, so it can also be
 //   reached by touch.
 // - BACK leaves the app (the system default).
+//
+// Each callback only unwraps its event and calls a method that takes the key or the touch
+// coordinates, which the tests call directly (Toybox events cannot be created outside the system).
 class WatchfaceDelegate extends WatchUi.BehaviorDelegate {
     private var _view as WatchfaceView;
     private var _controller as WatchfaceController;
@@ -36,15 +39,23 @@ class WatchfaceDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onKeyPressed(keyEvent as WatchUi.KeyEvent) as Boolean {
-        if (keyEvent.getKey() == WatchUi.KEY_ENTER) {
+        return keyPressed(keyEvent.getKey());
+    }
+
+    function onKeyReleased(keyEvent as WatchUi.KeyEvent) as Boolean {
+        return keyReleased(keyEvent.getKey());
+    }
+
+    function keyPressed(key as WatchUi.Key) as Boolean {
+        if (key == WatchUi.KEY_ENTER) {
             _controller.sosPress();
             return true;
         }
         return false;
     }
 
-    function onKeyReleased(keyEvent as WatchUi.KeyEvent) as Boolean {
-        if (keyEvent.getKey() == WatchUi.KEY_ENTER) {
+    function keyReleased(key as WatchUi.Key) as Boolean {
+        if (key == WatchUi.KEY_ENTER) {
             _controller.sosRelease();
             return true;
         }
@@ -58,14 +69,26 @@ class WatchfaceDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onHold(clickEvent as WatchUi.ClickEvent) as Boolean {
-        if (_view.isOnSosButton(clickEvent.getCoordinates())) {
+        return touchHeld(clickEvent.getCoordinates());
+    }
+
+    function onRelease(clickEvent as WatchUi.ClickEvent) as Boolean {
+        return touchReleased();
+    }
+
+    function onTap(clickEvent as WatchUi.ClickEvent) as Boolean {
+        return tapped(clickEvent.getCoordinates());
+    }
+
+    function touchHeld(coordinates as [Number, Number]) as Boolean {
+        if (_view.isOnSosButton(coordinates)) {
             _controller.sosPress();
             return true;
         }
         return false;
     }
 
-    function onRelease(clickEvent as WatchUi.ClickEvent) as Boolean {
+    function touchReleased() as Boolean {
         if (_controller.hold.isPressed()) {
             _controller.sosRelease();
             return true;
@@ -73,8 +96,8 @@ class WatchfaceDelegate extends WatchUi.BehaviorDelegate {
         return false;
     }
 
-    function onTap(clickEvent as WatchUi.ClickEvent) as Boolean {
-        if (_view.isOnSosButton(clickEvent.getCoordinates())) {
+    function tapped(coordinates as [Number, Number]) as Boolean {
+        if (_view.isOnSosButton(coordinates)) {
             _controller.sosTap();
             return true;
         }
