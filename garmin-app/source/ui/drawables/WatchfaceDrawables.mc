@@ -156,11 +156,14 @@ class HeartRateIndicator extends WatchUi.Drawable {
 
 // The large red SOS button at the bottom: "SOS" and "AUXILIO" on a red circle with a white
 // outline, like the other apps. While pressed it turns white with red text, so the person sees
-// at once that the press was registered.
+// at once that the press was registered, and a white ring fills clockwise around it from the top
+// over the 2 seconds of the hold, like the ring of the web and Wear OS buttons.
 class SosButton extends WatchUi.Drawable {
     var title as String = "";
     var label as String = "";
     var pressed as Boolean = false;
+    // From 0 to 1 while held.
+    var progress as Float = 0.0;
     private var _layout as WatchfaceLayout;
 
     function initialize(layout as WatchfaceLayout) {
@@ -182,6 +185,23 @@ class SosButton extends WatchUi.Drawable {
         dc.setColor(content, Graphics.COLOR_TRANSPARENT);
         dc.drawText(x, y - _layout.scale(12), Graphics.FONT_MEDIUM, title, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
         dc.drawText(x, y + _layout.scale(22), Graphics.FONT_XTINY, label, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        drawProgress(dc, x, y);
+    }
+
+    private function drawProgress(dc as Graphics.Dc, x as Number, y as Number) as Void {
+        var degrees = (progress * 360).toNumber();
+        if (degrees <= 0) {
+            return;
+        }
+        var ringRadius = _layout.sosRadius + _layout.scale(9);
+        dc.setColor(WatchColors.TEXT, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(_layout.scale(7));
+        if (degrees >= 360) {
+            dc.drawCircle(x, y, ringRadius);
+        } else {
+            // From 12 o'clock (90 degrees), clockwise.
+            dc.drawArc(x, y, ringRadius, Graphics.ARC_CLOCKWISE, 90, 90 - degrees);
+        }
     }
 }
 

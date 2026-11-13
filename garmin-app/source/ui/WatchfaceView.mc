@@ -114,6 +114,7 @@ class WatchfaceView extends WatchUi.View {
         sosButton.title = _language.text(Rez.Strings.SosTitle, Rez.Strings.SosTitleEn);
         sosButton.label = _language.text(Rez.Strings.SosLabel, Rez.Strings.SosLabelEn);
         sosButton.pressed = _controller.hold.isPressed();
+        sosButton.progress = _controller.hold.progress(System.getTimer());
         sosButton.draw(dc);
         startHint.draw(dc);
 
