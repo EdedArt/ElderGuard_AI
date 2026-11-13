@@ -2,7 +2,7 @@
 
 Aplicación de ElderGuard AI para relojes Garmin, escrita en Monkey C con el SDK de Connect IQ. Es la versión que se instala en el **Garmin Forerunner 165** prestado para la sustentación. Es un proyecto independiente: no usa `npm` ni Gradle y no comparte código con la versión web (`src/`) ni con la de Wear OS (`wear-app/`), que sirven como especificación de lo que hay que portar.
 
-Estado actual: esfera del reloj. La aplicación muestra la batería y el GPS, la hora en formato de 12 horas, la fecha, la frecuencia cardíaca y un botón SOS que se activa manteniéndolo pulsado 2 segundos, con la telemetría simulada de la fase anterior. Está en español por defecto y se puede cambiar a inglés desde el reloj.
+Estado actual: esfera del reloj, detección de caídas, frecuencia cardíaca anormal y alertas simuladas. La aplicación muestra la batería y el GPS, la hora en formato de 12 horas, la fecha, la frecuencia cardíaca y un botón SOS que se activa manteniéndolo pulsado 2 segundos, con la telemetría simulada. Detecta caídas con una cuenta regresiva cancelable, avisa de un ritmo cardíaco alto en reposo y registra alertas simuladas a los contactos de emergencia, sin conexión a ninguna red. Está en español por defecto y se puede cambiar a inglés desde el reloj.
 
 Compilado y probado en el simulador con el **SDK de Connect IQ 9.3.0** para el Forerunner 165 (`fr165`, nivel de API 5.2). Aún no se ha instalado en el reloj real.
 
@@ -24,20 +24,34 @@ garmin-app/
 ├── manifest.xml                  # Tipo de aplicación, dispositivo, idiomas, permisos e ID
 ├── monkey.jungle                 # Configuración de compilación (código en source/ y test/)
 ├── source/
-│   ├── App.mc                    # ElderGuardApp: punto de entrada; crea el almacén, el motor y el idioma
+│   ├── App.mc                    # ElderGuardApp: punto de entrada; crea el almacén, el motor, el idioma, los monitores y las alertas
 │   ├── config/
-│   │   └── TelemetryConfig.mc    # Constantes de la simulación (telemetry.config.js)
+│   │   ├── TelemetryConfig.mc    # Constantes de la simulación (telemetry.config.js)
+│   │   ├── FallDetectionConfig.mc # Umbrales de caída y cuenta regresiva (fallDetection.config.js)
+│   │   ├── HeartRateAnomalyConfig.mc # Umbrales de ritmo cardíaco (heartRateAnomaly.config.js)
+│   │   └── ContactsConfig.mc     # Contactos de emergencia ficticios (contacts.config.js)
+│   ├── detection/
+│   │   ├── FallDetector.mc       # Máquina de estados de caída (fallDetector.js)
+│   │   └── HeartRateAnomalyDetector.mc # Ritmo alto sostenido en reposo (heartRateAnomalyDetector.js)
+│   ├── alerts/
+│   │   ├── Countdown.mc          # Cuenta regresiva con Timer (countdown.js)
+│   │   ├── FallMonitor.mc        # Alimenta el detector y lleva la cuenta regresiva (fallMonitor.js)
+│   │   ├── HeartRateMonitor.mc   # Alimenta el detector y marca healthAlert (heartRateMonitor.js)
+│   │   ├── AlertPayload.mc       # Contenido de una alerta (alertPayload.js)
+│   │   └── AlertDispatcher.mc    # Registra las alertas simuladas (alertDispatcher.js)
 │   ├── i18n/
 │   │   └── LanguagePreference.mc # Idioma elegido (es/en), guardado en Application.Storage
 │   ├── sos/
 │   │   ├── SosHold.mc            # SosConfig y la pulsación de 2 segundos (longPress.js)
-│   │   └── SosController.mc      # Activa y cancela el SOS (sosController.js)
+│   │   └── SosController.mc      # Activa y cancela el SOS, con su motivo (sosController.js)
 │   ├── telemetry/
 │   │   ├── TelemetryModels.mc    # Lecturas: HeartRate, Accelerometer, Gps, Battery, DeviceStatus
 │   │   ├── TelemetryStore.mc     # TelemetryState y TelemetryStore (telemetryStore.js)
 │   │   ├── GeneratorMath.mc      # RandomSource y redondeo (math.js)
 │   │   ├── Generators.mc         # Generadores de cada sensor (generators/)
 │   │   ├── SimulationEngine.mc   # Motor con Timer (simulationEngine.js)
+│   │   ├── Magnitude.mc          # Magnitud del acelerómetro y reposo (magnitude.js)
+│   │   ├── Clock.mc              # Hora de las lecturas y de las alertas (sustituible en pruebas)
 │   │   └── WatchStatus.mc        # Estado de la batería y del GPS (watchStatus.js)
 │   └── ui/
 │       ├── WatchfaceView.mc      # La esfera: dibuja las partes con los datos del almacén
@@ -45,8 +59,11 @@ garmin-app/
 │       ├── WatchfaceController.mc # Lógica de la pulsación del SOS y su temporizador
 │       ├── WatchfaceDelegate.mc  # Botones y toques de la esfera
 │       ├── drawables/
-│       │   └── WatchfaceDrawables.mc # Batería, GPS, reloj, pulso, botón SOS, avisos
-│       ├── SosView.mc            # Pantalla roja «Pidiendo ayuda…» y su delegado
+│       │   └── WatchfaceDrawables.mc # Batería, GPS, reloj, pulso, botón SOS, avisos, aviso de pulso
+│       ├── AlertScreens.mc       # Abre y cierra las pantallas de alerta según el modo
+│       ├── FallCountdownView.mc  # Pantalla «¿Te caíste?» y su delegado
+│       ├── SosView.mc            # Pantalla roja «Pidiendo ayuda…» con la confirmación, y su delegado
+│       ├── Vibration.mc          # Patrones de vibración
 │       ├── LanguageMenu.mc       # Pantalla de idioma (Menu2)
 │       ├── TimeFormat.mc         # Hora de 12 horas y fecha corta (timeFormat.js)
 │       └── WatchColors.mc        # Colores del tema oscuro
@@ -144,8 +161,9 @@ Antes de la sustentación conviene hacer una prueba completa en el reloj real, p
 Es la misma que en la versión web (`src/core`) y en la de Wear OS (`wear-app`), con los mismos valores de `telemetry.config.js`: frecuencia cardíaca en reposo entre 60 y 80 LPM, acelerómetro en reposo de 1 g, posición de ejemplo en Bogotá y batería que baja un 0,01 % por segundo. Por ahora los sensores son simulados; los del reloj se conectarán en fases posteriores.
 
 ```text
-SimulationEngine ──tick cada segundo──▶ TelemetryStore ──avisa a los oyentes──▶ WatchfaceView / SosView
-  (Timer + generadores)                  (estado actual)                         (requestUpdate)
+SimulationEngine ──tick cada segundo──▶ TelemetryStore ──avisa a los oyentes──▶ FallMonitor, HeartRateMonitor,
+  (Timer + generadores)                  (estado actual)                         AlertDispatcher, AlertScreens,
+                                                                                 WatchfaceView (requestUpdate)
 ```
 
 ### Modelo de estado
@@ -187,7 +205,7 @@ El azar llega como parámetro, un `RandomSource`, que usa `Math.rand()`. `Math.s
 
 ### Pantalla y consumo de batería
 
-La esfera no tiene un temporizador para redibujarse. Mientras está visible (`onShow()`), escucha al almacén, y cada aviso solo llama a `WatchUi.requestUpdate()`: el sistema junta las peticiones y llama a `onUpdate()` una vez. Como el almacén solo avisa si algo cambió, la pantalla se dibuja como mucho una vez por tick, lo que también mantiene la hora al día, y deja de escuchar en `onHide()`. El único temporizador extra es el de la pulsación del SOS (ver más abajo), que solo funciona mientras se mantiene pulsado o se ve el aviso. El fondo es negro porque en la pantalla AMOLED los píxeles negros están apagados.
+La esfera no tiene un temporizador para redibujarse. Mientras está visible (`onShow()`), escucha al almacén, y cada aviso solo llama a `WatchUi.requestUpdate()`: el sistema junta las peticiones y llama a `onUpdate()` una vez. Como el almacén solo avisa si algo cambió, la pantalla se dibuja como mucho una vez por tick, lo que también mantiene la hora al día, y deja de escuchar en `onHide()`. Los únicos temporizadores extra son el de la pulsación del SOS (ver más abajo), que solo funciona mientras se mantiene pulsado o se ve el aviso, y el de la cuenta regresiva de caída, que solo existe durante esos 10 segundos. El fondo es negro porque en la pantalla AMOLED los píxeles negros están apagados.
 
 ## Botones y pantalla táctil del Forerunner 165
 
@@ -196,7 +214,7 @@ El Forerunner 165 tiene pantalla táctil y cinco botones. Se comprobó con los a
 | Entrada | Lo que recibe la aplicación | Uso en ElderGuard AI |
 | ------- | --------------------------- | -------------------- |
 | START/STOP (arriba a la derecha) | `onKeyPressed` al bajar y `onKeyReleased` al soltar (`KEY_ENTER`), así que se puede medir cuánto se mantiene | **SOS**: mantener 2 segundos |
-| BACK (abajo a la derecha) | `onBack` | Cancelar el SOS; en la esfera, salir de la aplicación (lo normal en Garmin) |
+| BACK (abajo a la derecha) | `onBack` | «Estoy bien» en la cuenta regresiva de caída y cancelar el SOS; en la esfera, salir de la aplicación (lo normal en Garmin) |
 | UP (izquierda, centro) | Mantenerlo pulsado da `onMenu`, el menú en todos los relojes Garmin | Abrir la pantalla de idioma |
 | DOWN (abajo a la izquierda) | `onNextPage` | Abrir la pantalla de idioma |
 | LIGHT (arriba a la izquierda) | Nada: lo reserva el sistema | — |
@@ -231,7 +249,70 @@ Un toque o una pulsación corta no hacen nada, para evitar activaciones accident
 
 Con el dedo, el sistema solo avisa de que hay un dedo quieto alrededor de 1 segundo después del toque (`onHold`), así que el anillo empieza a llenarse a partir de ese momento: en la pantalla hacen falta unos 3 segundos en total. Con START son exactamente 2.
 
-La pantalla SOS reacciona al estado, como en la versión web: la esfera la abre cuando el modo pasa a `MODE_SOS` y ella se cierra cuando deja de serlo. `SosHold` guarda la pulsación (con tiempos que recibe como parámetro, para las pruebas), `WatchfaceController` tiene el temporizador de 100 ms que mueve el anillo y comprueba si se completó, y solo funciona mientras hay algo que animar, y `SosController` cambia el modo en el almacén.
+La pantalla SOS reacciona al estado, como en la versión web: `AlertScreens` la abre cuando el modo pasa a `MODE_SOS` y la cierra cuando deja de serlo (ver _Pantallas de alerta_). `SosHold` guarda la pulsación (con tiempos que recibe como parámetro, para las pruebas), `WatchfaceController` tiene el temporizador de 100 ms que mueve el anillo y comprueba si se completó, y solo funciona mientras hay algo que animar, y `SosController` cambia el modo en el almacén y guarda el motivo: `SOS_REASON_MANUAL` con el botón y `SOS_REASON_FALL` cuando una cuenta regresiva de caída llega a cero.
+
+Una vez registrada la alerta (ver _Alertas a la familia_), la pantalla SOS la confirma, como en las otras versiones: `Avisados (simulado)` (`Notified (mock)`), el nombre de cada contacto en su propia línea, y dónde dice la alerta que está la persona: `GPS` o, sin señal, `Última posición` (`Last position`), y debajo las coordenadas con 5 decimales y punto (`4.60970, -74.08170`). En Wear OS esto se desplaza; aquí cabe en una sola pantalla, cada línea con la fuente más grande que cabe en el círculo a su altura (`WatchfaceLayout.fittingFont`, medida con las fuentes reales), y el botón `Cancelar` queda más pequeño, debajo. Las coordenadas van en su propia línea porque con la etiqueta miden 418 px incluso en `FONT_XTINY`.
+
+## Pantallas de alerta
+
+`AlertScreens` abre y cierra las pantallas de alerta según `deviceStatus.mode`, durante toda la vida de la aplicación (no solo mientras se ve la esfera): la cuenta regresiva en `MODE_FALL_COUNTDOWN` y la pantalla SOS en `MODE_SOS`. Una alerta nueva se pone encima de lo que se esté viendo (`pushView`); la cuenta que llega a cero se reemplaza por la pantalla SOS (`switchToView`), y al volver a `MODE_MONITORING` se cierra (`popView`). Así, una caída detectada con la pantalla de idioma abierta muestra igualmente su cuenta regresiva. Las pantallas solo dibujan: ninguna se abre ni se cierra sola.
+
+## Detección de caídas
+
+Traducción de `src/core/fallDetector.js`, `src/core/countdown.js` y `src/core/fallMonitor.js`, con los mismos umbrales del README principal, en `config/FallDetectionConfig.mc`:
+
+| Constante | Valor | Significado |
+| --------- | ----- | ----------- |
+| `IMPACT_THRESHOLD_G` | 2,5 g | Magnitud mínima que cuenta como impacto |
+| `IMMOBILITY_TOLERANCE_G` | 0,15 g | Distancia máxima a 1 g que aún cuenta como quietud |
+| `IMMOBILITY_DURATION_MS` | 5000 | Tiempo de quietud que confirma la caída |
+| `IMMOBILITY_START_WINDOW_MS` | 3000 | Tiempo máximo tras el impacto para que empiece la quietud |
+| `COUNTDOWN_SECONDS` | 10 | Tiempo para cancelar antes de pedir ayuda |
+| `URGENT_SECONDS` | 3 | Últimos segundos, más insistentes |
+
+`FallDetector` tiene los mismos estados que las otras versiones (`FALL_IDLE` → `FALL_IMPACT` → `FALL_IMMOBILITY` → `FALL_CONFIRMED`): el movimiento o una quietud que empieza tarde vuelven a `FALL_IDLE`, y un impacto nuevo en cualquier estado salvo confirmado reinicia la secuencia desde ese momento (la desviación aprobada), para no perder una caída real después de un tropiezo. La magnitud es la misma fórmula, `Magnitude.of` (√(x² + y² + z²)). El tiempo sale de las lecturas, así que las pruebas reproducen cada escenario al instante.
+
+`FallMonitor` alimenta el detector con cada aviso del almacén, es decir, una vez por tick: cada tick escribe otra batería y otro `lastUpdate`, así que un cuerpo quieto también cuenta como lectura. Solo mientras el modo es `MODE_MONITORING`; en cualquier otro modo el detector se reinicia, y la primera lectura al volver se descarta. Mide el tiempo con `System.getTimer()` (`Clock`), que tiene milisegundos; `Time.now()` solo tiene segundos.
+
+Al confirmarse una caída, el modo pasa a `MODE_FALL_COUNTDOWN`, empieza la cuenta de 10 segundos (`Countdown`, con un `Timer` de 1 segundo que se crea al empezar y se libera al terminar) y aparece la pantalla de la caída:
+
+- `¿Te caíste?` (`Did you fall?`), los segundos restantes en `FONT_NUMBER_HOT`, un anillo que se vacía con ellos y un botón grande `ESTOY BIEN` (`I'M OK`), negro con borde blanco.
+- Ámbar con texto negro, y rojo con texto blanco en los últimos 3 segundos. El anillo baja un paso por segundo, junto con el número, en lugar de vaciarse de forma continua: eso obligaría a redibujar muchas veces por segundo.
+- Vibra cada segundo. El Forerunner 165 ignora la intensidad de `VibeProfile`, así que la urgencia se expresa con la duración y el ritmo: dos pulsos de 150 ms, tres más rápidos de 120 ms en los segundos urgentes y uno largo de 600 ms al llegar a cero.
+
+**Cancelar («Estoy bien»)** es una sola acción rápida, porque la persona puede haberse caído y solo tiene 10 segundos:
+
+| Entrada | Efecto |
+| ------- | ------ |
+| BACK, una pulsación corta (señalado con un arco junto al botón) | Cancela. BACK cancela en todas las pantallas de Garmin y ya cancela la pantalla SOS |
+| Toque en el botón `ESTOY BIEN` | Cancela |
+| Dedo quieto en el botón (`onHold`) | Cancela: un dedo quieto no produce `onTap` (ver la tabla de botones) |
+| START | Nada. Es el botón SOS de la esfera: alguien que se cayó y lo pulsa para pedir ayuda nunca debe cancelar la alerta |
+| Deslizar, UP, DOWN, toques fuera del botón | Nada. En relojes táctiles deslizar a la derecha equivale a BACK, y una manga que roza la pantalla no debe cancelar |
+
+No se exige mantener pulsado: otra pulsación larga se comería parte de los 10 segundos, y con el dedo la pulsación solo empieza a contar después de alrededor de 1 segundo. Al cancelar, el reloj vuelve a `MODE_MONITORING` y el detector empieza de cero.
+
+Si nadie cancela, al llegar a cero se activa el SOS con el motivo `SOS_REASON_FALL` y la pantalla SOS reemplaza a la cuenta regresiva, con la confirmación de la alerta. Un SOS manual mantiene `SOS_REASON_MANUAL`.
+
+## Frecuencia cardíaca anormal
+
+Traducción de `src/core/heartRateAnomalyDetector.js` y `src/core/heartRateMonitor.js`, con los valores de `config/HeartRateAnomalyConfig.mc`: más de **120 LPM** en reposo durante **8 segundos**, con la misma tolerancia de quietud que las caídas (0,15 g). El nivel crítico, que avisa a la familia, es de más de **160 LPM**.
+
+`HeartRateAnomalyDetector` pasa de `ANOMALY_NORMAL` a `ANOMALY_ELEVATED` con el primer valor alto en reposo y a `ANOMALY_WARNING` cuando dura 8 segundos; vuelve a normal, avisando de que se resolvió, cuando el pulso baja o la persona se mueve. `HeartRateMonitor` lo alimenta con cada tick y mantiene `deviceStatus.healthAlert` en `HEALTH_ALERT_HIGH_HEART_RATE` mientras dura. Es un aviso, no una alerta: no cambia el modo del reloj y funciona a la vez que una cuenta regresiva de caída.
+
+En la esfera aparece un aviso ámbar con un triángulo y texto negro, `Pulso alto en reposo` (`High heart rate at rest`), en el lugar de la fecha, la fila menos urgente, así que la hora, el pulso y el botón SOS no se mueven. Cabe entre la base de los dígitos de la hora y el borde superior de los del pulso, medido con las fuentes reales. El texto es más corto que en las otras versiones porque `Ritmo cardíaco alto en reposo` mide 347 px incluso en `FONT_XTINY` y no cabe a esa altura. Mientras dura un episodio crítico ya avisado a la familia, el aviso se vuelve rojo con borde y texto blancos: `Pulso crítico: familia avisada` (`Critical pulse: family notified`), sin el triángulo, que no cabe al lado de ese texto.
+
+## Alertas a la familia (simuladas)
+
+Traducción de `src/core/alertPayload.js`, `src/core/alertDispatcher.js` y `src/config/contacts.config.js`. Como en las otras versiones, es una simulación: **no hay ninguna conexión de red**. `AlertDispatcher` no usa `Toybox.Communications` y `manifest.xml` no declara ningún permiso. Enviar una alerta es construir su contenido y guardarlo, que es donde iría la integración con un servicio de mensajería real; también se escribe en la salida de `monkeydo` (`Alert recorded (mock, not sent): fall to 3 contacts`).
+
+| Qué la produce | Tipo | ¿Abre el SOS? |
+| -------------- | ---- | ------------- |
+| Cuenta regresiva de caída que llega a cero | `fall` | Sí, motivo `SOS_REASON_FALL` |
+| Botón SOS mantenido 2 segundos | `manual-sos` | Sí, motivo `SOS_REASON_MANUAL` |
+| Más de 160 LPM en reposo durante 8 s | `high-heart-rate` | No: es de salud, no de caída |
+
+Cada alerta (`AlertPayload`) lleva el tipo, la hora (milisegundos desde 1970), el GPS, la frecuencia cardíaca, la batería redondeada como se muestra y los contactos, tal como estaban en ese momento: el SOS avisa al despachador dentro de la misma llamada, y los datos no se modifican después. Los contactos son los mismos personajes ficticios de las otras versiones: Ana Ejemplo (hija), Luis Ejemplo (hijo) y Dra. Prueba (médica), con números 555-01xx. El ritmo crítico se avisa una sola vez por episodio. No generan alerta: un tropiezo, una caída cancelada a tiempo, un pico breve de pulso, un pulso alto en movimiento ni un aviso de 120 a 160 LPM que se resuelve.
 
 ## Idioma
 
@@ -248,7 +329,8 @@ La elección se guarda en `Application.Storage` y se mantiene al cerrar y volver
 El SDK de Connect IQ incluye **Run No Evil**, un sistema de pruebas unitarias (módulo `Toybox.Test`). Por eso esta versión tiene pruebas automáticas, como la web (Vitest) y la de Wear OS (JUnit), en lugar de comprobar los valores a mano en la consola:
 
 - Las pruebas están en `test/`. Son funciones marcadas con `(:test)` que reciben un `Logger` y devuelven `true` si pasan; usan `Test.assert` y `Test.assertEqual`.
-- Traducen los casos principales de las pruebas de la versión web y la de Wear OS: almacén, generadores, motor, idioma, formato de hora, estado de batería y GPS, colores y contraste, pulsación del SOS, y la esfera con su interacción. En total, 81 pruebas.
+- Traducen los casos principales de las pruebas de la versión web y la de Wear OS: almacén, generadores, motor, idioma, formato de hora, estado de batería y GPS, colores y contraste, pulsación del SOS, la esfera con su interacción, la magnitud, el detector de caídas, la cuenta regresiva y su pantalla, el detector y el monitor de ritmo cardíaco con su aviso, el contenido de las alertas, el despachador y la confirmación en la pantalla SOS. En total, 196 pruebas.
+- Las de alertas montan un reloj entero (almacén, SOS, monitores y despachador) con un reloj falso, y avanzan segundo a segundo escribiendo las lecturas como un tick del motor; la cuenta regresiva avanza con `tick()`.
 - La esfera no se puede comprobar píxel a píxel, porque Run No Evil no permite leer la imagen dibujada. Se dibuja en una imagen fuera de pantalla de 390 × 390 y se comprueba que cada parte, medida con las fuentes reales y el texto más ancho de cada idioma, cabe en el círculo; que la vista pone los textos y colores correctos en cada estado, y que todos los estados se dibujan sin errores.
 - La interacción se prueba llamando a los métodos que usan los delegados para los botones y los toques, con un reloj falso, así que la pulsación de 2 segundos no hace esperar.
 - Todo lo de `test/` lleva `(:test)`, así que el compilador solo lo incluye con la opción `-t` y lo deja fuera del `.prg` normal.
@@ -263,11 +345,13 @@ monkeyc -f monkey.jungle -d fr165 -o bin\ElderGuardAI-test.prg -y "$env:USERPROF
 monkeydo bin\ElderGuardAI-test.prg fr165 /t
 ```
 
-La salida muestra cada prueba con `PASS`, `FAIL` o `ERROR`, y termina con un resumen como `PASSED (passed=81, failed=0, errors=0)`. Para ejecutar una sola prueba, añade su nombre después de `/t`.
+La salida muestra cada prueba con `PASS`, `FAIL` o `ERROR`, y termina con un resumen como `PASSED (passed=196, failed=0, errors=0)`. Para ejecutar una sola prueba, añade su nombre después de `/t`.
 
 ## Pendientes
 
 - **Instalación en el reloj real**: los pasos del apartado 3 aún no se han probado con el Forerunner 165 físico. Hay que confirmar la ruta de la carpeta `Apps` y dónde aparece la aplicación en el menú del reloj.
 - **Permisos**: ninguno por ahora, porque la telemetría es simulada. Para leer los sensores reales harán falta `Sensor` (frecuencia cardíaca y acelerómetro) y `Positioning` (GPS) en `manifest.xml`.
+- **Escenarios de demostración en el reloj**: la aplicación aún no tiene forma de simular una caída o un pulso alto desde el propio reloj. En el simulador se comprobaron con un programa de prueba aparte, no incluido en el repositorio, que usa `setOverride` del motor como el botón `Simular caída` de la web.
+- **Vibración en el reloj real**: los patrones de la cuenta regresiva solo se han probado en el simulador.
 - **Pulsación con el dedo en el reloj real**: el retardo de `onHold` (alrededor de 1 segundo en el simulador) puede ser distinto en el Forerunner 165 físico. Con START la pulsación siempre dura exactamente 2 segundos.
 - **Forerunner 165 Music**: es otro dispositivo (`fr165m`). Si hiciera falta, se añade como otro `<iq:product>` en `manifest.xml`.
