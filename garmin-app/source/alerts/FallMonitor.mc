@@ -43,6 +43,11 @@ class FallMonitor {
         return _countdown.remaining();
     }
 
+    // The countdown itself, so tests can advance it with tick() instead of waiting for its timer.
+    function countdown() as Countdown {
+        return _countdown;
+    }
+
     // Who hears each second of the countdown (the alert screens, which vibrate and redraw), or
     // null for nobody.
     function setTickListener(listener as CountdownTickListener or Null) as Void {
