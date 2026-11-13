@@ -38,3 +38,4 @@ garmin-app/**/developer_key*
 .DS_Store
 Thumbs.db
 Desktop.ini
+*.der
