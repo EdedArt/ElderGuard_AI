@@ -17,6 +17,8 @@ class ElderGuardApp extends Application.AppBase {
         _store = new TelemetryStore();
         _engine = new SimulationEngine(_store, new RandomSource());
         _language = new LanguagePreference(new LanguageStorage());
+        // Registered on the store, which keeps it alive for as long as the app runs.
+        new FallMonitor(_store, FallDetector.standard(), new Clock());
     }
 
     // Called when the app starts, before getInitialView().
