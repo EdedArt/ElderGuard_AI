@@ -103,6 +103,14 @@ class TelemetryStore {
         update(next);
     }
 
+    // Sets or clears (null) deviceStatus.healthAlert, keeping the rest of the state.
+    function setHealthAlert(healthAlert as HealthAlert or Null) as Void {
+        var next = getState();
+        var status = next.deviceStatus;
+        next.deviceStatus = new DeviceStatus(status.mode, status.lastUpdate, healthAlert);
+        update(next);
+    }
+
     // Restores the initial state, notifying listeners of what that changed.
     function reset() as Void {
         replaceState(TelemetryState.initial());
