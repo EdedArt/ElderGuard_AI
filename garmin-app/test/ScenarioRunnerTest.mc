@@ -13,6 +13,7 @@ class ScenarioHarness {
     var runner as ScenarioRunner;
     var sos as SosController;
     var fall as FallMonitor;
+    var heartRate as HeartRateMonitor;
     var alerts as AlertDispatcher;
 
     function initialize() {
@@ -21,7 +22,7 @@ class ScenarioHarness {
         runner = new ScenarioRunner(engine, store);
         sos = new SosController(store);
         fall = new FallMonitor(store, sos, FallDetector.standard(), clock);
-        new HeartRateMonitor(store, HeartRateAnomalyDetector.warning(), clock);
+        heartRate = new HeartRateMonitor(store, HeartRateAnomalyDetector.warning(), clock);
         alerts = new AlertDispatcher(store, sos, HeartRateAnomalyDetector.critical(), clock);
     }
 

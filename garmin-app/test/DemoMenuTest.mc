@@ -12,7 +12,8 @@ class DemoMenuHarness {
     var delegate as DemoMenuDelegate;
 
     function initialize() {
-        demo = new DemoController(scenario.runner, scenario.engine, scenario.fall);
+        demo = new DemoController(scenario.runner, scenario.engine, scenario.store, scenario.fall, scenario.heartRate,
+            scenario.alerts);
         delegate = new DemoMenuDelegate(demo);
     }
 
@@ -137,5 +138,72 @@ function demoMenu_theMainMenuAndLanguageScreenStillBuild(logger as Logger) as Bo
     language.setLanguage(LANGUAGE_EN);
     Test.assertEqual(language.text(Rez.Strings.MenuLanguage, Rez.Strings.MenuLanguageEn), "Language");
     Test.assertEqual(language.text(Rez.Strings.MenuDemo, Rez.Strings.MenuDemoEn), "Demo");
+    return true;
+}
+
+// --- Reset all ---
+
+(:test)
+function demoReset_closesAFallCountdownAndReturnsToMonitoring(logger as Logger) as Boolean {
+    var h = new DemoMenuHarness();
+    h.delegate.select(:fall);
+    h.scenario.tick();
+    h.scenario.runner.onStepDue();
+    h.scenario.ticks(FallDetectionConfig.IMMOBILITY_DURATION_MS / 1000 + 1);
+    Test.assertEqual(h.state().deviceStatus.mode, MODE_FALL_COUNTDOWN);
+    h.delegate.select(:reset);
+    Test.assertEqual(h.state().deviceStatus.mode, MODE_MONITORING);
+    Test.assert(!h.scenario.fall.countdown().isRunning());
+    Test.assertEqual(h.scenario.fall.getDetectorState(), FALL_IDLE);
+    Test.assert(!h.scenario.runner.isRunning());
+    // Monitoring works again: nothing goes off by itself.
+    h.scenario.ticks(FallDetectionConfig.COUNTDOWN_SECONDS + 2);
+    Test.assertEqual(h.state().deviceStatus.mode, MODE_MONITORING);
+    Test.assertEqual(h.scenario.alerts.alerts().size(), 0);
+    return true;
+}
+
+(:test)
+function demoReset_closesAnSosAndForgetsItsAlert(logger as Logger) as Boolean {
+    var h = new DemoMenuHarness();
+    h.scenario.sos.activate(SOS_REASON_MANUAL);
+    Test.assertEqual(h.scenario.alerts.alerts().size(), 1);
+    h.delegate.select(:reset);
+    Test.assertEqual(h.state().deviceStatus.mode, MODE_MONITORING);
+    Test.assert(h.scenario.sos.activeReason() == null);
+    Test.assert(h.scenario.alerts.sosAlert() == null);
+    Test.assertEqual(h.scenario.alerts.alerts().size(), 0);
+    return true;
+}
+
+(:test)
+function demoReset_clearsTheHeartRateWarningsAndRestoresBatteryAndGps(logger as Logger) as Boolean {
+    var h = new DemoMenuHarness();
+    h.delegate.select(:gpsLost);
+    h.delegate.select(:criticalHeartRate);
+    // The draining battery makes every tick a new state: with every sensor overridden, the ticks
+    // of a test, all within the same second, would only repeat the same lastUpdate.
+    h.scenario.ticks(HeartRateAnomalyConfig.SUSTAINED_DURATION_MS / 1000);
+    Test.assert(h.scenario.alerts.isCriticalActive());
+    Test.assert(h.state().deviceStatus.healthAlert == HEALTH_ALERT_HIGH_HEART_RATE);
+    h.delegate.select(:lowBattery);
+    Test.assertEqual(h.state().battery.level, Scenarios.LOW_BATTERY_LEVEL);
+    Test.assert(!h.state().gps.signal);
+
+    h.delegate.select(:reset);
+    var state = h.state();
+    Test.assert(state.deviceStatus.healthAlert == null);
+    Test.assert(!h.scenario.alerts.isCriticalActive());
+    Test.assertEqual(h.scenario.heartRate.getDetectorState(), ANOMALY_NORMAL);
+    Test.assertEqual(h.scenario.alerts.alerts().size(), 0);
+    Test.assertEqual(state.battery.level, TelemetryConfig.Battery.START_LEVEL);
+    Test.assert(state.gps.signal);
+    Test.assertEqual(state.gps.lat, TelemetryConfig.Gps.BASE_LAT);
+    Test.assertEqual(state.heartRate.bpm, 70);
+    // Every sensor is generated again: the battery drains from 100 %, the GPS keeps its signal.
+    h.scenario.tick();
+    Test.assert(h.state().battery.level < TelemetryConfig.Battery.START_LEVEL);
+    Test.assert(h.state().gps.signal);
+    Test.assert(h.state().heartRate.bpm <= TelemetryConfig.HeartRate.RESTING_MAX);
     return true;
 }

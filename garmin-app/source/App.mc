@@ -25,11 +25,10 @@ class ElderGuardApp extends Application.AppBase {
         _language = new LanguagePreference(new LanguageStorage());
         _sos = new SosController(_store);
         _fallMonitor = new FallMonitor(_store, _sos, FallDetector.standard(), new Clock());
-        // Registered on the store, which keeps it alive for as long as the app runs.
-        new HeartRateMonitor(_store, HeartRateAnomalyDetector.warning(), new Clock());
+        var heartRate = new HeartRateMonitor(_store, HeartRateAnomalyDetector.warning(), new Clock());
         _alerts = new AlertDispatcher(_store, _sos, HeartRateAnomalyDetector.critical(), new Clock());
         _alertScreens = new AlertScreens(_store, _language, _sos, _fallMonitor, _alerts);
-        _demo = new DemoController(new ScenarioRunner(_engine, _store), _engine, _fallMonitor);
+        _demo = new DemoController(new ScenarioRunner(_engine, _store), _engine, _store, _fallMonitor, heartRate, _alerts);
     }
 
     // Called when the app starts, before getInitialView().

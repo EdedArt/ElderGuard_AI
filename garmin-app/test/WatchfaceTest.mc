@@ -46,7 +46,10 @@ class WatchfaceFixture {
         alerts = new AlertDispatcher(store, sos, HeartRateAnomalyDetector.critical(), new FakeClock());
         view = new WatchfaceView(store, language, controller, alerts);
         engine = new SimulationEngine(store, new RandomSource());
-        demo = new DemoController(new ScenarioRunner(engine, store), engine, new FallMonitor(store, sos, FallDetector.standard(), new FakeClock()));
+        var clock = new FakeClock();
+        demo = new DemoController(new ScenarioRunner(engine, store), engine, store,
+            new FallMonitor(store, sos, FallDetector.standard(), clock),
+            new HeartRateMonitor(store, HeartRateAnomalyDetector.warning(), clock), alerts);
         delegate = new WatchfaceDelegate(view, controller, language, demo);
         var bitmap = Graphics.createBufferedBitmap({:width => 390, :height => 390}).get() as Graphics.BufferedBitmap;
         dc = bitmap.getDc();

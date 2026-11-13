@@ -6,12 +6,25 @@ import Toybox.Lang;
 class DemoController {
     private var _runner as ScenarioRunner;
     private var _engine as SimulationEngine;
+    private var _store as TelemetryStore;
     private var _fall as FallMonitor;
+    private var _heartRate as HeartRateMonitor;
+    private var _alerts as AlertDispatcher;
 
-    function initialize(runner as ScenarioRunner, engine as SimulationEngine, fall as FallMonitor) {
+    function initialize(
+        runner as ScenarioRunner,
+        engine as SimulationEngine,
+        store as TelemetryStore,
+        fall as FallMonitor,
+        heartRate as HeartRateMonitor,
+        alerts as AlertDispatcher
+    ) {
         _runner = runner;
         _engine = engine;
+        _store = store;
         _fall = fall;
+        _heartRate = heartRate;
+        _alerts = alerts;
     }
 
     // Starts scenario, replacing any in progress. A fall cut short is not something the wearer
@@ -30,9 +43,18 @@ class DemoController {
         _runner.run(scenario);
     }
 
-    // Stops any scenario and hands every sensor back to its generator.
+    // Back to the state the watch started in, like resetAll in the web app: no scenario and no
+    // overrides, monitoring with the countdown or SOS screen closed (AlertScreens closes it when
+    // the mode returns to MODE_MONITORING, which also stops the countdown), full battery, the GPS
+    // signal at the base position, both heart rate detectors and the fall detector at rest, no
+    // warning, and an empty alert history.
     function resetAll() as Void {
         _runner.stop();
         _engine.clearAllOverrides();
+        _store.reset();
+        // After the store, whose reset is itself a reading for every detector.
+        _fall.resetDetector();
+        _heartRate.reset();
+        _alerts.reset();
     }
 }
