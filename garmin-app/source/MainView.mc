@@ -17,20 +17,20 @@ class MainView extends WatchUi.View {
     // Kept so the same Method object can be unregistered in onHide().
     private var _listener as TelemetryListener;
 
-    // Loaded once from the string resources, so the text follows the device language.
+    // Loaded once from the string resources, in the language chosen in the app.
     private var _heartRateFormat as String;
     private var _batteryFormat as String;
     private var _movementFormat as String;
     private var _decimalSeparator as String;
 
-    function initialize(store as TelemetryStore) {
+    function initialize(store as TelemetryStore, language as LanguagePreference) {
         View.initialize();
         _store = store;
         _listener = method(:onTelemetryChanged) as TelemetryListener;
-        _heartRateFormat = WatchUi.loadResource(Rez.Strings.ReadoutHeartRate) as String;
-        _batteryFormat = WatchUi.loadResource(Rez.Strings.ReadoutBattery) as String;
-        _movementFormat = WatchUi.loadResource(Rez.Strings.ReadoutMovement) as String;
-        _decimalSeparator = WatchUi.loadResource(Rez.Strings.DecimalSeparator) as String;
+        _heartRateFormat = language.text(Rez.Strings.ReadoutHeartRate, Rez.Strings.ReadoutHeartRateEn);
+        _batteryFormat = language.text(Rez.Strings.ReadoutBattery, Rez.Strings.ReadoutBatteryEn);
+        _movementFormat = language.text(Rez.Strings.ReadoutMovement, Rez.Strings.ReadoutMovementEn);
+        _decimalSeparator = language.text(Rez.Strings.DecimalSeparator, Rez.Strings.DecimalSeparatorEn);
     }
 
     function onShow() as Void {

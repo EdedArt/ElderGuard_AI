@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Spanish, the default language. English is in resources-eng. -->
+<!--
+    Spanish, the default language of the app. Every string here has an English version in
+    strings-eng.xml with the same id plus "En". Both files are default resources: the app chooses
+    between them with LanguagePreference.text(), not by the language of the watch.
+-->
 <strings>
-    <!-- Name in the watch's app list. -->
+    <!-- Name in the watch's app list, shown by the system. The same in both languages. -->
     <string id="AppName">ElderGuard AI</string>
     <!-- Temporary live readout, replaced by the watchface in a later phase.
          $1$ is replaced by the value (Lang.format). -->

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    English, chosen by the user in the app. Each id is the Spanish id in strings.xml plus "En".
+    A default resource like strings.xml, so it is available whatever the language of the watch.
+-->
+<strings>
+    <!-- Temporary live readout. -->
+    <string id="ReadoutHeartRateEn">$1$ BPM</string>
+    <string id="ReadoutBatteryEn">Battery $1$%</string>
+    <string id="ReadoutMovementEn">Movement $1$ g</string>
+    <string id="DecimalSeparatorEn">.</string>
+</strings>

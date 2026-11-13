@@ -4,17 +4,19 @@ import Toybox.WatchUi;
 
 // Entry point of the watch app, named in manifest.xml (entry="ElderGuardApp").
 // The system creates it when the app starts and asks it for the first screen.
-// It owns the telemetry store and the simulation engine for as long as the app runs, the role of
-// the ViewModel in the Wear OS version.
+// It owns the telemetry store, the simulation engine and the language preference for as long as
+// the app runs, the role of the ViewModel in the Wear OS version.
 class ElderGuardApp extends Application.AppBase {
 
     private var _store as TelemetryStore;
     private var _engine as SimulationEngine;
+    private var _language as LanguagePreference;
 
     function initialize() {
         AppBase.initialize();
         _store = new TelemetryStore();
         _engine = new SimulationEngine(_store, new RandomSource());
+        _language = new LanguagePreference(new LanguageStorage());
     }
 
     // Called when the app starts, before getInitialView().
@@ -29,6 +31,6 @@ class ElderGuardApp extends Application.AppBase {
 
     // The first screen: for now, a single view with no input delegate.
     function getInitialView() as [Views] or [Views, InputDelegates] {
-        return [new MainView(_store)];
+        return [new MainView(_store, _language)];
     }
 }
