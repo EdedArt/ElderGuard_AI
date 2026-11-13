@@ -13,9 +13,6 @@ class WatchfaceView extends WatchUi.View {
     private var _language as LanguagePreference;
     private var _listener as TelemetryListener;
     private var _controller as WatchfaceController;
-    private var _sos as SosController;
-    // True from pushing the SOS screen until this view shows again, so it is pushed only once.
-    private var _sosScreenShown as Boolean = false;
 
     // Created in onLayout(), when the screen size is known.
     private var _layout as WatchfaceLayout or Null;
@@ -30,14 +27,12 @@ class WatchfaceView extends WatchUi.View {
     function initialize(
         store as TelemetryStore,
         language as LanguagePreference,
-        controller as WatchfaceController,
-        sos as SosController
+        controller as WatchfaceController
     ) {
         View.initialize();
         _store = store;
         _language = language;
         _controller = controller;
-        _sos = sos;
         _listener = method(:onTelemetryChanged) as TelemetryListener;
     }
 
@@ -82,8 +77,6 @@ class WatchfaceView extends WatchUi.View {
 
     function onShow() as Void {
         _store.register(_listener);
-        _sosScreenShown = false;
-        showSosScreenIfActive();
     }
 
     function onHide() as Void {
@@ -93,18 +86,6 @@ class WatchfaceView extends WatchUi.View {
 
     function onTelemetryChanged(state as TelemetryState, changedKeys as Array<StateKey>) as Void {
         WatchUi.requestUpdate();
-        if (changedKeys.indexOf(KEY_DEVICE_STATUS) >= 0) {
-            showSosScreenIfActive();
-        }
-    }
-
-    // The SOS screen covers the watchface while the mode is MODE_SOS, like the web app's overlay.
-    private function showSosScreenIfActive() as Void {
-        if (_sos.isActive() && !_sosScreenShown) {
-            _sosScreenShown = true;
-            var view = new SosView(_store, _language);
-            WatchUi.pushView(view, new SosDelegate(view, _sos), WatchUi.SLIDE_IMMEDIATE);
-        }
     }
 
     function onUpdate(dc as Graphics.Dc) as Void {

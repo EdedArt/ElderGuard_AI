@@ -22,6 +22,9 @@
     <!-- SOS active screen. -->
     <string id="SosActiveEn">Calling for help…</string>
     <string id="SosCancelEn">Cancel</string>
+    <!-- Fall countdown screen. -->
+    <string id="FallQuestionEn">Did you fall?</string>
+    <string id="FallCancelEn">I'M OK</string>
     <!-- Language screen. -->
     <string id="LanguageTitleEn">Language</string>
     <string id="LanguageCurrentEn">Current</string>

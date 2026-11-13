@@ -27,6 +27,9 @@
     <!-- SOS active screen. -->
     <string id="SosActive">Pidiendo ayuda…</string>
     <string id="SosCancel">Cancelar</string>
+    <!-- Fall countdown screen. -->
+    <string id="FallQuestion">¿Te caíste?</string>
+    <string id="FallCancel">ESTOY BIEN</string>
     <!-- Language screen. Each language is named in itself, so someone who switched by mistake
          still finds theirs; the names are the same in both files. -->
     <string id="LanguageTitle">Idioma</string>

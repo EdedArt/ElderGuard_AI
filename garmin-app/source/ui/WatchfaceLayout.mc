@@ -1,5 +1,6 @@
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.Math;
 
 // Where each part of the watchface goes, mirroring the three zones of the web watchface from top
 // to bottom: status (battery and GPS), data (time, date, heart rate) and the SOS button.
@@ -50,6 +51,23 @@ class WatchfaceLayout {
     var cancelWidth as Number;
     var cancelHeight as Number;
 
+    // The fall countdown screen. The draining ring is inset from the edge, which keeps the edge
+    // free for the BACK button hint; everything else stays inside fallContentRadius, within the
+    // ring. The title, the seconds left and the "Estoy bien" button, from top to bottom.
+    var fallRingRadius as Number;
+    var fallRingWidth as Number;
+    var fallContentRadius as Number;
+    var fallTitleY as Number;
+    var fallSecondsY as Number;
+    var fallButtonY as Number;
+    var fallButtonWidth as Number;
+    var fallButtonHeight as Number;
+    var fallSecondsFont as Graphics.FontType = Graphics.FONT_NUMBER_HOT;
+
+    // Fonts a line of text may use, largest first, for fittingFont().
+    var titleFonts as Array<Graphics.FontType> =
+        [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL] as Array<Graphics.FontType>;
+
     var statusFont as Graphics.FontType = Graphics.FONT_TINY;
     var timeFont as Graphics.FontType = Graphics.FONT_NUMBER_MEDIUM;
     var periodFont as Graphics.FontType = Graphics.FONT_TINY;
@@ -79,6 +97,14 @@ class WatchfaceLayout {
         cancelY = scale(265);
         cancelWidth = scale(240);
         cancelHeight = scale(84);
+        fallRingRadius = scale(177);
+        fallRingWidth = scale(8);
+        fallContentRadius = fallRingRadius - fallRingWidth / 2 - scale(5);
+        fallTitleY = scale(110);
+        fallSecondsY = scale(190);
+        fallButtonY = scale(285);
+        fallButtonWidth = scale(260);
+        fallButtonHeight = scale(70);
     }
 
     // A length on the 390-pixel design, on this screen.
@@ -96,6 +122,48 @@ class WatchfaceLayout {
         var dx = x - centerX;
         var dy = y - sosY;
         return dx * dx + dy * dy <= sosTouchRadius * sosTouchRadius;
+    }
+
+    // True if the point is on a button centered at (centerX, buttonY), or within a margin of it,
+    // for unsteady hands.
+    function isOnButton(x as Number, y as Number, buttonY as Number, buttonWidth as Number, buttonHeight as Number) as Boolean {
+        var margin = scale(12);
+        return x >= centerX - buttonWidth / 2 - margin && x <= centerX + buttonWidth / 2 + margin
+            && y >= buttonY - buttonHeight / 2 - margin && y <= buttonY + buttonHeight / 2 + margin;
+    }
+
+    // The width available to a row of halfHeight above and below y, inside a circle of radius
+    // around the center of the screen: the chord at the edge of the row farther from the center.
+    function widthInCircle(y as Number, halfHeight as Number, radius as Number) as Number {
+        var dy = (y - height / 2).abs() + halfHeight;
+        if (dy >= radius) {
+            return 0;
+        }
+        return (2 * Math.sqrt(radius * radius - dy * dy)).toNumber();
+    }
+
+    // The largest of fonts (largest first) in which text, centered on row y, fits inside a circle
+    // of radius; the last one if none does. Measured with the real font, so it holds for the
+    // longer of the two languages without a fixed size per language.
+    function fittingFont(dc as Graphics.Dc, text as String, fonts as Array<Graphics.FontType>, y as Number, radius as Number) as Graphics.FontType {
+        for (var i = 0; i < fonts.size(); i++) {
+            var font = fonts[i];
+            if (dc.getTextWidthInPixels(text, font) <= widthInCircle(y, Graphics.getFontAscent(font) / 2, radius)) {
+                return font;
+            }
+        }
+        return fonts[fonts.size() - 1];
+    }
+
+    // The largest of fonts (largest first) in which text is at most maxWidth wide; the last one
+    // if none is. For text inside a shape, such as a button.
+    function fontForWidth(dc as Graphics.Dc, text as String, fonts as Array<Graphics.FontType>, maxWidth as Number) as Graphics.FontType {
+        for (var i = 0; i < fonts.size(); i++) {
+            if (dc.getTextWidthInPixels(text, fonts[i]) <= maxWidth) {
+                return fonts[i];
+            }
+        }
+        return fonts[fonts.size() - 1];
     }
 
     function inCircle(x as Number, y as Number) as Boolean {

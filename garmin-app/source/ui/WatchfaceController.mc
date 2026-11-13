@@ -1,4 +1,3 @@
-import Toybox.Attention;
 import Toybox.Lang;
 import Toybox.System;
 import Toybox.Timer;
@@ -24,7 +23,7 @@ class WatchfaceController {
 
     function sosPress() as Void {
         if (!hold.isPressed()) {
-            buzz(50);
+            Vibration.pulse(50);
         }
         hold.press(now());
         changed();
@@ -69,15 +68,8 @@ class WatchfaceController {
     }
 
     private function activate() as Void {
-        buzz(600);
+        Vibration.pulse(Vibration.ALERT_MS);
         _sos.activate();
-    }
-
-    // A vibration of this many milliseconds, on watches that can vibrate.
-    private function buzz(durationMs as Number) as Void {
-        if (Attention has :vibrate) {
-            Attention.vibrate([new Attention.VibeProfile(100, durationMs)]);
-        }
     }
 
     private function changed() as Void {

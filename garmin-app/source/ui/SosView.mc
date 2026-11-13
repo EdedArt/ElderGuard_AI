@@ -3,21 +3,16 @@ import Toybox.Lang;
 import Toybox.WatchUi;
 
 // Full-screen red screen shown while SOS is active, like the web and Wear OS SOS screens:
-// "Pidiendo ayuda…" and a large "Cancelar" button. The watchface pushes it when
-// deviceStatus.mode becomes MODE_SOS, and it closes itself when the mode leaves MODE_SOS.
+// "Pidiendo ayuda…" and a large "Cancelar" button. AlertScreens opens it while
+// deviceStatus.mode is MODE_SOS and closes it when the mode leaves MODE_SOS.
 class SosView extends WatchUi.View {
-    private var _store as TelemetryStore;
     private var _language as LanguagePreference;
-    private var _listener as TelemetryListener;
     private var _layout as WatchfaceLayout or Null;
     private var _backHint as ButtonHintArc or Null;
-    private var _closed as Boolean = false;
 
-    function initialize(store as TelemetryStore, language as LanguagePreference) {
+    function initialize(language as LanguagePreference) {
         View.initialize();
-        _store = store;
         _language = language;
-        _listener = method(:onTelemetryChanged) as TelemetryListener;
     }
 
     function onLayout(dc as Graphics.Dc) as Void {
@@ -25,20 +20,6 @@ class SosView extends WatchUi.View {
         _layout = layout;
         // White on the red screen, next to BACK: the button that cancels.
         _backHint = new ButtonHintArc(layout, layout.backKeyAngle, WatchColors.ON_DANGER);
-    }
-
-    function onShow() as Void {
-        _store.register(_listener);
-        // The SOS may have ended while this screen was not listening.
-        closeUnlessActive(_store.getState());
-    }
-
-    function onHide() as Void {
-        _store.unregister(_listener);
-    }
-
-    function onTelemetryChanged(state as TelemetryState, changedKeys as Array<StateKey>) as Void {
-        closeUnlessActive(state);
     }
 
     // True if a touch at these screen coordinates is on the cancel button.
@@ -87,13 +68,6 @@ class SosView extends WatchUi.View {
             _language.text(Rez.Strings.SosCancel, Rez.Strings.SosCancelEn), Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
 
         backHint.draw(dc);
-    }
-
-    private function closeUnlessActive(state as TelemetryState) as Void {
-        if (!_closed && state.deviceStatus.mode != MODE_SOS) {
-            _closed = true;
-            WatchUi.popView(WatchUi.SLIDE_IMMEDIATE);
-        }
     }
 }
 

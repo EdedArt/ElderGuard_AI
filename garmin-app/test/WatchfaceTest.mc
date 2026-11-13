@@ -40,7 +40,7 @@ class WatchfaceFixture {
         language = new LanguagePreference(new MemoryLanguageStorage(languageTag));
         sos = new SosController(store);
         controller = new FakeClockController(sos);
-        view = new WatchfaceView(store, language, controller, sos);
+        view = new WatchfaceView(store, language, controller);
         delegate = new WatchfaceDelegate(view, controller, language);
         var bitmap = Graphics.createBufferedBitmap({:width => 390, :height => 390}).get() as Graphics.BufferedBitmap;
         dc = bitmap.getDc();
@@ -212,7 +212,7 @@ function sosScreen_drawsInBothLanguagesWithoutErrors(logger as Logger) as Boolea
     var tags = [null, "en"];
     for (var i = 0; i < tags.size(); i++) {
         var fixture = new WatchfaceFixture(tags[i] as String or Null);
-        var view = new SosView(fixture.store, fixture.language);
+        var view = new SosView(fixture.language);
         view.onLayout(fixture.dc);
         view.onUpdate(fixture.dc);
         fixture.finish();
@@ -303,7 +303,7 @@ function interaction_otherButtonsDoNotTouchSos(logger as Logger) as Boolean {
 (:test)
 function interaction_theSosScreenCancelsWithBackOrTheCancelButton(logger as Logger) as Boolean {
     var fixture = new WatchfaceFixture(null);
-    var view = new SosView(fixture.store, fixture.language);
+    var view = new SosView(fixture.language);
     view.onLayout(fixture.dc);
     var delegate = new SosDelegate(view, fixture.sos);
     var layout = new WatchfaceLayout(390, 390);

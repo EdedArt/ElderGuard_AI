@@ -95,6 +95,14 @@ class TelemetryStore {
         replaceState(next.copy());
     }
 
+    // Switches deviceStatus.mode, keeping the rest of the state.
+    function setMode(mode as DeviceMode) as Void {
+        var next = getState();
+        var status = next.deviceStatus;
+        next.deviceStatus = new DeviceStatus(mode, status.lastUpdate, status.healthAlert);
+        update(next);
+    }
+
     // Restores the initial state, notifying listeners of what that changed.
     function reset() as Void {
         replaceState(TelemetryState.initial());

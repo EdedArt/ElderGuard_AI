@@ -286,8 +286,10 @@ function fallFeed_confirmsAFallFedThroughTheStore(logger as Logger) as Boolean {
     TestReadings.write(store, clock, TestReadings.still(), 2000 + FallDetectionConfig.IMMOBILITY_DURATION_MS - 1000);
     Test.assertEqual(monitor.getDetectorState(), FALL_IMMOBILITY);
     TestReadings.write(store, clock, TestReadings.still(), 2000 + FallDetectionConfig.IMMOBILITY_DURATION_MS);
-    // Confirmed: until the countdown exists the monitor re-arms the detector at once.
+    // Confirmed: the watch switches to the fall countdown, and the detector rests until it ends.
+    Test.assertEqual(store.getState().deviceStatus.mode, MODE_FALL_COUNTDOWN);
     Test.assertEqual(monitor.getDetectorState(), FALL_IDLE);
+    monitor.cancel();
     return true;
 }
 
