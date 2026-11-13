@@ -1,6 +1,5 @@
 import Toybox.Graphics;
 import Toybox.Lang;
-import Toybox.Math;
 import Toybox.WatchUi;
 
 // The main screen, port of the web and Wear OS watchfaces: battery and GPS at the top, the time,
@@ -61,10 +60,10 @@ class WatchfaceView extends WatchUi.View {
         var state = _store.getState();
 
         // Status row: the battery and GPS indicators centered together.
-        var percent = Math.round(state.battery.level).toNumber();
+        var percent = WatchStatus.batteryPercent(state.battery.level);
         battery.percent = percent;
         battery.text = Lang.format(_language.text(Rez.Strings.BatteryValue, Rez.Strings.BatteryValueEn), [percent]);
-        gps.text = state.gps.signal
+        gps.text = WatchStatus.gpsState(state.gps) == GPS_OK
             ? _language.text(Rez.Strings.GpsOk, Rez.Strings.GpsOkEn)
             : _language.text(Rez.Strings.GpsLost, Rez.Strings.GpsLostEn);
 
