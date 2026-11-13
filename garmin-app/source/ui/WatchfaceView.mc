@@ -1,5 +1,6 @@
 import Toybox.Graphics;
 import Toybox.Lang;
+import Toybox.System;
 import Toybox.WatchUi;
 
 // The main screen, port of the web and Wear OS watchfaces: battery and GPS at the top, the time,
@@ -12,6 +13,7 @@ class WatchfaceView extends WatchUi.View {
     private var _store as TelemetryStore;
     private var _language as LanguagePreference;
     private var _listener as TelemetryListener;
+    private var _controller as WatchfaceController;
 
     // Created in onLayout(), when the screen size is known.
     private var _layout as WatchfaceLayout or Null;
@@ -19,11 +21,15 @@ class WatchfaceView extends WatchUi.View {
     private var _gps as GpsIndicator or Null;
     private var _clock as ClockDisplay or Null;
     private var _heartRate as HeartRateIndicator or Null;
+    private var _sosButton as SosButton or Null;
+    private var _startHint as ButtonHintArc or Null;
+    private var _holdHint as HoldHint or Null;
 
-    function initialize(store as TelemetryStore, language as LanguagePreference) {
+    function initialize(store as TelemetryStore, language as LanguagePreference, controller as WatchfaceController) {
         View.initialize();
         _store = store;
         _language = language;
+        _controller = controller;
         _listener = method(:onTelemetryChanged) as TelemetryListener;
     }
 
@@ -34,6 +40,15 @@ class WatchfaceView extends WatchUi.View {
         _gps = new GpsIndicator(layout);
         _clock = new ClockDisplay(layout);
         _heartRate = new HeartRateIndicator(layout);
+        _sosButton = new SosButton(layout);
+        _startHint = new ButtonHintArc(layout, layout.startKeyAngle, WatchColors.DANGER_TEXT);
+        _holdHint = new HoldHint(layout);
+    }
+
+    // True if a touch at these screen coordinates is on the SOS button.
+    function isOnSosButton(coordinates as [Number, Number]) as Boolean {
+        var layout = _layout;
+        return layout != null && layout.isOnSosButton(coordinates[0], coordinates[1]);
     }
 
     function onShow() as Void {
@@ -42,6 +57,7 @@ class WatchfaceView extends WatchUi.View {
 
     function onHide() as Void {
         _store.unregister(_listener);
+        _controller.stop();
     }
 
     function onTelemetryChanged(state as TelemetryState, changedKeys as Array<StateKey>) as Void {
@@ -54,7 +70,11 @@ class WatchfaceView extends WatchUi.View {
         var gps = _gps;
         var clock = _clock;
         var heartRate = _heartRate;
-        if (layout == null || battery == null || gps == null || clock == null || heartRate == null) {
+        var sosButton = _sosButton;
+        var startHint = _startHint;
+        var holdHint = _holdHint;
+        if (layout == null || battery == null || gps == null || clock == null || heartRate == null
+            || sosButton == null || startHint == null || holdHint == null) {
             return;
         }
         var state = _store.getState();
@@ -90,5 +110,16 @@ class WatchfaceView extends WatchUi.View {
         gps.draw(dc);
         clock.draw(dc);
         heartRate.draw(dc);
+
+        sosButton.title = _language.text(Rez.Strings.SosTitle, Rez.Strings.SosTitleEn);
+        sosButton.label = _language.text(Rez.Strings.SosLabel, Rez.Strings.SosLabelEn);
+        sosButton.pressed = _controller.hold.isPressed();
+        sosButton.draw(dc);
+        startHint.draw(dc);
+
+        if (_controller.hold.isHintVisible(System.getTimer())) {
+            holdHint.text = _language.text(Rez.Strings.SosHoldHint, Rez.Strings.SosHoldHintEn);
+            holdHint.draw(dc);
+        }
     }
 }

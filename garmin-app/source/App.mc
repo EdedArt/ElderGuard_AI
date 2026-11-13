@@ -29,8 +29,10 @@ class ElderGuardApp extends Application.AppBase {
         _engine.stop();
     }
 
-    // The first screen: for now, a single view with no input delegate.
+    // The first screen: the watchface, with its input delegate.
     function getInitialView() as [Views] or [Views, InputDelegates] {
-        return [new WatchfaceView(_store, _language)];
+        var controller = new WatchfaceController();
+        var view = new WatchfaceView(_store, _language, controller);
+        return [view, new WatchfaceDelegate(view, controller)];
     }
 }

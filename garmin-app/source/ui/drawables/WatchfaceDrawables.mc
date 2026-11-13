@@ -153,3 +153,85 @@ class HeartRateIndicator extends WatchUi.Drawable {
         dc.fillPolygon([[cx - 2 * r, top + r / 2 + 1], [cx + 2 * r, top + r / 2 + 1], [cx, cy + size / 2]]);
     }
 }
+
+// The large red SOS button at the bottom: "SOS" and "AUXILIO" on a red circle with a white
+// outline, like the other apps. While pressed it turns white with red text, so the person sees
+// at once that the press was registered.
+class SosButton extends WatchUi.Drawable {
+    var title as String = "";
+    var label as String = "";
+    var pressed as Boolean = false;
+    private var _layout as WatchfaceLayout;
+
+    function initialize(layout as WatchfaceLayout) {
+        Drawable.initialize({});
+        _layout = layout;
+    }
+
+    function draw(dc as Graphics.Dc) as Void {
+        var x = _layout.centerX;
+        var y = _layout.sosY;
+        var radius = _layout.sosRadius;
+        var fill = pressed ? WatchColors.ON_DANGER : WatchColors.DANGER;
+        var content = pressed ? WatchColors.DANGER : WatchColors.ON_DANGER;
+        dc.setColor(fill, Graphics.COLOR_TRANSPARENT);
+        dc.fillCircle(x, y, radius);
+        dc.setColor(WatchColors.DANGER_BORDER, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(_layout.scale(3));
+        dc.drawCircle(x, y, radius);
+        dc.setColor(content, Graphics.COLOR_TRANSPARENT);
+        dc.drawText(x, y - _layout.scale(12), Graphics.FONT_MEDIUM, title, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+        dc.drawText(x, y + _layout.scale(22), Graphics.FONT_XTINY, label, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+    }
+}
+
+// A short thick arc on the edge of the screen, next to a physical button: the hint Garmin's own
+// apps draw to show which button does something (here, that START is the SOS button).
+// Angles are in degrees, counterclockwise from 3 o'clock, as Dc.drawArc uses them.
+class ButtonHintArc extends WatchUi.Drawable {
+    var angle as Number;
+    var color as Number;
+    private var _layout as WatchfaceLayout;
+
+    function initialize(layout as WatchfaceLayout, angle as Number, color as Number) {
+        Drawable.initialize({});
+        _layout = layout;
+        self.angle = angle;
+        self.color = color;
+    }
+
+    function draw(dc as Graphics.Dc) as Void {
+        var width = _layout.scale(10);
+        dc.setColor(color, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(width);
+        dc.drawArc(_layout.centerX, _layout.height / 2, _layout.width / 2 - width / 2, Graphics.ARC_COUNTER_CLOCKWISE,
+            angle - 10, angle + 10);
+    }
+}
+
+// "Mantén presionado": a white-outlined box in the middle of the screen, shown for a moment
+// after a press that was too short. In the middle, so the finger on the SOS button never
+// covers it.
+class HoldHint extends WatchUi.Drawable {
+    var text as String = "";
+    private var _layout as WatchfaceLayout;
+
+    function initialize(layout as WatchfaceLayout) {
+        Drawable.initialize({});
+        _layout = layout;
+    }
+
+    function draw(dc as Graphics.Dc) as Void {
+        var font = _layout.hintFont;
+        var width = dc.getTextWidthInPixels(text, font) + _layout.scale(28);
+        var height = dc.getFontHeight(font) + _layout.scale(8);
+        var left = _layout.centerX - width / 2;
+        var top = _layout.hintY - height / 2;
+        dc.setColor(WatchColors.BACKGROUND, Graphics.COLOR_TRANSPARENT);
+        dc.fillRoundedRectangle(left, top, width, height, _layout.scale(12));
+        dc.setColor(WatchColors.TEXT, Graphics.COLOR_TRANSPARENT);
+        dc.setPenWidth(_layout.scale(2));
+        dc.drawRoundedRectangle(left, top, width, height, _layout.scale(12));
+        dc.drawText(_layout.centerX, _layout.hintY, font, text, Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER);
+    }
+}

@@ -25,9 +25,18 @@ class WatchfaceLayout {
     var statusGap as Number;
     var iconGap as Number;
 
-    // The SOS button: a circle at the bottom, inside the curved edge.
+    // The SOS button: a circle at the bottom, inside the curved edge. Touches count as on the
+    // button up to sosTouchRadius from its center, a little beyond its edge, for unsteady hands.
     var sosY as Number;
     var sosRadius as Number;
+    var sosTouchRadius as Number;
+
+    // The "Mantén presionado" hint, over the middle of the screen.
+    var hintY as Number;
+
+    // Where the START button is, around the screen: about 28 degrees above 3 o'clock on the
+    // fr165 (from the key positions in the SDK's device files).
+    var startKeyAngle as Number = 28;
 
     var statusFont as Graphics.FontType = Graphics.FONT_TINY;
     var timeFont as Graphics.FontType = Graphics.FONT_NUMBER_MEDIUM;
@@ -35,19 +44,22 @@ class WatchfaceLayout {
     var dateFont as Graphics.FontType = Graphics.FONT_SMALL;
     var heartRateFont as Graphics.FontType = Graphics.FONT_LARGE;
     var unitFont as Graphics.FontType = Graphics.FONT_TINY;
+    var hintFont as Graphics.FontType = Graphics.FONT_TINY;
 
     function initialize(width as Number, height as Number) {
         self.width = width;
         self.height = height;
         centerX = width / 2;
         statusY = scale(72);
-        timeY = scale(140);
-        dateY = scale(196);
-        heartRateY = scale(240);
+        timeY = scale(136);
+        dateY = scale(190);
+        heartRateY = scale(232);
         statusGap = scale(18);
         iconGap = scale(6);
-        sosY = scale(318);
-        sosRadius = scale(56);
+        sosY = scale(322);
+        sosRadius = scale(54);
+        sosTouchRadius = scale(76);
+        hintY = height / 2;
     }
 
     // A length on the 390-pixel design, on this screen.
@@ -58,6 +70,13 @@ class WatchfaceLayout {
     // True if the rectangle is inside the round screen: its four corners are within the circle.
     function fitsInCircle(left as Number, top as Number, right as Number, bottom as Number) as Boolean {
         return inCircle(left, top) && inCircle(right, top) && inCircle(left, bottom) && inCircle(right, bottom);
+    }
+
+    // True if the point is on the SOS button, including its margin for touch.
+    function isOnSosButton(x as Number, y as Number) as Boolean {
+        var dx = x - centerX;
+        var dy = y - sosY;
+        return dx * dx + dy * dy <= sosTouchRadius * sosTouchRadius;
     }
 
     function inCircle(x as Number, y as Number) as Boolean {
