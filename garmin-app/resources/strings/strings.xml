@@ -31,4 +31,7 @@
     <string id="SosTitle">SOS</string>
     <string id="SosLabel">AUXILIO</string>
     <string id="SosHoldHint">Mantén presionado</string>
+    <!-- SOS active screen. -->
+    <string id="SosActive">Pidiendo ayuda…</string>
+    <string id="SosCancel">Cancelar</string>
 </strings>

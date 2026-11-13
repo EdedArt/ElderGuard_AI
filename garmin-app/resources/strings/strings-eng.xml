@@ -24,4 +24,7 @@
     <string id="SosTitleEn">SOS</string>
     <string id="SosLabelEn">HELP</string>
     <string id="SosHoldHintEn">Hold to call for help</string>
+    <!-- SOS active screen. -->
+    <string id="SosActiveEn">Calling for help…</string>
+    <string id="SosCancelEn">Cancel</string>
 </strings>

@@ -36,9 +36,10 @@ class WatchfaceDelegate extends WatchUi.BehaviorDelegate {
         return false;
     }
 
-    // START and taps also produce onSelect; both are already handled above and below.
+    // START and taps also produce onSelect, before onTap. Both are handled by the other
+    // callbacks, so this one lets the event through: returning true here would stop onTap.
     function onSelect() as Boolean {
-        return true;
+        return false;
     }
 
     function onHold(clickEvent as WatchUi.ClickEvent) as Boolean {

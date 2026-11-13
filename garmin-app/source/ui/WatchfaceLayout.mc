@@ -37,6 +37,15 @@ class WatchfaceLayout {
     // Where the START button is, around the screen: about 28 degrees above 3 o'clock on the
     // fr165 (from the key positions in the SDK's device files).
     var startKeyAngle as Number = 28;
+    // And BACK, about 29 degrees below 3 o'clock.
+    var backKeyAngle as Number = -29;
+
+    // The SOS screen: the title, the widest it may be, and the cancel button below it.
+    var sosTitleY as Number;
+    var sosTitleMaxWidth as Number;
+    var cancelY as Number;
+    var cancelWidth as Number;
+    var cancelHeight as Number;
 
     var statusFont as Graphics.FontType = Graphics.FONT_TINY;
     var timeFont as Graphics.FontType = Graphics.FONT_NUMBER_MEDIUM;
@@ -60,6 +69,11 @@ class WatchfaceLayout {
         sosRadius = scale(54);
         sosTouchRadius = scale(76);
         hintY = height / 2;
+        sosTitleY = scale(150);
+        sosTitleMaxWidth = scale(330);
+        cancelY = scale(265);
+        cancelWidth = scale(240);
+        cancelHeight = scale(84);
     }
 
     // A length on the 390-pixel design, on this screen.
