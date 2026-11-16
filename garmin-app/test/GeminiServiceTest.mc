@@ -76,6 +76,34 @@ function gemini_promptSaysWhenTheLocationIsTheLastKnown(logger as Logger) as Boo
     return true;
 }
 
+// Connect IQ does not escape double quotes when it turns the body into JSON, so a prompt with one
+// makes Gemini answer 400 (seen in the simulator). The prompts use «» and '' instead.
+(:test)
+function gemini_promptsHaveNoDoubleQuotes(logger as Logger) as Boolean {
+    var types = [ALERT_FALL, ALERT_MANUAL_SOS, ALERT_HIGH_HEART_RATE] as Array<AlertType>;
+    var languages = [LANGUAGE_ES, LANGUAGE_EN] as Array<AppLanguage>;
+    for (var i = 0; i < types.size(); i++) {
+        for (var j = 0; j < languages.size(); j++) {
+            var prompt = GeminiService.buildAlertPrompt(types[i], 92, GeminiSamples.TIMESTAMP, GeminiSamples.lostGps(), languages[j]);
+            Test.assert(!GeminiSamples.contains(prompt, "\""));
+        }
+    }
+    return true;
+}
+
+(:test)
+function gemini_promptsAskForAShortTextWithoutNamesOrCoordinates(logger as Logger) as Boolean {
+    var es = GeminiService.buildAlertPrompt(ALERT_FALL, 92, GeminiSamples.TIMESTAMP, GeminiSamples.gps(), LANGUAGE_ES);
+    var en = GeminiService.buildAlertPrompt(ALERT_FALL, 92, GeminiSamples.TIMESTAMP, GeminiSamples.gps(), LANGUAGE_EN);
+    Test.assert(GeminiSamples.contains(es, "menos de 90 caracteres"));
+    Test.assert(GeminiSamples.contains(es, "«tu familiar»"));
+    Test.assert(GeminiSamples.contains(es, "No copies las coordenadas"));
+    Test.assert(GeminiSamples.contains(en, "under 90 characters"));
+    Test.assert(GeminiSamples.contains(en, "'your relative'"));
+    Test.assert(GeminiSamples.contains(en, "Do not copy the coordinates"));
+    return true;
+}
+
 (:test)
 function gemini_clockTimeIsTwoDigitHoursAndMinutes(logger as Logger) as Boolean {
     var time = GeminiService.clockTime(GeminiSamples.TIMESTAMP);

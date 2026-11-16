@@ -53,7 +53,7 @@
     <string id="LanguageEsNameEn">Español</string>
     <string id="LanguageEnNameEn">English</string>
     <!-- Prompt sent to Gemini. Never shown on screen. -->
-    <string id="GeminiPromptEn">You are the assistant of ElderGuard AI, a safety watch for older adults. Write the message an emergency contact of the person wearing the watch will receive. Event: $1$. Heart rate: $2$ BPM. Time: $3$. Location: $4$. At most 2 sentences and 160 characters, in English, clear and calm. Do not use brackets, placeholders, links or made-up details. Reply with the message only.</string>
+    <string id="GeminiPromptEn">You are the assistant of ElderGuard AI, a safety watch for older adults. Write the message an emergency contact of the person wearing the watch will receive. Event: $1$. Heart rate: $2$ BPM. Time: $3$. Location: $4$. At most 2 sentences and under 90 characters, in English, clear and calm. Do not start with the name of the app. Call the person 'your relative' and do not make up names or details. Do not copy the coordinates, which are sent separately: only say whether the location is from GPS or the last known one. No brackets, placeholders or links. Reply with the message only.</string>
     <string id="GeminiEventFallEn">confirmed fall; the person did not answer the countdown</string>
     <string id="GeminiEventManualSosEn">the person pressed the SOS button to ask for help</string>
     <string id="GeminiEventHighHeartRateEn">sustained critical heart rate at rest</string>
