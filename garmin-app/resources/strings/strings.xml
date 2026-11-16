@@ -39,6 +39,12 @@
     <string id="SosLocation">GPS</string>
     <string id="SosLastLocation">Última posición</string>
     <string id="SosCoordinates">$1$, $2$</string>
+    <!-- While Gemini writes the text of the alert (also on the critical heart rate banner). -->
+    <string id="SosGenerating">Generando mensaje…</string>
+    <!-- Message page of the SOS screen: where the text sent came from. Short, to fit the top of
+         the round screen; the confirmation page already says it is a mock. -->
+    <string id="SosMessageAi">Mensaje de IA</string>
+    <string id="SosMessageTemplate">Mensaje predefinido</string>
     <!-- Fall countdown screen. -->
     <string id="FallQuestion">¿Te caíste?</string>
     <string id="FallCancel">ESTOY BIEN</string>

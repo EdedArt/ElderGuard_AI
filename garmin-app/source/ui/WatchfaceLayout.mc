@@ -75,6 +75,17 @@ class WatchfaceLayout {
     var confirmCancelY as Number;
     var confirmCancelWidth as Number;
     var confirmCancelHeight as Number;
+    // The message page of the SOS screen: a label where the title was, then the text of the
+    // alert in a box down to the cancel button, as wide as the circle allows at its lower edge,
+    // and the chevrons that say there is another page below (on the confirmation) or above (here).
+    var messageLabelY as Number;
+    var messageY as Number;
+    var messageHeight as Number;
+    var messageWidth as Number;
+    var messageFonts as Array<Graphics.FontType> = [Graphics.FONT_TINY, Graphics.FONT_XTINY] as Array<Graphics.FontType>;
+    var pageDownY as Number;
+    var pageUpY as Number;
+    var chevronSize as Number;
     var sosTitleFonts as Array<Graphics.FontType> =
         [Graphics.FONT_LARGE, Graphics.FONT_MEDIUM, Graphics.FONT_SMALL, Graphics.FONT_TINY] as Array<Graphics.FontType>;
     var contactFonts as Array<Graphics.FontType> = [Graphics.FONT_TINY, Graphics.FONT_XTINY] as Array<Graphics.FontType>;
@@ -137,6 +148,13 @@ class WatchfaceLayout {
         confirmCancelY = scale(322);
         confirmCancelWidth = scale(200);
         confirmCancelHeight = scale(56);
+        messageLabelY = scale(72);
+        messageY = scale(194);
+        messageHeight = scale(200);
+        messageWidth = widthInCircle(messageY, messageHeight / 2, sosSafeRadius) - scale(16);
+        pageDownY = scale(366);
+        pageUpY = scale(30);
+        chevronSize = scale(10);
         cancelY = scale(265);
         cancelWidth = scale(240);
         cancelHeight = scale(84);

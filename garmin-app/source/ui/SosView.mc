@@ -7,6 +7,12 @@ import Toybox.WatchUi;
 // GPS coordinates) and a large "Cancelar" button. AlertScreens opens it while
 // deviceStatus.mode is MODE_SOS and closes it when the mode leaves MODE_SOS.
 //
+// While the text of the alert is being generated (Gemini, up to GeminiConfig.TIMEOUT_MS), the
+// line above the contacts says "Generando mensaje…" instead of "Avisados (simulado)". A second
+// page, reached with DOWN or by swiping up (a chevron at the bottom says it is there), shows the
+// text itself and whether it came from Gemini or from the static template; UP or swiping down
+// goes back. The cancel button is on both pages.
+//
 // Wear OS scrolls the three parts; here they fit on one screen, each line in the largest font
 // that fits the round screen at its row (WatchfaceLayout.fittingFont), so nothing needs scrolling.
 class SosView extends WatchUi.View {
@@ -21,6 +27,9 @@ class SosView extends WatchUi.View {
     var contactNames as Array<String> = [] as Array<String>;
     var locationLabel as String = "";
     var coordinates as String = "";
+    var showingMessage as Boolean = false;
+    var messageLabel as String = "";
+    var messageText as String = "";
 
     function initialize(language as LanguagePreference, alerts as AlertDispatcher) {
         View.initialize();
@@ -33,6 +42,12 @@ class SosView extends WatchUi.View {
         _layout = layout;
         // White on the red screen, next to BACK: the button that cancels.
         _backHint = new ButtonHintArc(layout, layout.backKeyAngle, WatchColors.ON_DANGER);
+    }
+
+    // Shows the message page (true) or the confirmation (false).
+    function showMessage(show as Boolean) as Void {
+        showingMessage = show;
+        WatchUi.requestUpdate();
     }
 
     // A coordinate with 5 decimals (about 1 m), like toFixed(5) in the web app; always with a dot.
@@ -65,12 +80,22 @@ class SosView extends WatchUi.View {
 
         var alert = _alerts.sosAlert();
         confirming = alert != null;
-        var title = _language.text(Rez.Strings.SosActive, Rez.Strings.SosActiveEn);
-        var titleY = confirming ? layout.confirmTitleY : layout.sosTitleY;
-        drawLine(dc, layout, title, layout.sosTitleFonts, titleY);
+        // The message page leaves out the title, which the confirmation page already shows, to
+        // give the text more room.
+        if (alert == null || !showingMessage) {
+            var title = _language.text(Rez.Strings.SosActive, Rez.Strings.SosActiveEn);
+            var titleY = confirming ? layout.confirmTitleY : layout.sosTitleY;
+            drawLine(dc, layout, title, layout.sosTitleFonts, titleY);
+        }
 
         if (alert != null) {
-            drawConfirmation(dc, layout, alert);
+            if (showingMessage) {
+                drawMessage(dc, layout, alert);
+                drawChevron(dc, layout, layout.pageUpY, true);
+            } else {
+                drawConfirmation(dc, layout, alert);
+                drawChevron(dc, layout, layout.pageDownY, false);
+            }
             drawCancel(dc, layout, layout.confirmCancelY, layout.confirmCancelWidth, layout.confirmCancelHeight);
         } else {
             drawCancel(dc, layout, layout.cancelY, layout.cancelWidth, layout.cancelHeight);
@@ -81,7 +106,9 @@ class SosView extends WatchUi.View {
     // "Avisados (simulado)", one contact name per line, so a name never breaks in the middle, and
     // where the alert says the person is: the GPS position, or the last one known without signal.
     private function drawConfirmation(dc as Graphics.Dc, layout as WatchfaceLayout, alert as AlertPayload) as Void {
-        notified = _language.text(Rez.Strings.SosNotified, Rez.Strings.SosNotifiedEn);
+        notified = alert.isMessagePending()
+            ? _language.text(Rez.Strings.SosGenerating, Rez.Strings.SosGeneratingEn)
+            : _language.text(Rez.Strings.SosNotified, Rez.Strings.SosNotifiedEn);
         drawLine(dc, layout, notified, [layout.detailFont] as Array<Graphics.FontType>, layout.notifiedY);
 
         contactNames = [] as Array<String>;
@@ -98,6 +125,46 @@ class SosView extends WatchUi.View {
             [formatCoordinate(alert.gps.lat), formatCoordinate(alert.gps.lng)]);
         drawLine(dc, layout, locationLabel, [layout.detailFont] as Array<Graphics.FontType>, layout.locationLabelY);
         drawLine(dc, layout, coordinates, layout.contactFonts, layout.coordinatesY);
+    }
+
+    // Where the text came from, and the text itself, wrapped in the box below in the largest font
+    // that fits it all; the TextArea ends it with "…" if even the smallest does not.
+    private function drawMessage(dc as Graphics.Dc, layout as WatchfaceLayout, alert as AlertPayload) as Void {
+        var message = alert.message;
+        if (message == null) {
+            messageLabel = _language.text(Rez.Strings.SosGenerating, Rez.Strings.SosGeneratingEn);
+            messageText = "";
+        } else {
+            messageLabel = alert.messageOrigin == MESSAGE_AI
+                ? _language.text(Rez.Strings.SosMessageAi, Rez.Strings.SosMessageAiEn)
+                : _language.text(Rez.Strings.SosMessageTemplate, Rez.Strings.SosMessageTemplateEn);
+            messageText = message;
+        }
+        drawLine(dc, layout, messageLabel, [layout.detailFont] as Array<Graphics.FontType>, layout.messageLabelY);
+        if (messageText.length() == 0) {
+            return;
+        }
+        var area = new WatchUi.TextArea({
+            :text => messageText,
+            :color => WatchColors.ON_DANGER,
+            :backgroundColor => Graphics.COLOR_TRANSPARENT,
+            :font => layout.messageFonts,
+            :justification => Graphics.TEXT_JUSTIFY_CENTER | Graphics.TEXT_JUSTIFY_VCENTER,
+            :locX => layout.centerX - layout.messageWidth / 2,
+            :locY => layout.messageY - layout.messageHeight / 2,
+            :width => layout.messageWidth,
+            :height => layout.messageHeight,
+        });
+        area.draw(dc);
+    }
+
+    // A small white triangle pointing to the other page: down at the bottom, up at the top.
+    private function drawChevron(dc as Graphics.Dc, layout as WatchfaceLayout, y as Number, up as Boolean) as Void {
+        var size = layout.chevronSize;
+        var tip = up ? y - size / 2 : y + size / 2;
+        var base = up ? y + size / 2 : y - size / 2;
+        dc.setColor(WatchColors.ON_DANGER, Graphics.COLOR_TRANSPARENT);
+        dc.fillPolygon([[layout.centerX - size, base], [layout.centerX + size, base], [layout.centerX, tip]] as Array<Graphics.Point2D>);
     }
 
     // A centered line in white, in the largest of fonts that fits the round screen at row y.
@@ -120,7 +187,8 @@ class SosView extends WatchUi.View {
 
 // Input of the SOS screen: tapping the cancel button or pressing BACK cancels the SOS. Pressing
 // BACK is how every Garmin screen is left or cancelled. START does nothing here, so the hold that
-// activated the SOS cannot affect this screen when the button is released.
+// activated the SOS cannot affect this screen when the button is released. DOWN (or swiping up)
+// shows the message page and UP (or swiping down) goes back to the confirmation.
 class SosDelegate extends WatchUi.BehaviorDelegate {
     private var _view as SosView;
     private var _sos as SosController;
@@ -140,8 +208,8 @@ class SosDelegate extends WatchUi.BehaviorDelegate {
         return tapped(clickEvent.getCoordinates());
     }
 
-    // Everything else is swallowed, so nothing leaves the SOS screen by accident. BACK goes
-    // through, so the system turns it into onBack().
+    // Everything else is swallowed, so nothing leaves the SOS screen by accident. BACK, UP and
+    // DOWN go through, so the system turns them into onBack() and the page changes.
     function onKeyPressed(keyEvent as WatchUi.KeyEvent) as Boolean {
         return swallows(keyEvent.getKey());
     }
@@ -159,7 +227,7 @@ class SosDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function swallows(key as WatchUi.Key) as Boolean {
-        return key != WatchUi.KEY_ESC;
+        return key != WatchUi.KEY_ESC && key != WatchUi.KEY_UP && key != WatchUi.KEY_DOWN;
     }
 
     // A tap produces onSelect before onTap; returning true here would stop onTap.
@@ -172,10 +240,12 @@ class SosDelegate extends WatchUi.BehaviorDelegate {
     }
 
     function onNextPage() as Boolean {
+        _view.showMessage(true);
         return true;
     }
 
     function onPreviousPage() as Boolean {
+        _view.showMessage(false);
         return true;
     }
 }

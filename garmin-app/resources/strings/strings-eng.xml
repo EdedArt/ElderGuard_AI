@@ -29,6 +29,9 @@
     <string id="SosLocationEn">GPS</string>
     <string id="SosLastLocationEn">Last position</string>
     <string id="SosCoordinatesEn">$1$, $2$</string>
+    <string id="SosGeneratingEn">Generating message…</string>
+    <string id="SosMessageAiEn">AI message</string>
+    <string id="SosMessageTemplateEn">Standard message</string>
     <!-- Fall countdown screen. -->
     <string id="FallQuestionEn">Did you fall?</string>
     <string id="FallCancelEn">I'M OK</string>

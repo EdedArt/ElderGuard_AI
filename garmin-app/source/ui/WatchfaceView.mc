@@ -130,13 +130,18 @@ class WatchfaceView extends WatchUi.View {
         clock.date = TimeFormat.today(_language);
 
         // Critical first, as in the other apps: a critical alert has no screen of its own, so the
-        // banner is where the wearer learns that the family was told.
+        // banner is where the wearer learns that the family was told, once its message is ready.
         var critical = _alerts.isCriticalActive();
+        var criticalAlert = _alerts.criticalAlert();
         banner.visible = critical || state.deviceStatus.healthAlert == HEALTH_ALERT_HIGH_HEART_RATE;
         banner.setCritical(critical);
-        banner.text = critical
-            ? _language.text(Rez.Strings.HeartRateAlertCritical, Rez.Strings.HeartRateAlertCriticalEn)
-            : _language.text(Rez.Strings.HeartRateAlertHigh, Rez.Strings.HeartRateAlertHighEn);
+        if (criticalAlert != null && criticalAlert.isMessagePending()) {
+            banner.text = _language.text(Rez.Strings.SosGenerating, Rez.Strings.SosGeneratingEn);
+        } else if (critical) {
+            banner.text = _language.text(Rez.Strings.HeartRateAlertCritical, Rez.Strings.HeartRateAlertCriticalEn);
+        } else {
+            banner.text = _language.text(Rez.Strings.HeartRateAlertHigh, Rez.Strings.HeartRateAlertHighEn);
+        }
         clock.showDate = !banner.visible;
 
         heartRate.bpm = state.heartRate.bpm;
