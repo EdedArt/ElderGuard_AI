@@ -60,4 +60,12 @@
     <string id="LanguageCurrent">Actual</string>
     <string id="LanguageEsName">Español</string>
     <string id="LanguageEnName">English</string>
+    <!-- Prompt sent to Gemini to write the text of an alert. Never shown on screen.
+         $1$ the event, $2$ heart rate in BPM, $3$ time (24-hour), $4$ location. -->
+    <string id="GeminiPrompt">Eres el asistente de ElderGuard AI, un reloj de seguridad para personas mayores. Escribe el mensaje que recibirá un contacto de emergencia de la persona que lleva el reloj. Evento: $1$. Pulso: $2$ LPM. Hora: $3$. Ubicación: $4$. Máximo 2 frases y 160 caracteres, en español, claro y calmado. No uses corchetes, marcadores, enlaces ni datos inventados. Responde solo con el mensaje.</string>
+    <string id="GeminiEventFall">caída confirmada; la persona no respondió a la cuenta regresiva</string>
+    <string id="GeminiEventManualSos">la persona pulsó el botón SOS para pedir ayuda</string>
+    <string id="GeminiEventHighHeartRate">pulso crítico sostenido en reposo</string>
+    <string id="GeminiLocationGps">$1$, $2$ (GPS)</string>
+    <string id="GeminiLocationLast">última posición conocida $1$, $2$ (sin señal GPS)</string>
 </strings>
