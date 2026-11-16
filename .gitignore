@@ -20,6 +20,8 @@ garmin-app/**/*.iq
 garmin-app/**/*.der
 garmin-app/**/*.pem
 garmin-app/**/developer_key*
+# The Gemini API key. Copy garmin-app/source/Secrets.mc.example to Secrets.mc and put the key there.
+garmin-app/source/Secrets.mc
 
 # Environment files
 .env
