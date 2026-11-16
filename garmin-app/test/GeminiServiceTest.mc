@@ -158,6 +158,29 @@ function gemini_parseResponseTrimsNewlinesSpacesAndQuotes(logger as Logger) as B
 }
 
 (:test)
+function gemini_parseResponseIgnoresTheThoughtSignatureNextToTheText(logger as Logger) as Boolean {
+    // The shape gemini-3.5-flash-lite answered with in the simulator.
+    var answer = {"candidates" => [{"content" => {"role" => "model", "parts" => [
+        {"thoughtSignature" => "EmAKXgFpFH0T", "text" => "Caída confirmada de tu familiar."},
+    ]}, "finishReason" => "STOP"}]} as Dictionary;
+    Test.assertEqual(GeminiService.parseResponse(answer) as String, "Caída confirmada de tu familiar.");
+    return true;
+}
+
+(:test)
+function gemini_parseResponseJoinsSplitTextAndLeavesOutThoughts(logger as Logger) as Boolean {
+    var answer = {"candidates" => [{"content" => {"parts" => [
+        {"text" => "Let me write a short alert.", "thought" => true},
+        {"text" => "Caída confirmada de tu familiar. "},
+        {"text" => "Pulso 70 LPM."},
+    ]}}]} as Dictionary;
+    Test.assertEqual(GeminiService.parseResponse(answer) as String, "Caída confirmada de tu familiar. Pulso 70 LPM.");
+    var onlyThoughts = {"candidates" => [{"content" => {"parts" => [{"text" => "Thinking", "thought" => true}]}}]} as Dictionary;
+    Test.assert(GeminiService.parseResponse(onlyThoughts) == null);
+    return true;
+}
+
+(:test)
 function gemini_parseResponseRejectsMalformedAnswers(logger as Logger) as Boolean {
     // What makeWebRequest passes when the body is not JSON, or there is no body at all.
     Test.assert(GeminiService.parseResponse("<html>502 Bad Gateway</html>") == null);

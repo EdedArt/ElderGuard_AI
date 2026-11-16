@@ -161,17 +161,29 @@ module GeminiService {
     // The text of candidates[0].content.parts[0].text, cleaned up for the screen, or null when
     // the answer does not have that shape or the text is empty. Never throws: any unexpected
     // answer means "use the static template".
+    //
+    // Gemini 3 models may split the answer over several parts, or add parts with the model's
+    // thoughts (marked "thought": true). So the text is that of every part in order, thoughts
+    // left out; with one part, as usual, it is exactly parts[0].text.
     function parseResponse(response as Dictionary or String or Null) as String or Null {
         var candidates = field(response, "candidates");
         if (!(candidates instanceof Array) || candidates.size() == 0) {
             return null;
         }
         var parts = field(field(candidates[0] as Object or Null, "content"), "parts");
-        if (!(parts instanceof Array) || parts.size() == 0) {
+        if (!(parts instanceof Array)) {
             return null;
         }
-        var text = field(parts[0] as Object or Null, "text");
-        return text instanceof String ? clean(text) : null;
+        var text = "";
+        for (var i = 0; i < parts.size(); i++) {
+            var part = parts[i] as Object or Null;
+            var partText = field(part, "text");
+            var thought = field(part, "thought");
+            if (partText instanceof String && !(thought instanceof Boolean && thought)) {
+                text += partText;
+            }
+        }
+        return clean(text);
     }
 
     // The value at key when container is a Dictionary; null otherwise.
