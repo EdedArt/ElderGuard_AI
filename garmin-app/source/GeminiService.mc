@@ -1,8 +1,114 @@
+import Toybox.Communications;
 import Toybox.Lang;
 import Toybox.StringUtil;
+import Toybox.System;
 import Toybox.Time;
 import Toybox.Time.Gregorian;
+import Toybox.Timer;
 import Toybox.WatchUi;
+
+// Receives the text Gemini wrote for an alert, or null when there is none: no answer within the
+// timeout, no connection, an HTTP error or an answer of an unexpected shape. Null means "use the
+// static template".
+typedef AlertMessageCallback as Method(text as String or Null) as Void;
+
+// What the prompt of an alert is made of: what happened, the readings it carries and the language
+// to write in.
+class AlertMessageContext {
+    var eventType as AlertType;
+    var heartRate as Number;
+    var timestamp as Long;
+    var location as Gps;
+    var language as AppLanguage;
+
+    function initialize(eventType as AlertType, heartRate as Number, timestamp as Long, location as Gps, language as AppLanguage) {
+        self.eventType = eventType;
+        self.heartRate = heartRate;
+        self.timestamp = timestamp;
+        self.location = location;
+        self.language = language;
+    }
+
+    static function of(alert as AlertPayload, language as AppLanguage) as AlertMessageContext {
+        return new AlertMessageContext(alert.type, alert.heartRate, alert.timestamp, alert.gps, language);
+    }
+}
+
+// One request to Gemini, which answers its callback exactly once: with the text, or with null
+// when the answer is not usable or does not come within GeminiConfig.TIMEOUT_MS. An answer that
+// arrives after the timeout is ignored. The timer is one-shot and is released when the request
+// ends, since apps may only have a few timers.
+//
+// On the watch, makeWebRequest goes through the paired phone (Garmin Connect); without a phone or
+// internet it fails at once (a negative code), which also means the template.
+class GeminiRequest {
+    private var _callback as AlertMessageCallback;
+    private var _timer as Timer.Timer or Null = null;
+    private var _done as Boolean = false;
+
+    function initialize(callback as AlertMessageCallback) {
+        _callback = callback;
+    }
+
+    // True once the callback was answered or the request was cancelled.
+    function isDone() as Boolean {
+        return _done;
+    }
+
+    function start(body as Dictionary<Object, Object>) as Void {
+        try {
+            var timer = new Timer.Timer();
+            timer.start(method(:onTimeout), GeminiConfig.TIMEOUT_MS, false);
+            _timer = timer;
+            Communications.makeWebRequest(GeminiService.url(), body, {
+                :method => Communications.HTTP_REQUEST_METHOD_POST,
+                // The key goes in a header, not in the URL, so it does not end up in request logs.
+                :headers => {
+                    "Content-Type" => Communications.REQUEST_CONTENT_TYPE_JSON,
+                    "x-goog-api-key" => GEMINI_API_KEY,
+                },
+                :responseType => Communications.HTTP_RESPONSE_CONTENT_TYPE_JSON,
+            }, method(:onResponse));
+        } catch (e) {
+            finish(null, "request failed");
+        }
+    }
+
+    // The answer of makeWebRequest: 200 with the parsed JSON, or an HTTP error, or a negative
+    // Connect IQ code (no phone, no internet, answer too large...).
+    function onResponse(responseCode as Number, data as Dictionary or String or Null) as Void {
+        var text = responseCode == 200 ? GeminiService.parseResponse(data) : null;
+        finish(text, "HTTP " + responseCode);
+    }
+
+    function onTimeout() as Void {
+        finish(null, "timeout");
+    }
+
+    // Stops waiting without answering the callback.
+    function cancel() as Void {
+        _done = true;
+        stopTimer();
+    }
+
+    private function finish(text as String or Null, outcome as String) as Void {
+        if (_done) {
+            return;
+        }
+        _done = true;
+        stopTimer();
+        System.println("Gemini " + outcome + (text != null ? ": message received" : ": using the static template"));
+        _callback.invoke(text);
+    }
+
+    private function stopTimer() as Void {
+        var timer = _timer;
+        if (timer != null) {
+            timer.stop();
+            _timer = null;
+        }
+    }
+}
 
 // Asks Gemini (Google AI) to write the text of an alert for an emergency contact. The functions
 // here are pure: they build the prompt and the request body and read the answer, so they are
@@ -12,6 +118,16 @@ import Toybox.WatchUi;
 // (GeminiPrompt and GeminiPromptEn), so no language is hardcoded. It is sent to Gemini and never
 // shown on screen.
 module GeminiService {
+    // Asks Gemini for the text of the alert described by context. The callback receives the text,
+    // or null (use the static template) on a timeout or any error. The request is returned so
+    // the caller can cancel it.
+    function requestAlertMessage(context as AlertMessageContext, callback as AlertMessageCallback) as GeminiRequest {
+        var request = new GeminiRequest(callback);
+        var prompt = buildAlertPrompt(context.eventType, context.heartRate, context.timestamp, context.location, context.language);
+        request.start(buildRequestBody(prompt));
+        return request;
+    }
+
     // The generateContent endpoint of the configured model.
     function url() as String {
         return GeminiConfig.ENDPOINT + GeminiConfig.MODEL + ":generateContent";
@@ -35,11 +151,11 @@ module GeminiService {
     }
 
     // The body generateContent expects: one user turn with one text part, and a cap on the answer.
-    function buildRequestBody(prompt as String) as Dictionary<String, Object> {
+    function buildRequestBody(prompt as String) as Dictionary<Object, Object> {
         return {
             "contents" => [{"parts" => [{"text" => prompt}]}],
             "generationConfig" => {"maxOutputTokens" => GeminiConfig.MAX_OUTPUT_TOKENS},
-        } as Dictionary<String, Object>;
+        } as Dictionary<Object, Object>;
     }
 
     // The text of candidates[0].content.parts[0].text, cleaned up for the screen, or null when

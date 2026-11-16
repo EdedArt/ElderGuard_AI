@@ -23,9 +23,12 @@
             <iq:product id="fr165"/>
         </iq:products>
 
-        <!-- None needed yet. Telemetry will need "Sensor" (heart rate, accelerometer) and
-             "Positioning" (GPS) in later phases. -->
-        <iq:permissions/>
+        <!-- Communications: makeWebRequest, to ask Gemini for the text of an alert. Telemetry is
+             still simulated; reading the real sensors will need "Sensor" (heart rate,
+             accelerometer) and "Positioning" (GPS). -->
+        <iq:permissions>
+            <iq:uses-permission id="Communications"/>
+        </iq:permissions>
 
         <!-- Spanish is the default; English is the alternative, as in the other implementations. -->
         <iq:languages>
