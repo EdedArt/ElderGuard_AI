@@ -128,21 +128,21 @@ class SosView extends WatchUi.View {
     }
 
     // Where the text came from, and the text itself, wrapped in the box below in the largest font
-    // that fits it all; the TextArea ends it with "…" if even the smallest does not.
+    // that fits it all; the TextArea ends it with "…" if even the smallest does not. While the
+    // text is generated, the box says so and there is no label.
     private function drawMessage(dc as Graphics.Dc, layout as WatchfaceLayout, alert as AlertPayload) as Void {
         var message = alert.message;
         if (message == null) {
-            messageLabel = _language.text(Rez.Strings.SosGenerating, Rez.Strings.SosGeneratingEn);
-            messageText = "";
+            messageLabel = "";
+            messageText = _language.text(Rez.Strings.SosGenerating, Rez.Strings.SosGeneratingEn);
         } else {
             messageLabel = alert.messageOrigin == MESSAGE_AI
                 ? _language.text(Rez.Strings.SosMessageAi, Rez.Strings.SosMessageAiEn)
                 : _language.text(Rez.Strings.SosMessageTemplate, Rez.Strings.SosMessageTemplateEn);
             messageText = message;
         }
-        drawLine(dc, layout, messageLabel, [layout.detailFont] as Array<Graphics.FontType>, layout.messageLabelY);
-        if (messageText.length() == 0) {
-            return;
+        if (messageLabel.length() > 0) {
+            drawLine(dc, layout, messageLabel, [layout.detailFont] as Array<Graphics.FontType>, layout.messageLabelY);
         }
         var area = new WatchUi.TextArea({
             :text => messageText,
