@@ -2,7 +2,7 @@
 
 Aplicación de ElderGuard AI para relojes Garmin, escrita en Monkey C con el SDK de Connect IQ. Es la versión que se instala en el **Garmin Forerunner 165** prestado para la sustentación. Es un proyecto independiente: no usa `npm` ni Gradle y no comparte código con la versión web (`src/`) ni con la de Wear OS (`wear-app/`), que sirven como especificación de lo que hay que portar.
 
-Estado actual: esfera del reloj, detección de caídas, frecuencia cardíaca anormal y alertas simuladas. La aplicación muestra la batería y el GPS, la hora en formato de 12 horas, la fecha, la frecuencia cardíaca y un botón SOS que se activa manteniéndolo pulsado 2 segundos, con la telemetría simulada. Detecta caídas con una cuenta regresiva cancelable, avisa de un ritmo cardíaco alto en reposo y registra alertas simuladas a los contactos de emergencia, sin conexión a ninguna red. Un menú de demostración en el propio reloj simula una caída, un pulso alto o crítico, la batería baja o la pérdida del GPS, y lo restablece todo, para presentarla sin computador. Está en español por defecto y se puede cambiar a inglés desde el reloj.
+Estado actual: esfera del reloj, detección de caídas, frecuencia cardíaca anormal, alertas simuladas y texto de las alertas generado con Gemini (Google AI). La aplicación muestra la batería y el GPS, la hora en formato de 12 horas, la fecha, la frecuencia cardíaca y un botón SOS que se activa manteniéndolo pulsado 2 segundos, con la telemetría simulada. Detecta caídas con una cuenta regresiva cancelable, avisa de un ritmo cardíaco alto en reposo y registra alertas simuladas a los contactos de emergencia. El texto de cada alerta lo escribe Gemini; si no responde en 8 segundos o no hay conexión, se usa una plantilla fija, sin que cambie nada más. Un menú de demostración en el propio reloj simula una caída, un pulso alto o crítico, la batería baja o la pérdida del GPS, y lo restablece todo, para presentarla sin computador. Está en español por defecto y se puede cambiar a inglés desde el reloj.
 
 Compilado y probado en el simulador con el **SDK de Connect IQ 9.3.0** para el Forerunner 165 (`fr165`, nivel de API 5.2). Aún no se ha instalado en el reloj real.
 
@@ -25,11 +25,15 @@ garmin-app/
 ├── monkey.jungle                 # Configuración de compilación (código en source/ y test/)
 ├── source/
 │   ├── App.mc                    # ElderGuardApp: punto de entrada; crea el almacén, el motor, el idioma, los monitores y las alertas
+│   ├── GeminiService.mc          # Prompt, cuerpo de la petición, lectura de la respuesta y petición a Gemini con tiempo límite
+│   ├── Secrets.mc.example        # Plantilla de Secrets.mc (versionada)
+│   ├── Secrets.mc                # La clave de la API de Gemini (NO versionada: está en .gitignore)
 │   ├── config/
 │   │   ├── TelemetryConfig.mc    # Constantes de la simulación (telemetry.config.js)
 │   │   ├── FallDetectionConfig.mc # Umbrales de caída y cuenta regresiva (fallDetection.config.js)
 │   │   ├── HeartRateAnomalyConfig.mc # Umbrales de ritmo cardíaco (heartRateAnomaly.config.js)
-│   │   └── ContactsConfig.mc     # Contactos de emergencia ficticios (contacts.config.js)
+│   │   ├── ContactsConfig.mc     # Contactos de emergencia ficticios (contacts.config.js)
+│   │   └── GeminiConfig.mc       # Modelo, URL, tiempo límite y tamaño máximo de la respuesta de Gemini
 │   ├── detection/
 │   │   ├── FallDetector.mc       # Máquina de estados de caída (fallDetector.js)
 │   │   └── HeartRateAnomalyDetector.mc # Ritmo alto sostenido en reposo (heartRateAnomalyDetector.js)
@@ -37,8 +41,9 @@ garmin-app/
 │   │   ├── Countdown.mc          # Cuenta regresiva con Timer (countdown.js)
 │   │   ├── FallMonitor.mc        # Alimenta el detector y lleva la cuenta regresiva (fallMonitor.js)
 │   │   ├── HeartRateMonitor.mc   # Alimenta el detector y marca healthAlert (heartRateMonitor.js)
-│   │   ├── AlertPayload.mc       # Contenido de una alerta (alertPayload.js)
-│   │   └── AlertDispatcher.mc    # Registra las alertas simuladas (alertDispatcher.js)
+│   │   ├── AlertPayload.mc       # Contenido de una alerta (alertPayload.js), con su mensaje
+│   │   ├── AlertMessageSource.mc # De dónde sale el texto: Gemini o la plantilla fija
+│   │   └── AlertDispatcher.mc    # Registra las alertas simuladas y les pone el texto (alertDispatcher.js)
 │   ├── demo/
 │   │   ├── ScenarioRunner.mc     # Escenarios de demostración con anulaciones del motor (scenarioRunner.js)
 │   │   └── DemoController.mc     # Ejecuta escenarios y restablece todo (demoController.js)
@@ -65,7 +70,7 @@ garmin-app/
 │       │   └── WatchfaceDrawables.mc # Batería, GPS, reloj, pulso, botón SOS, avisos, aviso de pulso
 │       ├── AlertScreens.mc       # Abre y cierra las pantallas de alerta según el modo
 │       ├── FallCountdownView.mc  # Pantalla «¿Te caíste?» y su delegado
-│       ├── SosView.mc            # Pantalla roja «Pidiendo ayuda…» con la confirmación, y su delegado
+│       ├── SosView.mc            # Pantalla roja «Pidiendo ayuda…» con la confirmación y el mensaje, y su delegado
 │       ├── Vibration.mc          # Patrones de vibración
 │       ├── LanguageMenu.mc       # Pantalla de idioma (Menu2)
 │       ├── DemoMenu.mc           # Menú principal y pantalla de demostración (Menu2)
@@ -106,6 +111,14 @@ Se instalan una sola vez:
      ```
 
    `.gitignore` ignora cualquier clave dentro de `garmin-app/`, pero no debe subirse nunca. Usa siempre la misma clave: el reloj no acepta como actualización una versión firmada con una clave distinta a la de la versión instalada.
+
+5. **Clave de la API de Gemini**: sin `source/Secrets.mc` la aplicación no compila. Copia la plantilla y pon la clave (se crea gratis en [aistudio.google.com/apikey](https://aistudio.google.com/apikey)):
+
+   ```powershell
+   Copy-Item source\Secrets.mc.example source\Secrets.mc
+   ```
+
+   y cambia `"TU_API_KEY_AQUI"` por la clave en `source\Secrets.mc`. Ese archivo está en el `.gitignore` de la raíz y no se sube nunca. Detalles en [Integración con Gemini AI](#integración-con-gemini-ai).
 
 El ID de la aplicación ya está fijado en `manifest.xml` y **no debe cambiarse**: si cambia, el reloj trata la nueva versión como una aplicación distinta. Para instalar por USB no hace falta un ID asignado por la tienda de Garmin.
 
@@ -308,7 +321,7 @@ En la esfera aparece un aviso ámbar con un triángulo y texto negro, `Pulso alt
 
 ## Alertas a la familia (simuladas)
 
-Traducción de `src/core/alertPayload.js`, `src/core/alertDispatcher.js` y `src/config/contacts.config.js`. Como en las otras versiones, es una simulación: **no hay ninguna conexión de red**. `AlertDispatcher` no usa `Toybox.Communications` y `manifest.xml` no declara ningún permiso. Enviar una alerta es construir su contenido y guardarlo, que es donde iría la integración con un servicio de mensajería real; también se escribe en la salida de `monkeydo` (`Alert recorded (mock, not sent): fall to 3 contacts`).
+Traducción de `src/core/alertPayload.js`, `src/core/alertDispatcher.js` y `src/config/contacts.config.js`. Como en las otras versiones, el envío es una simulación: **no se envía nada a nadie**. Enviar una alerta es construir su contenido y guardarlo, que es donde iría la integración con un servicio de mensajería real. La única conexión de red es la petición a Gemini para escribir el texto del mensaje (ver [Integración con Gemini AI](#integración-con-gemini-ai)); por eso `manifest.xml` declara el permiso `Communications`. En la salida de `monkeydo` se ve `Alert recorded (mock): fall, generating its message` y, cuando el texto está listo, `Alert sent (mock): fall to 3 contacts, Gemini message: …` (o `template message: …`).
 
 | Qué la produce | Tipo | ¿Abre el SOS? |
 | -------------- | ---- | ------------- |
@@ -316,7 +329,62 @@ Traducción de `src/core/alertPayload.js`, `src/core/alertDispatcher.js` y `src/
 | Botón SOS mantenido 2 segundos | `manual-sos` | Sí, motivo `SOS_REASON_MANUAL` |
 | Más de 160 LPM en reposo durante 8 s | `high-heart-rate` | No: es de salud, no de caída |
 
-Cada alerta (`AlertPayload`) lleva el tipo, la hora (milisegundos desde 1970), el GPS, la frecuencia cardíaca, la batería redondeada como se muestra y los contactos, tal como estaban en ese momento: el SOS avisa al despachador dentro de la misma llamada, y los datos no se modifican después. Los contactos son los mismos personajes ficticios de las otras versiones: Ana Ejemplo (hija), Luis Ejemplo (hijo) y Dra. Prueba (médica), con números 555-01xx. El ritmo crítico se avisa una sola vez por episodio. No generan alerta: un tropiezo, una caída cancelada a tiempo, un pico breve de pulso, un pulso alto en movimiento ni un aviso de 120 a 160 LPM que se resuelve.
+Cada alerta (`AlertPayload`) lleva el tipo, la hora (milisegundos desde 1970), el GPS, la frecuencia cardíaca, la batería redondeada como se muestra, los contactos y el texto del mensaje, tal como estaban en ese momento: el SOS avisa al despachador dentro de la misma llamada, y los datos no se modifican después. Los contactos son los mismos personajes ficticios de las otras versiones: Ana Ejemplo (hija), Luis Ejemplo (hijo) y Dra. Prueba (médica), con números 555-01xx. El ritmo crítico se avisa una sola vez por episodio. No generan alerta: un tropiezo, una caída cancelada a tiempo, un pico breve de pulso, un pulso alto en movimiento ni un aviso de 120 a 160 LPM que se resuelve.
+
+## Integración con Gemini AI
+
+Cada alerta (caída confirmada, pulso crítico y SOS manual) lleva un **texto para el contacto de emergencia escrito por Gemini**, el modelo de IA de Google, a partir de los datos de la alerta. Si Gemini no responde a tiempo, la alerta usa una **plantilla fija** y el resto del flujo no cambia.
+
+### Qué hace
+
+1. Al salir la alerta, `AlertDispatcher` la registra con el mensaje pendiente y llama a `GeminiService.requestAlertMessage()`.
+2. `buildAlertPrompt()` escribe el prompt en el idioma elegido en el reloj, con el evento, el pulso, la hora (24 h) y si la ubicación es la del GPS o la última conocida. Pide un mensaje de **2 frases como máximo y menos de 90 caracteres**, que llame a la persona «tu familiar» sin inventar nombres y que no copie las coordenadas (viajan aparte, en la alerta). El texto del prompt está en `strings.xml` / `strings-eng.xml` (`GeminiPrompt`), no en el código.
+3. `buildRequestBody()` arma el JSON de `generateContent` (`contents` > `parts` > `text`, con `maxOutputTokens` = 120), y `makeWebRequest` lo envía por POST a `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent`.
+4. `parseResponse()` lee `candidates[0].content.parts[].text` (uniendo las partes de texto y dejando fuera las de razonamiento, `thought`). Ante cualquier otra forma (error de la API, respuesta bloqueada, JSON roto, texto vacío) devuelve `null`; nunca lanza una excepción.
+5. Con texto, ese es el mensaje (`MESSAGE_AI`). Con `null`, el mensaje es la plantilla fija del idioma elegido (`MESSAGE_TEMPLATE`, textos `AlertTemplate*`), con el pulso y la ubicación.
+
+**Modelo**: el enunciado pedía `gemini-2.0-flash`, pero Google lo retiró el 1 de junio de 2026 y hoy responde `404 This model models/gemini-2.0-flash is no longer available`: con él, el reloj usaría siempre la plantilla. Se usa `gemini-3.5-flash-lite`, que respondió en 1 a 2 segundos en las pruebas. Se cambia en `source/config/GeminiConfig.mc` (`MODEL`).
+
+### En pantalla
+
+- **Pantalla SOS**: mientras se genera el texto, la línea sobre los contactos dice `Generando mensaje…` (`Generating message…`) en lugar de `Avisados (simulado)`. Los contactos y las coordenadas se ven desde el primer momento.
+- **Página del mensaje**: con **DOWN** (o deslizando hacia arriba) se pasa a una segunda página con el texto enviado y su origen: `Mensaje de IA` o `Mensaje predefinido` (`AI message` / `Standard message`). **UP** (o deslizar hacia abajo) vuelve. Un triángulo blanco abajo (o arriba) indica que hay otra página. `Cancelar` y BACK funcionan en las dos páginas. Si un texto no cabiera en las 6 líneas del recuadro, termina en `…`; el completo queda en la alerta y en la salida de `monkeydo`.
+- **Pulso crítico**: el aviso rojo de la esfera dice `Generando mensaje…` mientras tanto y luego `Pulso crítico: familia avisada`. El texto en sí solo se ve en la salida de `monkeydo`, porque esta alerta no tiene pantalla propia.
+
+### Comportamiento de respaldo (fallback)
+
+`GeminiRequest` responde **una sola vez**, y con `null` (plantilla) si:
+
+| Situación | Qué pasa |
+| --------- | -------- |
+| No hay respuesta en **8 segundos** (`GeminiConfig.TIMEOUT_MS`) | Un `Timer` de un solo disparo vence; si la respuesta llega después, se ignora |
+| No hay teléfono vinculado o no hay internet | `makeWebRequest` falla con un código negativo (por ejemplo `-104`) casi al instante |
+| Error HTTP (clave inválida, cuota, modelo retirado, sobrecarga `503`) | Cualquier código distinto de 200 |
+| Respuesta con otra forma o texto vacío | `parseResponse()` devuelve `null` |
+| `makeWebRequest` o el `Timer` lanzan una excepción | Se captura |
+
+Para quien usa el reloj el flujo es el mismo con IA o sin ella: la pantalla SOS, los contactos y el botón Cancelar no cambian; solo cambia la etiqueta de la página del mensaje. `Restablecer` del menú de demostración deja de esperar las peticiones en curso.
+
+### Dónde vive la clave
+
+- `source/Secrets.mc` define `const GEMINI_API_KEY = "…";`. Está en el `.gitignore` de la raíz (`garmin-app/source/Secrets.mc`) y **no se versiona**; `git status` no lo muestra.
+- `source/Secrets.mc.example` es la misma plantilla con `"TU_API_KEY_AQUI"` y sí se versiona. Cada persona que clone el repositorio la copia a `Secrets.mc` (ver [Requisitos](#requisitos)).
+- La clave viaja en la cabecera `x-goog-api-key`, no en la URL (`?key=`), para que no quede en registros de peticiones.
+- **Límite de este enfoque**: la clave queda dentro del `.prg` compilado, y quien tenga ese archivo puede extraerla. Para la sustentación basta, pero conviene usar una clave restringida a la Generative Language API, solo para la demo, y **revocarla después**. En un producto real la petición la haría un servidor propio.
+
+### Cómo se verificó en el simulador
+
+`requestAlertMessage()` no tiene prueba unitaria porque necesita red real. Se comprobó a mano en el simulador del Forerunner 165 (SDK 9.3.0), con la clave en `Secrets.mc` y el computador conectado a internet:
+
+1. Compila y abre la aplicación (pasos 1 y 2). El simulador usa la conexión a internet del computador, sin teléfono.
+2. `Menú` > `Demostración` > `Simular caída` y espera a que se abra `Pidiendo ayuda…`. Durante 1 o 2 segundos se ve `Generando mensaje…`, luego `Avisados (simulado)`.
+3. En la salida de `monkeydo` aparecen `Gemini HTTP 200: message received` y `Alert sent (mock): fall to 3 contacts, Gemini message: …`. Por ejemplo: `Alerta: caída confirmada de tu familiar y no respondió. Pulso: 71 LPM a las 10:51. Ubicación GPS disponible.`
+4. Pulsa **DOWN**: aparece `Mensaje de IA` con ese mismo texto completo, también en inglés (`AI message`).
+5. Fallback: con una clave inválida en `Secrets.mc` (o sin internet), la salida dice `Gemini HTTP 400: using the static template` (o un código negativo) y la página muestra `Mensaje predefinido` con la plantilla. El resto de la pantalla es igual.
+
+Lo que salió de esas pruebas y quedó corregido: el modelo inventaba el nombre de la persona y escribía textos de 110 a 190 caracteres que no cabían; y unas comillas dobles en el prompt hacían que Gemini respondiera `400`, porque Connect IQ no las escapa al convertir el cuerpo a JSON (hay una prueba que impide volver a ponerlas).
+
+En el reloj real, `makeWebRequest` sale por el teléfono vinculado con la aplicación **Garmin Connect** abierta y con datos o wifi. Sin teléfono se usa la plantilla al instante.
 
 ## Idioma
 
@@ -342,9 +410,9 @@ Hacen falta tres pasos deliberados, así que nadie lanza un escenario por accide
 
 | Opción | Qué hace | Qué se ve |
 | ------ | -------- | --------- |
-| `Simular caída` (`Simulate fall`) | Impacto de 4,4 g durante 1 segundo, quietud y, a los 8 segundos, devuelve el acelerómetro a su generador | Unos 7 segundos después, `¿Te caíste?` con la cuenta de 10 segundos; si nadie cancela, unos 18 segundos después `Pidiendo ayuda…` con los contactos avisados y las coordenadas |
+| `Simular caída` (`Simulate fall`) | Impacto de 4,4 g durante 1 segundo, quietud y, a los 8 segundos, devuelve el acelerómetro a su generador | Unos 7 segundos después, `¿Te caíste?` con la cuenta de 10 segundos; si nadie cancela, unos 18 segundos después `Pidiendo ayuda…` con los contactos avisados y las coordenadas; `Generando mensaje…` hasta que llega el texto de Gemini, que se ve con DOWN |
 | `Pulso alto` (`High heart rate`) | 130 LPM en reposo, sin límite de tiempo | Unos 10 segundos después, el aviso ámbar `Pulso alto en reposo`. No envía nada |
-| `Pulso crítico` (`Critical heart rate`) | 170 LPM en reposo, sin límite de tiempo | Unos 9 segundos después, el aviso rojo `Pulso crítico: familia avisada`: la alerta sale sola, sin cuenta regresiva |
+| `Pulso crítico` (`Critical heart rate`) | 170 LPM en reposo, sin límite de tiempo | Unos 9 segundos después, el aviso rojo, primero `Generando mensaje…` y luego `Pulso crítico: familia avisada`: la alerta sale sola, sin cuenta regresiva |
 | `Batería baja` (`Low battery`) | Batería al 15 % | El indicador pasa a ámbar (`15 %`) |
 | `Sin GPS` (`GPS lost`) | Pierde la señal y conserva la última posición | `Sin GPS` en ámbar; una alerta posterior da `Última posición` |
 | `Restablecer` (`Reset`) | Detiene el escenario, quita todas las anulaciones y vuelve al estado inicial | Esfera normal: vigilancia, batería al 100 %, GPS con señal, sin avisos, detectores en reposo e historial de alertas vacío |
@@ -353,31 +421,33 @@ Un escenario a la vez: elegir otro detiene el que esté en curso y devuelve sus 
 
 `ScenarioRunner` (traducción de `src/core/scenarioRunner.js`) aplica los pasos de cada escenario en su momento, con un `Timer` de un solo disparo que solo existe mientras queda un paso pendiente: los relojes solo permiten unos pocos temporizadores a la vez, y durante una caída simulada conviven el del motor, el del escenario y el de la cuenta regresiva. `DemoController` (como `src/simulator/demoController.js`) ejecuta los escenarios y restablece todo.
 
-### Guion de defensa desde el reloj (5 minutos)
+### Guion de defensa desde el reloj (5 minutos y medio)
 
-Antes de empezar, abre **ElderGuard AI** en el reloj y comprueba que está en español (si no, pulsa DOWN y elige `Español`). Todo se hace en el reloj: mantener UP abre el menú, y cada escenario está en `Menú` > `Demostración`.
+Antes de empezar, abre **ElderGuard AI** en el reloj y comprueba que está en español (si no, pulsa DOWN y elige `Español`). Todo se hace en el reloj: mantener UP abre el menú, y cada escenario está en `Menú` > `Demostración`. Para el paso del mensaje de IA, el teléfono vinculado debe tener **Garmin Connect** abierto y conexión a internet (o, en el simulador, el computador conectado).
 
 | Tiempo | Paso | Qué hacer en el reloj | Qué decir o señalar |
 | ------ | ---- | --------------------- | ------------------- |
 | 0:00 | Lecturas normales | No toques nada durante unos segundos. | Hora, fecha, batería, GPS y pulso, que cambia cada segundo. Todo es grande y de alto contraste, pensado para personas mayores. |
 | 0:20 | SOS manual | Mantén **START** 2 segundos; luego pulsa **BACK**. | El anillo se llena y vibra. Aparece `Pidiendo ayuda…` con los contactos avisados y las coordenadas. Un toque corto no hace nada, para evitar falsas alarmas. BACK cancela. |
 | 0:50 | Caída con cancelación | `Demostración` > `Simular caída`. Cuando aparezca `¿Te caíste?`, pulsa **BACK** o toca `ESTOY BIEN`. | Unos 7 segundos: impacto y luego quietud. Hay 10 segundos para cancelar, con vibración cada segundo, más insistente al final. START no cancela: es el botón de pedir ayuda. Al cancelar no sale ninguna alerta. |
-| 1:30 | Caída hasta el SOS | `Simular caída` de nuevo y no toques nada. | Unos 18 segundos en total. La pantalla se vuelve roja en los últimos 3 segundos y se abre `Pidiendo ayuda…` sola: quien no puede responder también recibe ayuda. Aclara que es una simulación, sin conexión de red. |
-| 2:10 | Cerrar el SOS | Pulsa **BACK**. | El reloj vuelve a vigilar. |
-| 2:20 | Ritmo cardíaco alto | `Pulso alto` y espera unos 10 segundos. | Aviso ámbar `Pulso alto en reposo` en lugar de la fecha. Es un aviso: el reloj sigue funcionando y no envía nada. Un pico breve o el movimiento no lo activan. |
-| 2:50 | Ritmo cardíaco crítico | `Pulso crítico` y espera unos 9 segundos. | El aviso pasa a rojo: `Pulso crítico: familia avisada`. La alerta sale sola y sin cuenta regresiva, porque es de salud y no una caída. |
-| 3:20 | Batería y GPS | `Batería baja` y luego `Sin GPS`. | El indicador de batería pasa a ámbar (`15 %`) y aparece `Sin GPS`. Los avisos se suman: el pulso crítico sigue a la vista. |
-| 3:50 | Idioma | Pulsa **DOWN** y elige `English`; luego vuelve a `Español`. | Toda la interfaz cambia al instante y la elección se guarda al cerrar la aplicación. |
-| 4:20 | Restablecer | `Demostración` > `Restablecer`. | Todo vuelve al estado inicial: sin avisos, batería al 100 %, GPS con señal y sin alertas registradas. |
+| 1:30 | Caída hasta el SOS | `Simular caída` de nuevo y no toques nada. | Unos 18 segundos en total. La pantalla se vuelve roja en los últimos 3 segundos y se abre `Pidiendo ayuda…` sola: quien no puede responder también recibe ayuda. Señala `Generando mensaje…`: el reloj le está pidiendo el texto a Gemini. El envío a los contactos es simulado. |
+| 2:00 | Mensaje generado por IA | Cuando la línea cambie a `Avisados (simulado)`, pulsa **DOWN**; luego **UP**. | `Mensaje de IA`: Gemini escribió el aviso para la familia con los datos de la caída (evento, pulso, hora, tipo de ubicación), en el idioma del reloj y en 2 frases. Aclara que **hay respaldo**: si no hay red o Gemini tarda más de 8 segundos, se envía la plantilla fija (`Mensaje predefinido`) y el resto de la pantalla no cambia. Si se quiere mostrar, basta con poner el teléfono en modo avión y repetir la caída. |
+| 2:40 | Cerrar el SOS | Pulsa **BACK**. | El reloj vuelve a vigilar. |
+| 2:50 | Ritmo cardíaco alto | `Pulso alto` y espera unos 10 segundos. | Aviso ámbar `Pulso alto en reposo` en lugar de la fecha. Es un aviso: el reloj sigue funcionando y no envía nada. Un pico breve o el movimiento no lo activan. |
+| 3:20 | Ritmo cardíaco crítico | `Pulso crítico` y espera unos 9 segundos. | El aviso pasa a rojo: `Generando mensaje…` y luego `Pulso crítico: familia avisada`. La alerta sale sola y sin cuenta regresiva, porque es de salud y no una caída; su texto también lo escribe Gemini. |
+| 3:50 | Batería y GPS | `Batería baja` y luego `Sin GPS`. | El indicador de batería pasa a ámbar (`15 %`) y aparece `Sin GPS`. Los avisos se suman: el pulso crítico sigue a la vista. |
+| 4:20 | Idioma | Pulsa **DOWN** y elige `English`; luego vuelve a `Español`. | Toda la interfaz cambia al instante y la elección se guarda al cerrar la aplicación. |
+| 4:50 | Restablecer | `Demostración` > `Restablecer`. | Todo vuelve al estado inicial: sin avisos, batería al 100 %, GPS con señal y sin alertas registradas. |
 
-Consejo: haz una pasada completa con el reloj antes de la sustentación. En el simulador las vibraciones no se sienten, y el retardo del dedo quieto puede ser algo distinto en el reloj real.
+Consejo: haz una pasada completa con el reloj antes de la sustentación. En el simulador las vibraciones no se sienten, y el retardo del dedo quieto puede ser algo distinto en el reloj real. Comprueba también que el mensaje de IA llega por el teléfono; si la red del lugar falla, el guion sigue igual y se muestra el `Mensaje predefinido`.
 
 ## Pruebas unitarias
 
 El SDK de Connect IQ incluye **Run No Evil**, un sistema de pruebas unitarias (módulo `Toybox.Test`). Por eso esta versión tiene pruebas automáticas, como la web (Vitest) y la de Wear OS (JUnit), en lugar de comprobar los valores a mano en la consola:
 
 - Las pruebas están en `test/`. Son funciones marcadas con `(:test)` que reciben un `Logger` y devuelven `true` si pasan; usan `Test.assert` y `Test.assertEqual`.
-- Traducen los casos principales de las pruebas de la versión web y la de Wear OS: almacén, generadores, motor, idioma, formato de hora, estado de batería y GPS, colores y contraste, pulsación del SOS, la esfera con su interacción, la magnitud, el detector de caídas, la cuenta regresiva y su pantalla, el detector y el monitor de ritmo cardíaco con su aviso, el contenido de las alertas, el despachador, la confirmación en la pantalla SOS, los escenarios de demostración, su menú y el restablecimiento. En total, 219 pruebas.
+- Traducen los casos principales de las pruebas de la versión web y la de Wear OS: almacén, generadores, motor, idioma, formato de hora, estado de batería y GPS, colores y contraste, pulsación del SOS, la esfera con su interacción, la magnitud, el detector de caídas, la cuenta regresiva y su pantalla, el detector y el monitor de ritmo cardíaco con su aviso, el contenido de las alertas, el despachador, la confirmación en la pantalla SOS, los escenarios de demostración, su menú y el restablecimiento, y la integración con Gemini: el prompt en los dos idiomas y para cada evento, el cuerpo de la petición, la lectura de respuestas válidas, rotas o con otra forma, el tiempo límite y las respuestas tardías de `GeminiRequest`, el texto de cada alerta (IA o plantilla) y su presentación en la pantalla SOS y en el aviso de pulso. En total, 260 pruebas.
+- Ninguna prueba usa la red: el despachador recibe un `FakeMessageSource` que responde cuando la prueba quiere, y los métodos de `GeminiRequest` que reciben la respuesta y el vencimiento del tiempo se llaman a mano.
 - Las de alertas montan un reloj entero (almacén, SOS, monitores y despachador) con un reloj falso, y avanzan segundo a segundo escribiendo las lecturas como un tick del motor; la cuenta regresiva avanza con `tick()`.
 - La esfera no se puede comprobar píxel a píxel, porque Run No Evil no permite leer la imagen dibujada. Se dibuja en una imagen fuera de pantalla de 390 × 390 y se comprueba que cada parte, medida con las fuentes reales y el texto más ancho de cada idioma, cabe en el círculo; que la vista pone los textos y colores correctos en cada estado, y que todos los estados se dibujan sin errores.
 - La interacción se prueba llamando a los métodos que usan los delegados para los botones y los toques, con un reloj falso, así que la pulsación de 2 segundos no hace esperar.
@@ -393,12 +463,15 @@ monkeyc -f monkey.jungle -d fr165 -o bin\ElderGuardAI-test.prg -y "$env:USERPROF
 monkeydo bin\ElderGuardAI-test.prg fr165 /t
 ```
 
-La salida muestra cada prueba con `PASS`, `FAIL` o `ERROR`, y termina con un resumen como `PASSED (passed=219, failed=0, errors=0)`. Para ejecutar una sola prueba, añade su nombre después de `/t`.
+La salida muestra cada prueba con `PASS`, `FAIL` o `ERROR`, y termina con un resumen como `PASSED (passed=260, failed=0, errors=0)`. Para ejecutar una sola prueba, añade su nombre después de `/t`.
 
 ## Pendientes
 
 - **Instalación en el reloj real**: los pasos del apartado 3 aún no se han probado con el Forerunner 165 físico. Hay que confirmar la ruta de la carpeta `Apps` y dónde aparece la aplicación en el menú del reloj.
-- **Permisos**: ninguno por ahora, porque la telemetría es simulada. Para leer los sensores reales harán falta `Sensor` (frecuencia cardíaca y acelerómetro) y `Positioning` (GPS) en `manifest.xml`.
+- **Permisos**: solo `Communications`, para Gemini; la telemetría es simulada. Para leer los sensores reales harán falta `Sensor` (frecuencia cardíaca y acelerómetro) y `Positioning` (GPS) en `manifest.xml`.
+- **Gemini en el reloj real**: comprobado en el simulador, que usa la red del computador. Falta comprobar en el Forerunner 165 que la petición sale por el teléfono con Garmin Connect y que llega dentro de los 8 segundos; y, con el teléfono en modo avión, que se usa la plantilla al instante.
+- **Clave de Gemini**: va dentro del `.prg`. Restringirla a la Generative Language API antes de la sustentación y revocarla después.
+- **Modelo de Gemini**: `gemini-3.5-flash-lite` puede retirarse como pasó con `gemini-2.0-flash`; si el reloj empieza a usar siempre la plantilla y `monkeydo` muestra `Gemini HTTP 404`, hay que cambiar `GeminiConfig.MODEL`.
 - **Menú de demostración en el reloj real**: comprobado en el simulador; falta recorrer el guion de defensa completo en el Forerunner 165 físico.
 - **Vibración en el reloj real**: los patrones de la cuenta regresiva solo se han probado en el simulador.
 - **Pulsación con el dedo en el reloj real**: el retardo de `onHold` (alrededor de 1 segundo en el simulador) puede ser distinto en el Forerunner 165 físico. Con START la pulsación siempre dura exactamente 2 segundos.
