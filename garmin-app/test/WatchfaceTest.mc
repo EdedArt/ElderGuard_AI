@@ -43,7 +43,8 @@ class WatchfaceFixture {
         language = new LanguagePreference(new MemoryLanguageStorage(languageTag));
         sos = new SosController(store);
         controller = new FakeClockController(sos);
-        alerts = new AlertDispatcher(store, sos, HeartRateAnomalyDetector.critical(), new FakeClock());
+        alerts = new AlertDispatcher(store, sos, HeartRateAnomalyDetector.critical(), new FakeClock(), language,
+            new AlertMessageSource());
         view = new WatchfaceView(store, language, controller, alerts);
         engine = new SimulationEngine(store, new RandomSource());
         var clock = new FakeClock();

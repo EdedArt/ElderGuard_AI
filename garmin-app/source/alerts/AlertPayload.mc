@@ -7,10 +7,20 @@ enum AlertType {
     ALERT_HIGH_HEART_RATE,
 }
 
+// Where the text of an alert comes from. It is pending while Gemini is being asked.
+enum MessageOrigin {
+    MESSAGE_PENDING,
+    MESSAGE_AI,
+    MESSAGE_TEMPLATE,
+}
+
 // What the family would receive, with the same fields as the web app's payload: type, timestamp
 // (epoch milliseconds), GPS, heart rate in BPM, battery as the whole percentage shown on the
-// watch, and the contacts. Treated as immutable, and made of immutable readings, so a recorded
-// alert keeps saying what was true when it went out, whatever happens to the state afterwards.
+// watch, and the contacts. The readings are immutable, so a recorded alert keeps saying what was
+// true when it went out, whatever happens to the state afterwards.
+//
+// The one thing filled in later is the text of the message: null while it is being generated,
+// then Gemini's text or the static template, set once by AlertDispatcher.
 class AlertPayload {
     var type as AlertType;
     var timestamp as Long;
@@ -18,6 +28,8 @@ class AlertPayload {
     var heartRate as Number;
     var batteryLevel as Number;
     var contacts as Array<Contact>;
+    var message as String or Null = null;
+    var messageOrigin as MessageOrigin = MESSAGE_PENDING;
 
     function initialize(
         type as AlertType,
@@ -33,6 +45,10 @@ class AlertPayload {
         self.heartRate = heartRate;
         self.batteryLevel = batteryLevel;
         self.contacts = contacts;
+    }
+
+    function isMessagePending() as Boolean {
+        return messageOrigin == MESSAGE_PENDING;
     }
 }
 

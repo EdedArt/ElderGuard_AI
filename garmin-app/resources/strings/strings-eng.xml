@@ -56,4 +56,8 @@
     <string id="GeminiEventHighHeartRateEn">sustained critical heart rate at rest</string>
     <string id="GeminiLocationGpsEn">$1$, $2$ (GPS)</string>
     <string id="GeminiLocationLastEn">last known position $1$, $2$ (no GPS signal)</string>
+    <!-- Static text of an alert, sent when Gemini does not answer in time. -->
+    <string id="AlertTemplateFallEn">ElderGuard AI: a fall was detected and the person did not respond. Heart rate: $1$ BPM. Location: $2$.</string>
+    <string id="AlertTemplateManualSosEn">ElderGuard AI: the person asked for help with the SOS button. Heart rate: $1$ BPM. Location: $2$.</string>
+    <string id="AlertTemplateHighHeartRateEn">ElderGuard AI: critical heart rate of $1$ BPM at rest. Location: $2$.</string>
 </strings>

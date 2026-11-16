@@ -20,6 +20,41 @@ class FakeClock extends Clock {
     }
 }
 
+// A message source the test controls. By default it answers every request at once with reply
+// (null: the template), like the base class; with answerAtOnce false it keeps the callbacks, and
+// the test answers them later with answer(), as a slow Gemini would.
+(:test)
+class FakeMessageSource extends AlertMessageSource {
+    var answerAtOnce as Boolean = true;
+    var reply as String or Null = null;
+    var contexts as Array<AlertMessageContext> = [] as Array<AlertMessageContext>;
+    var pending as Array<AlertMessageCallback> = [] as Array<AlertMessageCallback>;
+    var cancelCount as Number = 0;
+
+    function initialize() {
+        AlertMessageSource.initialize();
+    }
+
+    function request(context as AlertMessageContext, callback as AlertMessageCallback) as Void {
+        contexts.add(context);
+        if (answerAtOnce) {
+            callback.invoke(reply);
+        } else {
+            pending.add(callback);
+        }
+    }
+
+    // Answers the request at index (in the order they were made).
+    function answer(index as Number, text as String or Null) as Void {
+        pending[index].invoke(text);
+    }
+
+    function cancelAll() as Void {
+        cancelCount += 1;
+        pending = [] as Array<AlertMessageCallback>;
+    }
+}
+
 // Readings and store writes the detector and alert tests share. A class with static functions,
 // since a global (:test) function would be taken for a test.
 (:test)

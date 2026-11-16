@@ -68,4 +68,9 @@
     <string id="GeminiEventHighHeartRate">pulso crítico sostenido en reposo</string>
     <string id="GeminiLocationGps">$1$, $2$ (GPS)</string>
     <string id="GeminiLocationLast">última posición conocida $1$, $2$ (sin señal GPS)</string>
+    <!-- Static text of an alert, sent when Gemini does not answer in time. $1$ heart rate in BPM,
+         $2$ location (GeminiLocationGps or GeminiLocationLast). -->
+    <string id="AlertTemplateFall">ElderGuard AI: se detectó una caída y la persona no respondió. Pulso: $1$ LPM. Ubicación: $2$.</string>
+    <string id="AlertTemplateManualSos">ElderGuard AI: la persona pidió ayuda con el botón SOS. Pulso: $1$ LPM. Ubicación: $2$.</string>
+    <string id="AlertTemplateHighHeartRate">ElderGuard AI: pulso crítico de $1$ LPM en reposo. Ubicación: $2$.</string>
 </strings>

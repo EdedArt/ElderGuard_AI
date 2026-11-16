@@ -15,6 +15,9 @@ class DeviceHarness {
     var fall as FallMonitor;
     var heartRate as HeartRateMonitor;
     var alerts as AlertDispatcher;
+    var language as LanguagePreference = new LanguagePreference(new MemoryLanguageStorage(null));
+    // Answers at once with null (the template) unless a test says otherwise.
+    var messages as FakeMessageSource = new FakeMessageSource();
 
     // What the next ticks write, like engine overrides.
     var bpm as Number = 70;
@@ -27,7 +30,7 @@ class DeviceHarness {
         sos = new SosController(store);
         fall = new FallMonitor(store, sos, FallDetector.standard(), clock);
         heartRate = new HeartRateMonitor(store, HeartRateAnomalyDetector.warning(), clock);
-        alerts = new AlertDispatcher(store, sos, HeartRateAnomalyDetector.critical(), clock);
+        alerts = new AlertDispatcher(store, sos, HeartRateAnomalyDetector.critical(), clock, language, messages);
     }
 
     function second() as Void {
@@ -321,7 +324,8 @@ function dispatcher_aCriticalEpisodeTurnsTheBannerRedUntilItEnds(logger as Logge
     var clock = new FakeClock();
     var monitor = new HeartRateMonitor(fixture.store, HeartRateAnomalyDetector.warning(), clock);
     // The fixture's dispatcher reads its own clock; drive both detectors with the same readings.
-    var critical = new AlertDispatcher(fixture.store, fixture.sos, HeartRateAnomalyDetector.critical(), clock);
+    var critical = new AlertDispatcher(fixture.store, fixture.sos, HeartRateAnomalyDetector.critical(), clock,
+        fixture.language, new AlertMessageSource());
     var view = new WatchfaceView(fixture.store, fixture.language, fixture.controller, critical);
     view.onLayout(fixture.dc);
     for (var i = 0; i < Times.toConfirm(); i++) {

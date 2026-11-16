@@ -23,7 +23,8 @@ class ScenarioHarness {
         sos = new SosController(store);
         fall = new FallMonitor(store, sos, FallDetector.standard(), clock);
         heartRate = new HeartRateMonitor(store, HeartRateAnomalyDetector.warning(), clock);
-        alerts = new AlertDispatcher(store, sos, HeartRateAnomalyDetector.critical(), clock);
+        alerts = new AlertDispatcher(store, sos, HeartRateAnomalyDetector.critical(), clock,
+            new LanguagePreference(new MemoryLanguageStorage(null)), new AlertMessageSource());
     }
 
     // One engine tick, a second later.

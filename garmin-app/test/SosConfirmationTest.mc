@@ -16,7 +16,11 @@ class SosScreenFixture {
     var dc as Graphics.Dc;
 
     function initialize(languageTag as String or Null) {
-        language = new LanguagePreference(new MemoryLanguageStorage(languageTag));
+        language = device.language;
+        var tagged = LanguagePreference.fromTag(languageTag);
+        if (tagged != null) {
+            language.setLanguage(tagged);
+        }
         view = new SosView(language, device.alerts);
         delegate = new SosDelegate(view, device.sos);
         dc = (Graphics.createBufferedBitmap({:width => 390, :height => 390}).get() as Graphics.BufferedBitmap).getDc();

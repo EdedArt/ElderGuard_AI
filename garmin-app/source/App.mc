@@ -26,7 +26,8 @@ class ElderGuardApp extends Application.AppBase {
         _sos = new SosController(_store);
         _fallMonitor = new FallMonitor(_store, _sos, FallDetector.standard(), new Clock());
         var heartRate = new HeartRateMonitor(_store, HeartRateAnomalyDetector.warning(), new Clock());
-        _alerts = new AlertDispatcher(_store, _sos, HeartRateAnomalyDetector.critical(), new Clock());
+        _alerts = new AlertDispatcher(_store, _sos, HeartRateAnomalyDetector.critical(), new Clock(), _language,
+            new GeminiMessageSource());
         _alertScreens = new AlertScreens(_store, _language, _sos, _fallMonitor, _alerts);
         _demo = new DemoController(new ScenarioRunner(_engine, _store), _engine, _store, _fallMonitor, heartRate, _alerts);
     }
